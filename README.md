@@ -1,6 +1,6 @@
 # The Geometric Siphon
 
-[![DOI](https://zenodo.org/badge/1208142238.svg)](https://doi.org/10.5281/zenodo.19526374)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19526374.svg)](https://doi.org/10.5281/zenodo.19526374)
 
 Code and supplementary material for the **Geometric Siphon** research line by K.R. Ryan.
 
