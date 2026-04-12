@@ -1,0 +1,43 @@
+# Foundry
+**/out/
+**/cache/
+**/broadcast/
+
+# Node
+**/node_modules/
+**/npm-debug.log*
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Syncthing
+.stfolder/
+.stversions/
+.stignore
+
+# LaTeX build artefacts (papers/ source compiles produce these alongside the .tex)
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Local working scripts
+scripts/
