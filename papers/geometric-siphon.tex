@@ -42,6 +42,8 @@
 
 % Paragraph formatting
 \usepackage{parskip}
+\emergencystretch=1em
+\hyphenpenalty=200
 
 % Typographic refinement (better letter spacing, hyphenation, line breaks)
 \usepackage{microtype}
@@ -146,6 +148,7 @@ The initial assumption was slippage, but on-chain decomposition of 92 rebalance 
 
 \begin{table}[H]
 \centering
+\small
 \begin{tabular}{@{}llrrll@{}}
 \toprule
 Phase & Period & Positions & Events & Contract & Focus \\
@@ -155,6 +158,7 @@ Phase & Period & Positions & Events & Contract & Focus \\
 \textbf{Total} & \textbf{7 days} & \textbf{39} & \textbf{1{,}380} & --- & --- \\
 \bottomrule
 \end{tabular}
+\normalsize
 \end{table}
 
 \subsection{Contributions}\label{sec:contributions}
@@ -303,6 +307,7 @@ where $\alpha = s - s_a$ and $\beta = 1/s - 1/s_b$. If contract dust provides ex
 
 \begin{table}[H]
 \centering
+\small
 \begin{tabular}{@{}lll@{}}
 \toprule
 Remove\ldots & Effect & Siphon? \\
@@ -312,6 +317,7 @@ Stage~2 (no same-range rebals) & Dust accumulates, never absorbed & Stops: stran
 Shared balances & Each position's dust isolated & Stops: no transfer medium \\
 \bottomrule
 \end{tabular}
+\normalsize
 \end{table}
 
 In steady state, geometric residuals from range changes feed the pool at the same rate that same-range rebalances drain it.
@@ -507,7 +513,7 @@ E & 3 & Same pool (KellyClaude/USDC), ratio 1:3:9 & Single-pool equilibrium \\
 \begin{itemize}[leftmargin=*]
     \item \textbf{Deliberate hub-spoke topology.} WETH/USDC CL50 as central hub, every spoke sharing WETH or USDC.
     \item \textbf{$V/L$ sweep experiment.} Three positions at $1{:}3{:}9$ size ratio in the same pool, isolating position size as the sole variable.
-    \item \textbf{Fiat FX weekend experiment.} Five stablecoin FX pairs deployed on a Sunday (markets closed), providing $\sigma \approx 0$ conditions that isolate the $V/L$ effect from volatility.
+    \item \textbf{Fiat FX weekend experiment.} Five stablecoin FX pairs deployed on a Sunday (markets closed), providing $\sigma \approx 0$ conditions that isolate the $V/L$~effect from volatility.
 \end{itemize}
 
 \subsection{Hypotheses}\label{sec:hypotheses}
@@ -851,7 +857,7 @@ The closed-form derivation is verified with a Foundry test suite covering both T
 
 \begin{itemize}[leftmargin=*]
     \item \textbf{Mock-pool tests} (\texttt{MockCLPool}), which implement the Uniswap V3 amount equations against a self-contained pool with a linearised tick-to-sqrt-price approximation. These exercise the residual geometry in isolation, with no fees, no slippage, and no dependence on a live RPC endpoint, but are not Uniswap-accurate in the last significant figure.
-    \item \textbf{Fork tests} against unmodified Aerodrome Slipstream contracts on Base mainnet via Foundry's \texttt{vm.createSelectFork}, exercising the same scenarios on real on-chain V3 geometry. These give the canonical demonstration that the residual is a property of unmodified V3 contracts, with the trade-off that the numerical residuals are non-deterministic between runs as the live pool state shifts.
+    \item \textbf{Fork tests} against unmodified Aerodrome Slipstream contracts on Base mainnet via Foundry's \texttt{vm.create\-Select\-Fork}, exercising the same scenarios on real on-chain V3 geometry. These give the canonical demonstration that the residual is a property of unmodified V3 contracts, with the trade-off that the numerical residuals are non-deterministic between runs as the live pool state shifts.
 \end{itemize}
 
 The mock-pool and fork-pool surfaces verify the same theorem at different displacement magnitudes; their qualitative agreement (residual exists, control case is dust-only, residual scales with size) is the central reproducibility claim. \S\ref{sec:foundry-mock-residual}--\S\ref{sec:foundry-mock-extinction} report the mock-pool numbers because they are deterministic and small enough to quote directly; \S\ref{sec:foundry-fork} reports the fork-pool verification.
@@ -878,9 +884,11 @@ Assertion: \texttt{assertTrue(residual0 > 0 || residual1 > 0)} --- \textbf{PASSE
 
 \subsection{Test 2: Same range = zero residual (control)}\label{sec:foundry-mock-control}
 
-Same setup, same price movement, but re-mint into the \textbf{identical range}. Residual: \textbf{29 wei} ($< 10^{-6}$ USD). Pure integer rounding from the Solidity floor division in the mint constraint.
+Same setup, same price movement, but re-mint into the \textbf{identical range}. Residual: \textbf{29~wei}\linebreak ($<\!10^{-6}$ USD). Pure integer rounding from Solidity's floor division.
 
-Assertion: \texttt{assertLt(residual1, 1e3)} --- \textbf{PASSED}. This confirms the converse of Theorem~\ref{thm:residual}: $R_{\text{old}} = R_{\text{new}} \Rightarrow \Delta R = 0$.
+Assertion: \texttt{assertLt(residual1, 1e3)} --- \textbf{PASSED}.
+
+\noindent This confirms the theorem's converse: $R_{\text{old}} = R_{\text{new}} \Rightarrow \Delta R = 0$.
 
 \subsection{Test 3: Linear scaling with position size}\label{sec:foundry-mock-scaling}
 
@@ -991,9 +999,9 @@ Assertion: \texttt{assertTrue(alpha > 95)} --- \textbf{PASSED}. At 2{,}000-tick 
 
 \subsection{Live fork verification}\label{sec:foundry-fork}
 
-The same scenarios are also run as fork tests against the live Aerodrome Slipstream WETH/USDC pool on Base mainnet, calling the unmodified \texttt{NonfungiblePositionManager} and pool contracts directly via \texttt{vm.createSelectFork}. Five tests reproduce the range-change residual, same-range control, wider-range case, $4\times$ scaling and the architectural precondition (\S\ref{sec:precondition}) against real on-chain V3 geometry.
+The same scenarios are also run as fork tests against the live Aerodrome Slipstream WETH/\allowbreak{}USDC pool on Base mainnet, calling the unmodified \texttt{Nonfungible\-Position\-Manager} and pool contracts directly via \texttt{vm.create\-Select\-Fork}. Five tests reproduce the range-change residual, same-range control, wider-range case, $4\times$~scaling and the architectural precondition (\S\ref{sec:precondition}) against real on-chain V3~geometry.
 
-Fork residuals are smaller than mock-pool residuals (${\sim}\$128$ vs ${\sim}\$2{,}061$) because the fork test swaps a fixed \$1{,}000 USDC to move the price, shifting the tick by only ${\sim}1$--$3$ ticks rather than the mock's hardcoded $+200$. The precondition test (\texttt{test\_stockNfpmDoesNotAbsorbDust}) creates two positions in the same range, leaves a residual via the first, then confirms the second's liquidity does not grow on a same-range rebalance. A stock NFPM has no shared dust balance, so no cross-position absorption occurs.
+Fork residuals are smaller than mock-pool residuals (${\sim}\$128$ vs ${\sim}\$2{,}061$) because the fork test swaps a fixed \$1{,}000 USDC to move the price, shifting the tick by only ${\sim}1$--$3$ ticks rather than the mock's hardcoded $+200$. The precondition test (\texttt{test\_stock\-Nfpm\-Does\-Not\-Absorb\-Dust}) creates two positions in the same range, leaves a residual via the first, then confirms the second's liquidity does not grow on a same-range rebalance. A stock NFPM has no shared dust balance, so no cross-position absorption occurs.
 
 The fork tests do not pin a block number; numerical residuals shift between runs, but the qualitative claims hold deterministically.
 
@@ -1003,8 +1011,8 @@ Tests 1--3 prove Theorem~\ref{thm:residual} (geometric residual existence and sc
 
 \begin{verbatim}
 forge test -vv
-Suite result: ok. 7 passed; 0 failed; 0 skipped  (mock-pool tests)
-Suite result: ok. 5 passed; 0 failed; 0 skipped  (fork tests, requires Base RPC)
+Suite result: ok. 7 passed; 0 failed; 0 skipped  (mock-pool)
+Suite result: ok. 5 passed; 0 failed; 0 skipped  (fork, Base RPC)
 \end{verbatim}
 
 The mock-pool environment has no swaps, zero fees, a single position, and no adaptive engine. The only mechanism present is the CL amount calculation itself, which isolates the residual from all confounding factors. The fork environment adds the real protocol contracts but otherwise exercises the same withdraw/mint sequence. Source is in the project's GitHub repository (see Appendix~\ref{app:reproduction}).
@@ -1019,7 +1027,9 @@ Every major CL automation platform --- Gamma Strategies, Arrakis Finance, Beefy 
 
 The siphon requires \texttt{dustBalance[depositor][token]} keyed without a pool dimension --- a storage layout that allows residuals from Pool~A to be consumed by Pool~B. This is an unusual design. The residual has always existed; cross-pool shared balances make it observable as inter-position flow.
 
-Theorem~\ref{thm:residual} applies to all Uniswap V3-style concentrated liquidity implementations. Cross-position flow requires one additional condition: shared token balances across positions in different pools. Any protocol moving from vault-per-pool to depositor-level multi-pool management will encounter this mechanism. The fork-mode test in \S\ref{sec:foundry-fork} verifies this precondition directly: on a stock NFPM (which does not have shared depositor balances), no cross-position absorption occurs.
+Theorem~\ref{thm:residual} applies to all Uniswap V3-style concentrated liquidity imple\-mentations. Cross-position flow requires one additional condition: shared token balances across positions in different pools. Any protocol moving from vault-per-pool to depositor-level multi-pool management will encounter this mechanism.
+
+The fork-mode test in \S\ref{sec:foundry-fork} verifies this precondition directly: on a stock NFPM (which does not have shared depositor balances), no cross-position absorption occurs.
 
 \subsection{Boundary cases}\label{sec:boundary}
 
@@ -1111,7 +1121,7 @@ function rebalanceCL(
 ) external returns (uint256 newTokenId);
 \end{verbatim}
 
-The critical storage layout is \texttt{dustBalance[depositor][token]}: leftover tokens from any pool's rebalance are accessible to any subsequent mint under the same depositor. This creates the cross-position channel described in \S\ref{sec:problem}. A vault-per-pool architecture would use \texttt{dustBalance[pool][token]} or equivalent, isolating residuals per pair.
+The critical storage layout is \texttt{dustBalance[depositor][token]}: leftover tokens from any pool's rebalance are accessible to any subsequent mint under the same depositor. This creates the cross-position channel described in \S\ref{sec:problem}. A vault-per-pool architecture would use \texttt{dustBalance\allowbreak{}[pool][token]} or equivalent, isolating residuals per pair.
 
 \section{Foundry test suite (reproduction)}\label{app:foundry}
 
