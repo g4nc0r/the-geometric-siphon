@@ -1,5 +1,7 @@
 # The Geometric Siphon
 
+[![DOI](https://zenodo.org/badge/1208142238.svg)](https://doi.org/10.5281/zenodo.19526374)
+
 Code and supplementary material for the **Geometric Siphon** research line by K.R. Ryan.
 
 This repository collects the verification code for two SSRN papers analysing the geometric residual that arises when concentrated-liquidity positions are restruck across tick ranges.
