@@ -1,28 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-import {Test, console} from "forge-std/Test.sol";
+import {console} from "forge-std/Test.sol";
 import {MockCLPool} from "../src/MockCLPool.sol";
+import {MockPositionTestBase} from "./helpers/MockPositionTestBase.sol";
+import {TickHelpers} from "./helpers/Tick.sol";
 
 /// @title ZeroSwapExtinctionProof
-/// @notice Proves the Zero-Swap Extinction Theorem: rebalancing without swaps causes geometric decay
-/// @dev When a position exits its range and becomes single-sided, rebalancing into a new range
-///      that requires both tokens WITHOUT swapping creates massive residual loss due to the min()
-///      constraint in getLiquidityForAmounts. Repeated cycles produce geometric decay: V_K <= V0(1-a)^K
-contract ZeroSwapExtinctionProof is Test {
-    MockCLPool pool;
-    
-    // Mock ERC20 balances
-    uint256 token0Balance;
-    uint256 token1Balance;
-    
-    // Position tracking
-    struct Position {
-        int24 tickLower;
-        int24 tickUpper;
-        uint128 liquidity;
-    }
-    
+/// @notice Mock-pool verification of Theorem 3.
+///
+/// Theorem 3 (Zero-Swap Extinction, §3.6):
+///   A CL position rebalanced repeatedly without an intervening swap
+///   leaks a fraction α ∈ (0, 1) of its USD value at every event. After
+///   K such rebalances the surviving value satisfies V_K ≤ V_0 (1 − α)^K,
+///   so the position decays geometrically toward extinction. The leak
+///   arises because `getLiquidityForAmounts` takes the minimum of the
+///   per-token liquidity, binding at zero on the missing-token side
+///   when the pre-rebalance position is single-sided.
+contract ZeroSwapExtinctionProof is MockPositionTestBase {
     // Price: 1 token0 = 2500 token1 (WETH = 2500 USDC)
     // Token0: 18 decimals (WETH-like)
     // Token1: 6 decimals (USDC-like)
@@ -42,18 +37,19 @@ contract ZeroSwapExtinctionProof is Test {
         console.log("Token1 balance:", token1Balance);
     }
     
-    /// @notice Test 1: Single-sided exit with no swap loses massive value
+    /// @notice Test 1: single-sided exit with no swap loses value.
     /// @dev Position becomes 100% token1, but new range needs both tokens.
-    ///      The min() constraint forces near-zero liquidity, leaving huge residual.
-    function test_singleSidedExit_noSwap_losesValue() public {
+    ///      The min() constraint forces zero liquidity, leaving the entire
+    ///      withdrawn balance as residual.
+    function test_theorem3_singleSidedExitNoSwapLosesValue() public {
         console.log("\n=== TEST 1: Single-Sided Exit + No Swap = Value Loss ===");
         
         int24 currentTick = pool.tick();
         console.log("Starting tick:", uint256(int256(currentTick)));
         
         // Create position below current price (will become 100% token1 when price moves up)
-        int24 tickLower = _nearestTick(currentTick - 300, TICK_SPACING);
-        int24 tickUpper = _nearestTick(currentTick - 100, TICK_SPACING);
+        int24 tickLower = TickHelpers.nearest(currentTick - 300, TICK_SPACING);
+        int24 tickUpper = TickHelpers.nearest(currentTick - 100, TICK_SPACING);
         
         console.log("Initial range tickLower:", uint256(int256(tickLower)));
         console.log("Initial range tickUpper:", uint256(int256(tickUpper)));
@@ -86,8 +82,8 @@ contract ZeroSwapExtinctionProof is Test {
         console.log("\n=== ATTEMPTING REBALANCE WITH NO SWAP ===");
         
         // Try to mint new range centered on current price (needs BOTH tokens)
-        int24 newLower = _nearestTick(newTick - 200, TICK_SPACING);
-        int24 newUpper = _nearestTick(newTick + 200, TICK_SPACING);
+        int24 newLower = TickHelpers.nearest(newTick - 200, TICK_SPACING);
+        int24 newUpper = TickHelpers.nearest(newTick + 200, TICK_SPACING);
         
         console.log("New range tickLower:", uint256(int256(newLower)));
         console.log("New range tickUpper:", uint256(int256(newUpper)));
@@ -107,7 +103,7 @@ contract ZeroSwapExtinctionProof is Test {
         console.log("Final value (USD):", valueFinal / 1e6);
         console.log("Residual value (USD):", residualValue / 1e6);
         
-        // Calculate alpha (residual fraction)
+        // Calculate alpha (residual fraction per Theorem 3)
         uint256 alpha = (valueInitial - valueFinal) * 1e18 / valueInitial;
         console.log("Alpha (residual fraction) percent:", alpha * 100 / 1e18);
         
@@ -116,19 +112,19 @@ contract ZeroSwapExtinctionProof is Test {
         assertGt(alpha, 0, "Residual fraction alpha MUST be > 0");
         assertGt(alpha, 5e17, "Alpha should be > 50% for single-sided exit with no swap");
         
-        console.log("\n[PROVEN] No-swap rebalance from single-sided position loses massive value");
+        console.log("\nNo-swap rebalance from single-sided position: full withdrawn balance leaks as residual");
     }
     
     /// @notice Test 2: Residual scales monotonically with displacement
     /// @dev The further out of range, the more single-sided the position, the higher alpha
-    function test_partialExit_noSwap_residualScalesWithDisplacement() public {
+    function test_theorem3_residualScalesWithDisplacement() public {
         console.log("\n=== TEST 2: Residual Scales With Displacement ===");
         
         int24 currentTick = pool.tick();
         
         // Use wider ranges so partial exit doesn't immediately go to 100%
-        int24 tickLower = _nearestTick(currentTick - 500, TICK_SPACING);
-        int24 tickUpper = _nearestTick(currentTick + 500, TICK_SPACING);
+        int24 tickLower = TickHelpers.nearest(currentTick - 500, TICK_SPACING);
+        int24 tickUpper = TickHelpers.nearest(currentTick + 500, TICK_SPACING);
         
         console.log("Base range tickLower:", uint256(int256(tickLower)));
         console.log("Base range tickUpper:", uint256(int256(tickUpper)));
@@ -136,13 +132,15 @@ contract ZeroSwapExtinctionProof is Test {
         // Test displacements: 100, 300, 600 ticks WITHIN the range (partial exits)
         int24[3] memory displacements = [int24(100), int24(300), int24(600)];
         uint256[3] memory alphas;
-        
+
+        uint256 snap = vm.snapshotState();
+
         for (uint i = 0; i < 3; i++) {
-            // Reset state
-            setUp();
+            vm.revertToState(snap);
+            snap = vm.snapshotState();
             currentTick = pool.tick();
-            tickLower = _nearestTick(currentTick - 500, TICK_SPACING);
-            tickUpper = _nearestTick(currentTick + 500, TICK_SPACING);
+            tickLower = TickHelpers.nearest(currentTick - 500, TICK_SPACING);
+            tickUpper = TickHelpers.nearest(currentTick + 500, TICK_SPACING);
             
             console.log("\n--- Displacement (ticks):", uint256(int256(displacements[i])));
             
@@ -161,8 +159,8 @@ contract ZeroSwapExtinctionProof is Test {
             console.log("Withdrawn token1:", withdrawn1);
             
             // Rebalance to TIGHTER range (no swap)
-            int24 newLower = _nearestTick(newTick - 250, TICK_SPACING);
-            int24 newUpper = _nearestTick(newTick + 250, TICK_SPACING);
+            int24 newLower = TickHelpers.nearest(newTick - 250, TICK_SPACING);
+            int24 newUpper = TickHelpers.nearest(newTick + 250, TICK_SPACING);
             Position memory newPos = _createPosition(newLower, newUpper, withdrawn0, withdrawn1);
             
             uint256 valueFinal = _calculatePositionValue(newPos);
@@ -188,20 +186,20 @@ contract ZeroSwapExtinctionProof is Test {
         assertGt(alphas[2], alphas[1], "Alpha must increase: 600 ticks > 300 ticks");
         assertGt(alphas[2], 0, "Final displacement must show some loss");
         
-        console.log("\n[PROVEN] Alpha scales monotonically with displacement");
+        console.log("\nAlpha scales monotonically with displacement");
     }
     
     /// @notice Test 3: Repeated rebalances show geometric decay
     /// @dev Simulate 5 cycles of: exit range -> withdraw -> mint new range
     ///      Each cycle should reduce value by approximately constant factor (1-a)
-    function test_repeatedRebalances_geometricDecay() public {
+    function test_theorem3_repeatedRebalancesGeometricDecay() public {
         console.log("\n=== TEST 3: Repeated Rebalances -> Geometric Decay ===");
         
         int24 currentTick = pool.tick();
         
         // Start with wider range
-        int24 tickLower = _nearestTick(currentTick - 400, TICK_SPACING);
-        int24 tickUpper = _nearestTick(currentTick + 400, TICK_SPACING);
+        int24 tickLower = TickHelpers.nearest(currentTick - 400, TICK_SPACING);
+        int24 tickUpper = TickHelpers.nearest(currentTick + 400, TICK_SPACING);
         
         Position memory pos = _createPosition(tickLower, tickUpper, 2 ether, 5000e6);
         
@@ -227,8 +225,8 @@ contract ZeroSwapExtinctionProof is Test {
             console.log("Withdrew token1:", withdrawn1);
             
             // Mint new range centered on new price, SAME WIDTH range (NO SWAP)
-            tickLower = _nearestTick(newTick - 400, TICK_SPACING);
-            tickUpper = _nearestTick(newTick + 400, TICK_SPACING);
+            tickLower = TickHelpers.nearest(newTick - 400, TICK_SPACING);
+            tickUpper = TickHelpers.nearest(newTick + 400, TICK_SPACING);
             pos = _createPosition(tickLower, tickUpper, withdrawn0, withdrawn1);
             
             values[cycle] = _calculatePositionValue(pos);
@@ -294,20 +292,20 @@ contract ZeroSwapExtinctionProof is Test {
         assertGt(totalDecay, 90, "Should lose >90% of value over 5 cycles (geometric decay)");
         assertLt(values[5], values[0] / 10, "Final value should be <10% of initial");
         
-        console.log("\n[PROVEN] Repeated rebalances produce geometric decay V_K <= V0(1-a)^K");
+        console.log("\nRepeated rebalances produce geometric decay V_K <= V0(1-a)^K");
     }
     
     /// @notice Test 4: Far out of range -> near-total loss
     /// @dev Simulates a terminal event like ZARP event 14 where position moved 2000 ticks
     ///      out of range, resulting in alpha = 0.994 (99.4% loss)
-    function test_fullyOutOfRange_nearTotalLoss() public {
+    function test_theorem3_fullyOutOfRangeNearTotalLoss() public {
         console.log("\n=== TEST 4: Extreme Displacement -> Near-Total Loss ===");
         
         int24 currentTick = pool.tick();
         
         // Create position
-        int24 tickLower = _nearestTick(currentTick - 200, TICK_SPACING);
-        int24 tickUpper = _nearestTick(currentTick + 200, TICK_SPACING);
+        int24 tickLower = TickHelpers.nearest(currentTick - 200, TICK_SPACING);
+        int24 tickUpper = TickHelpers.nearest(currentTick + 200, TICK_SPACING);
         
         console.log("Initial range tickLower:", uint256(int256(tickLower)));
         console.log("Initial range tickUpper:", uint256(int256(tickUpper)));
@@ -332,8 +330,8 @@ contract ZeroSwapExtinctionProof is Test {
         assertEq(withdrawn0, 0, "Should be 100% token1");
         
         // Try to rebalance into new range (will fail catastrophically)
-        int24 newLower = _nearestTick(newTick - 200, TICK_SPACING);
-        int24 newUpper = _nearestTick(newTick + 200, TICK_SPACING);
+        int24 newLower = TickHelpers.nearest(newTick - 200, TICK_SPACING);
+        int24 newUpper = TickHelpers.nearest(newTick + 200, TICK_SPACING);
         
         console.log("\nNew range tickLower:", uint256(int256(newLower)));
         console.log("New range tickUpper:", uint256(int256(newUpper)));
@@ -347,71 +345,14 @@ contract ZeroSwapExtinctionProof is Test {
         // Calculate alpha
         uint256 alpha = (valueInitial - valueFinal) * 1e18 / valueInitial;
         console.log("\n=== TERMINAL EVENT ===");
-        console.log("Alpha (loss fraction) percent:", alpha * 100 / 1e18);
+        console.log("Alpha (residual fraction) percent:", alpha * 100 / 1e18);
         
         // ASSERTIONS
         assertGt(alpha, 95e16, "Alpha must be > 95% (near-total loss)");
         assertLt(valueFinal, valueInitial / 20, "Final value < 5% of initial");
         
-        console.log("\n[PROVEN] Extreme displacement causes near-total value extinction");
-        console.log("  (comparable to ZARP event 14: alpha = 0.994)");
-    }
-    
-    // =============================================================================
-    // Helper Functions
-    // =============================================================================
-    
-    function _nearestTick(int24 tick, int24 tickSpacing) internal pure returns (int24) {
-        int24 compressed = tick / tickSpacing;
-        if (tick < 0 && tick % tickSpacing != 0) compressed--;
-        return compressed * tickSpacing;
-    }
-    
-    function _createPosition(
-        int24 tickLower,
-        int24 tickUpper,
-        uint256 amount0Desired,
-        uint256 amount1Desired
-    ) internal returns (Position memory pos) {
-        // Get liquidity for these amounts (THIS is where min() constraint bites)
-        uint128 liquidity = pool.getLiquidityForAmounts(
-            amount0Desired,
-            amount1Desired,
-            tickLower,
-            tickUpper
-        );
-        
-        // Get actual amounts needed for this liquidity
-        (uint256 amount0, uint256 amount1) = pool.getAmountsForLiquidity(
-            liquidity,
-            tickLower,
-            tickUpper
-        );
-        
-        // "Deposit" tokens (reduce balance)
-        require(token0Balance >= amount0, "Insufficient token0");
-        require(token1Balance >= amount1, "Insufficient token1");
-        token0Balance -= amount0;
-        token1Balance -= amount1;
-        
-        pos = Position({
-            tickLower: tickLower,
-            tickUpper: tickUpper,
-            liquidity: liquidity
-        });
-    }
-    
-    function _withdrawPosition(Position memory pos) internal returns (uint256 amount0, uint256 amount1) {
-        // Get amounts for liquidity at current price
-        (amount0, amount1) = pool.getAmountsForLiquidity(
-            pos.liquidity,
-            pos.tickLower,
-            pos.tickUpper
-        );
-        
-        // "Withdraw" tokens (increase balance)
-        token0Balance += amount0;
-        token1Balance += amount1;
+        console.log("\nExtreme displacement: alpha saturates near 1 (near-total value extinction)");
+        console.log("  (comparable to ZARP event 14: alpha = 0.99)");
     }
     
     function _calculatePositionValue(Position memory pos) internal view returns (uint256) {

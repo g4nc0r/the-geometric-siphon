@@ -1,17 +1,24 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-/// @title MockCLPool - Minimal CL Pool for Geometric Residual Proof
-/// @notice Implements core concentrated liquidity math
+/// @title MockCLPool
+/// @notice Minimal CL pool with linearised tick math, sufficient to demonstrate
+///         the geometric residual at order of magnitude. Used by
+///         GeometricResidualProofClean and ZeroSwapExtinctionProof.
 contract MockCLPool {
     uint160 public sqrtPriceX96;
     int24 public tick;
-    
+
     uint256 constant Q96 = 2**96;
-    
+
+    /// @notice Tick anchor for the linear sqrt-price approximation;
+    ///         corresponds to a price of ≈2500 (sqrt(2500) ≈ 50).
+    int24 internal constant ANCHOR_TICK = 73135;
+    uint256 internal constant ANCHOR_SQRT_PRICE = 314748404868481885948183330816; // sqrt(2500) * 2^96
+
     constructor(uint160 _sqrtPriceX96) {
         sqrtPriceX96 = _sqrtPriceX96;
-        tick = 73135; // Approximate tick for price ~2500
+        tick = ANCHOR_TICK;
     }
     
     /// @notice Get token amounts for given liquidity and range
@@ -120,19 +127,16 @@ contract MockCLPool {
         liquidity = uint128(mulDiv(amount1, Q96, sqrtRatioBX96 - sqrtRatioAX96));
     }
     
-    /// @notice Approximate sqrtPrice from tick (simplified - real implementation uses exp)
-    function getSqrtRatioAtTick(int24 _tick) public pure returns (uint160 sqrtPriceX96) {
-        // Simplified: use linear approximation around tick 73135 (price ~2500)
-        // sqrtPrice = sqrt(1.0001^tick) * 2^96
-        // For small tick changes, this is approximately: sqrtPrice_0 * (1 + 0.00005 * deltaTick)
-        
-        int256 tickDelta = int256(_tick) - 73135;
-        uint256 baseSqrtPrice = 314748404868481885948183330816; // sqrt(2500) * 2^96
-        
-        // Linear approximation: each tick ~= 0.01% price change, so sqrt ~= 0.005% change
-        int256 adjustment = int256(baseSqrtPrice) * tickDelta * 5 / 100000;
-        
-        sqrtPriceX96 = uint160(uint256(int256(baseSqrtPrice) + adjustment));
+    /// @notice Linear-approximation sqrtPrice from tick around ANCHOR_TICK.
+    /// @dev    Each tick ≈ 0.01% price change ≈ 0.005% sqrt-price change, so the
+    ///         linear coefficient is 5 / 100,000 per tick offset from ANCHOR_TICK.
+    ///         Sufficient for ≤1% rounding versus exact V3 TickMath in the
+    ///         reported §6 mock-pool numbers; see MockCLPoolV2 for the exact
+    ///         override used by Theorems 4-6.
+    function getSqrtRatioAtTick(int24 _tick) public pure virtual returns (uint160) {
+        int256 tickDelta = int256(_tick) - int256(ANCHOR_TICK);
+        int256 adjustment = int256(ANCHOR_SQRT_PRICE) * tickDelta * 5 / 100000;
+        return uint160(uint256(int256(ANCHOR_SQRT_PRICE) + adjustment));
     }
     
     /// @notice Multiply two uint256 values and divide by denominator

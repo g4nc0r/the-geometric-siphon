@@ -1,0 +1,22 @@
+{
+  "depositor_to_group_phase1": {
+    "⚗️": "A",
+    "👑": "B",
+    "🏦": "C",
+    "🧬": "D",
+    "🔬": "E"
+  },
+  "depositor_to_group_phase2": {
+    "⚗️": "A",
+    "👑": "B",
+    "🏦": "C",
+    "🔬": "D",
+    "🧪": "E"
+  },
+  "_note": [
+    "depositor_to_group_phase1: this mapping yields per-group Spearman ρ values consistent with Table 9 when used with the bundled events-phase1.jsonl.",
+    "depositor_to_group_phase2 is inferred for Table 17 from the row 'KellyClaude/USDC Group E'; Group E in Table 17 contains the Kelly V/L sweep, which sits in 🧪. Other letters map by the same rationale, with 🔬 (Phase 1 carryover) sliding from E to D.",
+    "Some emoji identifiers were reassigned between phases; the bundled Phase 1 / Phase 2 logs use the labels in use during those phases.",
+    "On-chain address mapping is not bundled with this public deposit. Receipt-level attribution against `supplementary/closed-form-decomposition-cache.json` requires the address → depositor lookup, which is not part of the public deposit."
+  ]
+}

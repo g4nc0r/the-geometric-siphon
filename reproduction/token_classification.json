@@ -1,0 +1,15 @@
+{
+  "_note": "Token classification for Theorems 5/6 segmentation. The theorems require T_1 to be the USD numéraire. 'usd_stables' are USD-pegged tokens; 'non_usd_fiats' are non-USD fiat-pegged tokens which are *volatile* relative to USD; 'crypto_volatiles' are crypto tokens, also volatile relative to USD. For Theorem 5/6 domain, a position needs T_0 in (non_usd_fiats ∪ crypto_volatiles) and T_1 in usd_stables.",
+  "usd_stables": ["USDC", "USDT", "DAI"],
+  "non_usd_fiats": ["EURC", "ZARP", "VCHF", "CADC", "KRWQ"],
+  "crypto_volatiles": [
+    "AAVE", "ACU", "AERO", "AVAIL", "AVNT",
+    "BNKR", "CARV", "CHECK", "CLAWD", "COOKIE",
+    "DIEM", "DRV", "FAI", "FLOCK", "GIZA",
+    "HYPE", "INJ", "KellyClaude", "LINK", "MOCA",
+    "MOLT", "MORPHO", "ODOS", "PEPE", "RAVE",
+    "RECALL", "SOL", "SYND", "TIBBIR", "TOSHI",
+    "UP", "VIRTUAL", "VVV", "WETH", "ZORA",
+    "ZRO", "cbBTC", "cbETH", "tBTC"
+  ]
+}

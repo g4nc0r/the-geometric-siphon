@@ -7,6 +7,10 @@
 **/node_modules/
 **/npm-debug.log*
 
+# Python build artefacts
+**/__pycache__/
+*.pyc
+
 # Editor
 .vscode/
 .idea/
@@ -39,5 +43,11 @@ Thumbs.db
 .env.*
 !.env.example
 
-# Local working scripts
+# Local-only data, scripts, and the Zenodo-bound deposit tree.
+# The public reproduction harness lives at top-level reproduction/.
 scripts/
+data/
+data-submission/
+
+# Internal drafts, audit notes, literature scratch
+Working Notes/

@@ -122,20 +122,20 @@ exit asymmetry, Uniswap V3, Aerodrome, DeFi mechanism design}
 \begin{abstract}
 In a companion paper \citep{ryan2026a}, I identified the Geometric Siphon, a mechanism by which concentrated-liquidity (CL) positions sharing a depositor-level token balance transfer capital between positions under autonomous rebalancing. A token-ratio mismatch between the old and new tick ranges produces residuals that flow through the shared balance. This paper establishes three results on the directional properties of the residual.
 
-For a rebalance into a new range of equal width recentred on the current price, Theorem~4 shows that the absolute residual $|\Delta R|$ increases strictly with displacement from the midpoint of the original range, up to the range boundary. Theorems~5 and~6 concern pools pairing a volatile asset at $T_0$ with a stablecoin at $T_1$ in Uniswap V3's pair ordering. Under symmetric sqrt-price displacements $\pm\delta$ that leave both displaced prices in range, the up-move position retains strictly more USD-denominated value than the down-move (Theorem~5). Under symmetric displacement past the range boundary, a below-range exit retains strictly less USD value than an above-range exit (Theorem~6) for the same pair ordering. Because residual magnitudes scale with position value, USD-denominated residuals inherit the same asymmetry.
+For a rebalance into a new range of equal width recentred on the current price, Theorem~4 shows that the absolute residual $|\Delta R|$ increases strictly with displacement from the midpoint of the original range, up to the range boundary. Theorems~5 and~6 concern pools pairing a volatile asset at $T_0$ with a stablecoin at $T_1$ in Uniswap V3's pair ordering. Under symmetric sqrt-price displacements $\pm\delta$ that leave both displaced prices in range, the up-move position retains strictly more USD-denominated value than the down-move (Theorem~5). Under symmetric displacement past the range boundary, a below-range exit retains strictly less USD value than an above-range exit (Theorem~6) for the same pair ordering. Residual magnitudes scale with position value, so the USD-denominated $|\Delta R|$ inherits these asymmetries by a scaling argument under the same domain assumptions.
 
-All three results are verified by Foundry tests against a harness implementing exact Uniswap V3 \texttt{TickMath} and amount-equation constants. Across 36{,}337 rebalance events on 58 positions over 18 days on Aerodrome (Base), observed dust flows match the predicted direction: rising markets produce USD-denominated flow about $5\times$ larger than falling markets, despite a near-identical frequency of positive-dust events.
+All three results are verified by Foundry tests against a harness implementing exact Uniswap V3 \texttt{TickMath} and amount-equation constants. Across 36{,}337 rebalance events on 58 positions over 18 days on Aerodrome (Base), observed dust flows are consistent with the predicted direction. Rising markets show USD-denominated flow about $5\times$ larger than falling markets despite a near-identical frequency of positive-dust events. The dataset is unsegmented by pool composition (\S\ref{sec:limitations}), so these figures support the prediction at production scale without strictly confirming Theorems~5 and~6 in their volatile/stablecoin domain.
 \end{abstract}
 
 \section{Introduction}
 
-\citet{ryan2026a} established that a CL rebalance produces a zero geometric residual if and only if the old and new ranges demand the same token ratio at current price (Theorem~1), that single-pool positions sharing a contract balance converge to equal value under repeated rebalancing (Theorem~2), and that positions rebalancing without swaps decay geometrically (Theorem~3). Those results characterise the existence, equilibrium and extinction behaviour of the siphon. They do not address how the residual responds to displacement magnitude, price direction or exit type.
+The Geometric Siphon is a mechanism in concentrated-liquidity (CL) portfolio management: when multiple CL positions share a depositor-level token balance, autonomous rebalancing produces residuals from token-ratio mismatches between old and new tick ranges, and those residuals flow through the shared balance as inter-position capital transfers. \citet{ryan2026a} established that a CL rebalance produces a zero geometric residual if and only if the old and new ranges demand the same token ratio at current price (Theorem~1), that single-pool positions sharing a contract balance converge to equal value under repeated rebalancing (Theorem~2), and that positions rebalancing without swaps decay geometrically (Theorem~3). Those results characterise the existence, equilibrium and extinction behaviour of the siphon. They do not address how the residual responds to displacement magnitude, price direction or exit type.
 
-This paper fills that gap with three theorems characterising the directional properties of the residual. Theorem~4 (Residual Monotonicity) establishes strict monotonicity of $|\Delta R|$ in displacement up to the range boundary. Theorem~5 (Directional Asymmetry) establishes an asymmetry in USD-denominated position value under symmetric sqrt-price displacement, for volatile/stablecoin pairs with the volatile asset at $T_0$. Theorem~6 (Exit Asymmetry) establishes an asymmetry in USD-denominated position value between above-range and below-range exits at symmetric displacement past the boundary, for the same pair ordering. Because residual magnitudes scale with position value, USD-denominated residuals inherit the asymmetries of Theorems~5 and~6.
+Three theorems below address those questions. Theorem~4 (Residual Monotonicity) gives strict monotonicity of $|\Delta R|$ in displacement up to the range boundary; the result holds for any pair composition. Theorem~5 (Directional Asymmetry) gives an asymmetry in USD-denominated position value under symmetric sqrt-price displacement, for volatile/stablecoin pairs with the volatile asset at $T_0$. Theorem~6 (Exit Asymmetry) gives an asymmetry in USD-denominated position value between above-range and below-range exits at symmetric displacement past the boundary, for the same pair ordering. Residual magnitudes scale with position value (Theorem~1 of \citet{ryan2026a}), so the USD-denominated $|\Delta R|$ inherits the asymmetries of Theorems~5 and~6 by a scaling argument under the same domain assumptions; the bridge is developed in the remark following Theorem~5. The three results together identify when USD-denominated dust accounting acquires a directional bias even though the residual-generating mechanism is directionally blind.
 
 \subsection{Scope}
 
-This paper analyses Phase~3 operational data from a live CL portfolio management system on Aerodrome (Base).
+The empirical confirmations below draw on Phase~3 operational data from a live CL portfolio management system on Aerodrome (Base).
 
 \begin{table}[H]
 \centering
@@ -152,17 +152,15 @@ DEX & Aerodrome Slipstream (Base) \\
 \end{tabular}
 \end{table}
 
-\noindent The larger dataset enables detection of effects not observable at Phase~2 scale.
-
 \subsection{Related work}\label{sec:related}
 
-\citet{adams2021} introduced concentrated liquidity in Uniswap V3, the protocol whose amount equations are the source of all three theorems below. \citet{ryan2026a} established the existence, equilibrium and extinction behaviour of the geometric residual under shared depositor balances; this paper extends that framework to its directional properties.
+\citet{adams2021} introduced concentrated liquidity in Uniswap V3. The amount equations from that paper are the source of all three theorems below. \citet{ryan2026a} established existence, equilibrium and extinction behaviour for the geometric residual under shared depositor balances; the present paper extends that framework to directional properties.
 
-\citet{hasbrouck2025} model V3 CL provision as a covered call sold at intrinsic rather than market value, with LPs forgoing the option's time premium in exchange for fees. Theorems~5 and~6 below establish a related but distinct asymmetry: position value in volatile/stablecoin pairs is structurally asymmetric under symmetric sqrt-price displacement, and the asymmetry intensifies at range exits. The proofs rely only on the V3 amount equations and the chosen num\'eraire, not on option-pricing arguments.
+\citet{hasbrouck2025} model V3 CL provision as a covered call sold at intrinsic rather than market value, with LPs forgoing the option's time premium in exchange for fees. Theorems~5 and~6 below identify a related asymmetry. Position value in volatile/stablecoin pairs is structurally asymmetric under symmetric sqrt-price displacement, and the asymmetry intensifies at range exits. The proofs use only the V3 amount equations and the chosen num\'eraire.
 
-\citet{cartea2024} introduce \emph{predictable loss}, a closed-form measure of the unhedgeable losses an LP incurs from holding assets in a CL pool, and analyse \emph{concentration risk}, the decrease in fee revenue when the marginal exchange rate exits the LP's range of liquidity. Theorem~6 below characterises the asymmetry of position value at the moment of range exit, complementing the in-range concentration-risk analysis with a boundary-event result.
+\citet{cartea2024} introduce \emph{predictable loss}, a closed-form measure of the unhedgeable losses an LP incurs from holding assets in a CL pool, and analyse \emph{concentration risk}, the decrease in fee revenue when the marginal exchange rate exits the LP's range of liquidity. Theorem~6 below addresses the asymmetry of position value at the moment of range exit.
 
-\citet{heimbach2022} model and empirically analyse V3 LP risks and returns, finding wide cross-strategy variation. The 36{,}337-event Phase~3 dataset analysed below sits within that empirical lineage at single-operator scale. \citet{fan2023} formulate the strategic LP problem of choosing tick ranges to maximise fees net of repositioning costs; Theorems~5 and~6 below describe the structural asymmetries any such strategy faces under directional price moves and at range exits.
+\citet{heimbach2022} model and empirically analyse V3 LP risks and returns, finding wide cross-strategy variation. The 36{,}337-event Phase~3 dataset below adds a single-operator observation point to that record. \citet{fan2023} formulate the strategic LP problem of choosing tick ranges to maximise fees net of repositioning costs. Theorems~5 and~6 describe asymmetries any such strategy faces under directional price moves and at range exits.
 
 \subsection{Preliminaries from \citet{ryan2026a}}
 
@@ -201,7 +199,7 @@ Uniswap V3 places token0 at the pool's lower contract address. Theorems~5 and~6 
 \subsection{Theorem 4 (Residual Monotonicity)}
 
 \begin{theorem}[Residual Monotonicity]
-For a CL position in range $[s_a, s_b]$ rebalanced to a new range of equal width centred on the current sqrt price $s$, where $s$ has been displaced by $\delta$ from the midpoint $\bar{s} = (s_a + s_b)/2$, the absolute geometric residual $|\Delta R|$ increases strictly monotonically with $|\delta|$ for $|\delta| \leq w/2$.
+For a CL position in range $[s_a, s_b]$ rebalanced to a new range of equal width centred on the current sqrt price $s$, where $s$ has been displaced by $\delta$ from the midpoint $\bar{s} = (s_a + s_b)/2$, the absolute geometric residual $|\Delta R|$ is strictly increasing in $|\delta|$ on $(0, w/2]$, with $\Delta R(0) = 0$ and $\Delta R(\pm w/2) = L \cdot w$.
 \end{theorem}
 
 \begin{proof}
@@ -219,11 +217,13 @@ The new liquidity is set by the token0 constraint:
 L_{\text{new}} = \frac{x_w}{1/s - 1/s_{b'}} = \frac{L(1/s - 1/s_b)}{1/s - 1/(s + w/2)}
 \end{equation}
 
-The token1 surplus (residual) is $y_w - L_{\text{new}}(s - s_{a'})$. As $\delta$ increases, $x_w$ decreases (the binding constraint tightens) whilst $y_w$ increases (more surplus token1 is available). The fraction of total withdrawn value that can be deposited into the new range therefore decreases monotonically with $\delta$, and the absolute surplus increases monotonically.
+The token1 surplus (residual) is
+\begin{equation}\label{eq:dr-closed-form}
+\Delta R(\delta) \;=\; y_w - L_{\text{new}}\,(s - s_{a'}) \;=\; L\,(s - s_a) \;-\; L\!\left(\frac{1/s - 1/s_b}{1/s - 1/(s + w/2)}\right)\!(w/2),
+\end{equation}
+with $s = \bar{s} + \delta$, $s_a = \bar{s} - w/2$, $s_b = \bar{s} + w/2$. Both subtrahend factors are strictly positive and continuously differentiable in $\delta$ on $[0, w/2)$; the leading term $L(s - s_a) = L(w/2 + \delta)$ is strictly increasing in $\delta$. A direct calculation (Appendix~B) shows that $d\,\Delta R/d\delta > 0$ on $(0, w/2)$, with $\Delta R(0) = 0$ and $\Delta R(w/2) = L \cdot w$ (the full token1 balance, the maximum possible value, at which $s = s_b$ and the position is 100\% token1).
 
-At $\delta = w/2$, the position has fully exited range ($s = s_b$), $x_w = 0$, $y_w = L \cdot w$, and the position is 100\% token1. The residual equals the full token1 balance minus what can be deposited, which is the maximum possible residual.
-
-The downward displacement case ($\delta < 0$) is symmetric: $y_w$ decreases, $x_w$ increases, and token0 enters surplus.
+The downward displacement case ($\delta < 0$) is symmetric with the roles of token0 and token1 exchanged: $y_w$ becomes the binding constraint, $L_{\text{new}}$ is set by token1, and the analogous closed form for $\Delta R(\delta)$ on $[-w/2, 0]$ has $d\,\Delta R/d\delta < 0$ by the same calculation. Hence $|\Delta R|$ is strictly increasing in $|\delta|$ on $(0, w/2]$.
 \end{proof}
 
 \noindent\textit{Foundry verification.} Five in-domain displacement levels on a $1{,}000$-tick-wide position at price ${\sim}\$2{,}500$ (so $|\delta| \leq w/2 = 500$ ticks).
@@ -243,7 +243,7 @@ $+500$ & \$9{,}297 (range exit) & \checkmark \\
 \end{tabular}
 \end{table}
 
-\noindent Zero violations occur across the five rows within the theorem's domain ($|\delta| \leq 500$ ticks for this 1,000-tick range). At $|\delta| = w/2$ the position fully exits range and the residual equals the full token1 balance minus what can be deposited at the new range's required ratio; additional Foundry runs at $|\delta| > w/2$ (not shown) plateau at this boundary value, consistent with saturation outside the theorem's domain.
+\noindent Zero violations occur across the five rows within the theorem's domain ($|\delta| \leq 500$ ticks for this 1,000-tick range). At $|\delta| = w/2$ the position fully exits range, $x_w = 0$, and the residual equals the full token1 balance ($L \cdot w$), as derived above; additional Foundry runs at $|\delta| > w/2$ (not shown) plateau at this boundary value, consistent with saturation outside the theorem's domain.
 
 \needspace{12\baselineskip}
 \subsection{Theorem 5 (Directional Asymmetry)}
@@ -259,7 +259,7 @@ V = L \cdot \phi(s, s_a, s_b)
 \end{equation}
 where $\phi(s, s_a, s_b) = 2s - s^2/s_b - s_a$. When token1 is a stablecoin, $V$ is already denominated in USD.
 
-Let $s$ be any sqrt price within the position's range. For $\delta > 0$ such that $s_a \leq s - \delta$ and $s + \delta \leq s_b$ (both displaced prices remain in range), evaluate the difference:
+Let $s$ be any sqrt price in the interior of the position's range. For $\delta > 0$ such that $s_a \leq s - \delta$ and $s + \delta \leq s_b$ (both displaced prices remain in range), evaluate the difference:
 \begin{equation}
 V(s + \delta) - V(s - \delta) = L\left[\phi(s + \delta) - \phi(s - \delta)\right]
 \end{equation}
@@ -273,12 +273,12 @@ Expanding:
 Since $s < s_b$ strictly for any position whose current price lies in the interior of its range, the factor $(1 - s/s_b) > 0$, and therefore $V(s + \delta) > V(s - \delta)$ for all $\delta > 0$ satisfying the range constraint.
 \end{proof}
 
-\noindent\textit{Remark (Residual--value bridge).} Theorem~1 of \citet{ryan2026a} gives the residual fraction $|\Delta R|/V$ as a function of range geometry and the current price, independent of $L$; at equal $|\delta|/w$, therefore, absolute residual magnitude scales with position value. Combined with Theorem~5, this implies that USD-denominated residual magnitudes inherit the directional asymmetry proved above, under the same pair-ordering and stablecoin assumptions. The theorem itself establishes only the $V$ inequality; the residual-magnitude statement follows as a scaling argument rather than an independent proof.
+\noindent\textit{Remark (Residual--value bridge).} Theorem~1 of \citet{ryan2026a} gives the residual fraction $|\Delta R|/V$ as a function of range geometry and the current price, independent of $L$; at equal $|\delta|/w$, absolute residual magnitude scales with position value. Combined with Theorem~5, this implies that USD-denominated residual magnitudes inherit the directional asymmetry proved above, under the same pair-ordering and stablecoin assumptions. Theorem~5 itself establishes only the $V$ inequality; the corresponding $|\Delta R|$ statement follows by scaling from \citet{ryan2026a}.
 
-The asymmetry is numéraire-dependent. The proof measures value in token1 units, in which up-moves retain more value. Measured in token0 units, the reverse holds: down-moves retain more value. The mechanism itself is directionally blind; the apparent bias arises from the choice of unit of account. Since USD aligns with stablecoins (typically token1 in Uniswap V3 pair ordering), the USD-denominated accounting favours up-moves.
+The asymmetry is numéraire-dependent. The proof measures value in token1 units, in which up-moves retain more value. Measured in token0 units, down-moves retain more value. The mechanism is directionally blind; the apparent bias comes from the choice of unit of account. Since USD aligns with stablecoins (typically token1 in Uniswap V3 pair ordering), USD-denominated accounting favours up-moves.
 
 \medskip
-\noindent\textit{Foundry verification.} Five symmetric displacement levels on a \$5,000 position.
+\noindent\textit{Foundry verification.} Five symmetric displacement levels on a \$5{,}000 position; the first four rows have both displaced prices strictly inside the range (Theorem~5's domain), and the fifth ($\pm 450$ ticks) places the down-move at the lower range boundary $s_a$.
 
 \begin{table}[H]
 \centering
@@ -295,7 +295,7 @@ $\pm 450$ ticks & \$8,346 & \$0 & $+$\$8,346 \\
 \end{tabular}
 \end{table}
 
-\noindent Zero violations. The gap widens with displacement. At $\pm 450$ ticks both displaced prices approach the range boundaries; the down-move position has fully exited range, confirming the asymmetry extends to the boundary case.
+\noindent Zero violations across all five rows. The gap widens monotonically with displacement. The first four rows verify Theorem~5 strictly within its domain; the fifth row ($\pm 450$ ticks) is the boundary limit at which the down-move sits at $s_a$ and displays as \$0 under integer arithmetic at depressed token0 prices, giving the closing case of the inequality by continuity.
 
 \medskip
 \noindent\textit{Empirical confirmation} ($N = 26{,}191$). Events classified by normalised displacement direction.
@@ -312,7 +312,7 @@ Falling ($nd < -0.1$) & 8,312 & $-$\$103,308 & $-$\$12.43 & 36.2\% \\
 \end{tabular}
 \end{table}
 
-\noindent The proportion of events producing positive dust is near-identical (${\sim}36\%$ in both directions), confirming that the asymmetry is in magnitude rather than frequency. The USD-denominated dust flow is about $5\times$ larger during rising markets because token surpluses generated during rallies are valued at higher prices. (The dataset is not segmented by pool type; see \S\ref{sec:limitations}.)
+\noindent The proportion of events producing positive dust is near-identical (${\sim}36\%$ in both directions), so the asymmetry is in magnitude, not frequency. USD-denominated dust flow is about $5\times$ larger during rising markets, consistent with the predicted direction (token surpluses produced during rallies are valued at higher prices). The dataset is not segmented by pool type (\S\ref{sec:limitations}); the figures support the prediction at production scale without strictly confirming Theorem~5 in its volatile/stablecoin domain.
 
 \subsection{Theorem 6 (Exit Asymmetry)}
 
@@ -321,7 +321,7 @@ For a CL position in pool $(T_0, T_1)$ where $T_0$ is the volatile asset and $T_
 \end{theorem}
 
 \begin{proof}
-When the current sqrt price $s'$ exits the position's range $[s_a, s_b]$, the V3 amount equations reduce to boundary values:
+Let $d > 0$ denote the sqrt-price displacement past the relevant range boundary, with $d < s_a$ assumed throughout so that $s' > 0$ in the below-exit case. When the current sqrt price $s'$ exits the position's range $[s_a, s_b]$, the V3 amount equations reduce to boundary values:
 
 At below-exit ($s' = s_a - d$, position is 100\% token0):
 \begin{equation}
@@ -333,9 +333,9 @@ At above-exit ($s' = s_b + d$, position is 100\% token1):
 x_{\text{above}} = 0, \quad y_{\text{above}} = L \cdot (s_b - s_a)
 \end{equation}
 
-The USD value of the above-exit position is $V_{\text{above}} = y_{\text{above}} = L(s_b - s_a)$, which is constant in $d$ since token1 is a stablecoin.
+The above-exit position holds only token1, so $V_{\text{above}} = y_{\text{above}} = L(s_b - s_a)$ in token1 units; this equals USD since token1 is a stablecoin, and the value is constant in $d$.
 
-The USD value of the below-exit position is $V_{\text{below}} = x_{\text{below}} \cdot s'^2 = L(1/s_a - 1/s_b)(s_a - d)^2$, where $s'^2$ is the USD price of token0 at the current market sqrt price. This is strictly decreasing in $d$.
+The USD value of the below-exit position is $V_{\text{below}} = x_{\text{below}} \cdot s'^2 = L(1/s_a - 1/s_b)(s_a - d)^2$, where $s'^2$ is the USD price of token0 at the current market sqrt price. This is strictly decreasing in $d$ on $(0, s_a)$.
 
 For any $d > 0$, the ratio $V_{\text{below}}/V_{\text{above}}$ decreases with $d$. The below-exit position loses value as the price moves further past the boundary, whilst the above-exit position does not.
 \end{proof}
@@ -359,7 +359,7 @@ $\pm 500$ ticks & \$9,297 & \$0 & 0 bps & 9,999 bps \\
 \end{tabular}
 \end{table}
 
-\noindent The above-exit position retains its full stablecoin value (\$9{,}297) at all five distances. The below-exit position displays as \$0 in the test output because its USD value falls below the one-cent display threshold under integer arithmetic at depressed token0 prices; the token0 quantity is non-zero but negligible relative to the above-exit value. The swap-fraction columns report how much of the held token must be converted to obtain the missing token for redeployment: above-swap = 0~bps (the above-exit position already holds the stablecoin), below-swap = 9{,}999~bps (the below-exit position must convert almost everything). Across the five distances, the assertion $V_{\text{above}} > V_{\text{below}}$ holds at every row, and the swap-fraction asymmetry is confirmed at every row, giving ten verifications in total.
+\noindent The above-exit position retains its full stablecoin value (\$9{,}297) at all five distances. The below-exit position displays as \$0 in the test output because its USD value falls below the one-cent display threshold under integer arithmetic at depressed token0 prices; the token0 quantity is non-zero but negligible relative to the above-exit value. The swap-fraction columns report how much of the held token must be converted to obtain the missing token for redeployment: above-swap = 0~bps (the above-exit position already holds the stablecoin), below-swap = 9{,}999~bps (the below-exit position must convert almost everything). Both $V_{\text{above}} > V_{\text{below}}$ and the swap-fraction gap hold at all five distances (ten verifications). The strict-monotonicity-in-$d$ claim of the proof is masked here by the integer-arithmetic floor on $V_{\text{below}}$; what the table verifies is the qualitative inequality $V_{\text{above}} > V_{\text{below}}$ at every $d > 0$, not the rate of decay.
 
 \medskip
 \noindent\textit{Empirical confirmation} ($N = 2{,}225$ exit events).
@@ -376,13 +376,13 @@ Below & 920 & $-$\$141 & $-$\$29 & $-$\$1,479 & $+$\$961 \\
 \end{tabular}
 \end{table}
 
-\noindent Below exits produce 58\% larger average negative dust flow. The distribution tails are wider in both directions: P5 for below-exits is $-$\$1,479 versus $-$\$1,261 for above (17\% wider). Average tick displacement at exit is $+103$ ticks (above) versus $-88$ ticks (below). Theorem~6 predicts $V_{\text{below}} < V_{\text{above}}$ at the terminal state; the observed dust-flow asymmetry is consistent with this prediction via the residual--value bridge (Remark after Theorem~5), though the theorem does not prove a direct $|\Delta R|$ asymmetry for exit rebalances.
+\noindent In this dataset, below-exits produce $58\%$ larger average negative dust flow. The distribution tails are wider in both directions; P5 for below-exits is $-$\$1{,}479 versus $-$\$1{,}261 for above ($17\%$ wider). Average tick displacement at exit is $+103$ ticks (above) versus $-88$ ticks (below). Theorem~6 establishes $V_{\text{below}} < V_{\text{above}}$ at the terminal state within its volatile/stablecoin domain. The observed dust-flow asymmetry is directionally consistent with this prediction via the residual--value bridge (Remark after Theorem~5). Theorem~6 does not prove a direct $|\Delta R|$ asymmetry for exit rebalances, and the dataset is unsegmented by pool composition (\S\ref{sec:limitations}).
 
 \section{Discussion}
 
-Theorem~4 establishes that residual magnitude increases strictly monotonically with displacement up to the range boundary. Theorems~5 and~6 then show that position value is directionally asymmetric in USD terms for volatile/stablecoin pairs, even though the residual-generating mechanism is directionally blind. Because residual magnitudes scale with position value, USD-denominated residuals inherit these asymmetries.
+Theorem~4 gives strict monotonicity of $|\Delta R|$ in displacement up to the range boundary. Within their volatile/stablecoin domain, Theorems~5 and~6 show that position value is directionally asymmetric in USD terms even though the residual-generating mechanism is directionally blind. Residual magnitudes scale with position value, so USD-denominated residuals inherit these asymmetries (remark after Theorem~5).
 
-The siphon moves tokens between positions through a shared dust pool based on geometric ratios. It does not take directional views. When these token flows are valued in USD, however, the accounting reflects the price exposure of the tokens being moved. In a portfolio where the volatile asset appears in multiple pools (a hub topology), token surpluses generated by rebalancing carry that asset's price exposure. The USD value of those flows therefore rises during rallies and falls during selloffs (Theorem~5), and below-range exits amplify this effect by retaining less USD value than above-range exits at symmetric displacement (Theorem~6). USD-denominated performance metrics will reflect the hub token's directional exposure.
+The siphon moves tokens between positions through a shared dust pool based on geometric ratios. It does not take directional views. When the token flows are valued in USD, the accounting reflects the price exposure of the tokens being moved. In a portfolio where a volatile asset appears in multiple pools paired against stablecoins (a hub topology of the kind Theorems~5 and~6 cover), token surpluses generated by rebalancing carry that asset's price exposure. The USD value of those flows is predicted to rise during rallies relative to selloffs at comparable displacement (Theorem~5 via the residual--value bridge), and below-range exits are predicted to retain less USD value than above-range exits at symmetric displacement past the boundary (Theorem~6). For portfolios with this composition, USD-denominated performance metrics reflect the hub token's directional exposure. In pools with the opposite address ordering or non-stablecoin pairings, the asymmetry inverts or attenuates with the numéraire.
 
 \section{Foundry verification suite}
 
@@ -397,7 +397,7 @@ RPC_BASE_ALCHEMY=https://mainnet.base.org forge test -vv
 Suite result: ok. 5 passed; 0 failed; 0 skipped      (live fork tests)
 \end{verbatim}
 
-The mock-pool subset (10 tests) verifies the existence and scaling of the residual (Theorem~1), zero-swap extinction (Theorem~3), and the three directional theorems below. The live fork subset (5 tests) reproduces the Theorem~1 scenarios against unmodified Aerodrome Slipstream contracts on Base mainnet via \texttt{vm.createSelectFork}, exercising the same withdraw-mint sequence on real on-chain V3 geometry. The qualitative claims (residual existence, same-range control, linear scaling) hold deterministically; the exact residual values vary between runs as live pool state changes.
+The mock-pool subset (10 tests) verifies existence and the scaling-with-position-size property of the residual (Theorem~1), zero-swap extinction (Theorem~3), and the three directional theorems below. The live fork subset (5 tests) reproduces the Theorem~1 scenarios against unmodified Aerodrome Slipstream contracts on Base mainnet via \texttt{vm.createSelectFork}, exercising the same withdraw-mint sequence on real on-chain V3 geometry. The qualitative claims (residual existence, same-range control, residual scaling with position size at fixed range geometry) hold deterministically; the exact residual values vary between runs as live pool state changes.
 
 Tests 8--10 below verify the directional theorems introduced in this paper:
 
@@ -408,7 +408,7 @@ Tests 8--10 below verify the directional theorems introduced in this paper:
 Test & Theorem & Assertion & Result \\
 \midrule
 8  & Theorem 4 (monotonicity)          & 0 violations, 5 in-domain levels & PASSED \\
-9  & Theorem 5 (directional asymmetry) & UP $>$ DOWN at all 5 levels  & PASSED \\
+9  & Theorem 5 (directional asymmetry) & UP $>$ DOWN at 4 in-domain + 1 boundary & PASSED \\
 10 & Theorem 6 (exit asymmetry)        & 10/10 confirmations          & PASSED \\
 \bottomrule
 \end{tabular}
@@ -430,11 +430,11 @@ Test & Theorem & Assertion & Result \\
 
 \section{Conclusion}
 
-In concentrated-liquidity rebalancing, the geometric residual increases strictly monotonically with displacement up to the range boundary (Theorem~4, Residual Monotonicity). For volatile/stablecoin pairs, position value is directionally asymmetric in USD terms (Theorem~5, Directional Asymmetry), and USD-denominated residuals inherit this asymmetry through the scaling of residual magnitude with position value. For the same pair ordering, below-range exits retain less USD value than above-range exits at symmetric displacement past the boundary (Theorem~6, Exit Asymmetry). All three results follow from the Uniswap V3 amount equations and are verified by Foundry tests using exact V3 \texttt{TickMath} constants for sqrt-price and liquidity computations.
+In concentrated-liquidity rebalancing, the geometric residual increases strictly monotonically with displacement up to the range boundary (Theorem~4, Residual Monotonicity). For volatile/stablecoin pairs with the volatile asset at $T_0$, position value is directionally asymmetric in USD terms under symmetric in-range displacement (Theorem~5, Directional Asymmetry); USD-denominated residuals inherit this asymmetry by a scaling argument from the residual-fraction result of \citet{ryan2026a}. For the same pair ordering, below-range exits retain less USD value than above-range exits at symmetric displacement past the boundary (Theorem~6, Exit Asymmetry). All three results follow from the Uniswap V3 amount equations and are verified by Foundry tests using exact V3 \texttt{TickMath} constants for sqrt-price and liquidity computations.
 
-The empirical dataset of 36,337 events across 58 positions and 18 days confirms the directional predictions at production scale: a $5\times$ magnitude difference in USD-denominated dust flows between rising and falling markets despite near-identical frequency of positive dust events, and $58\%$ larger average negative dust flow on below-range exits than above-range exits at comparable displacement.
+The empirical dataset of 36{,}337 events across 58 positions and 18 days is consistent with the predicted directions at production scale. USD-denominated dust flows are about $5\times$ larger in rising markets than in falling markets despite a near-identical frequency of positive-dust events, and below-range exits show $58\%$ larger average negative dust flow than above-range exits at comparable displacement. The dataset is not segmented by pool composition (\S\ref{sec:limitations}); the figures support the predictions at production scale without strictly confirming Theorems~5 and~6 in their volatile/stablecoin domain.
 
-Together with the existence (Theorem~1), equilibrium (Theorem~2) and extinction (Theorem~3) results established in \citet{ryan2026a}, these three theorems extend the siphon framework to cover displacement magnitude, price direction and exit type. The properties are inherent to the V3 amount equations and should manifest in any system performing autonomous CL rebalancing with shared depositor balances.
+\citet{ryan2026a} established existence (Theorem~1), equilibrium (Theorem~2) and extinction (Theorem~3) of the geometric residual under shared depositor balances. The three theorems above extend that framework to displacement magnitude, price direction and exit type. The proofs follow from the V3 amount equations and the chosen num\'eraire; under the stated domain assumptions, the same properties should manifest in any system performing autonomous CL rebalancing with shared depositor balances.
 
 \addcontentsline{toc}{section}{References}
 \begin{thebibliography}{9}
@@ -486,6 +486,48 @@ forge test -vv --match-contract NewTheoremsProof
 \end{verbatim}
 
 \noindent The official public endpoint above is sufficient for all five fork tests; any Alchemy, Infura, QuickNode or other Base RPC URL is equally acceptable in \texttt{RPC\_BASE\_ALCHEMY}. Forge caches RPC responses locally, so repeat runs are fast; mock-pool tests complete in under a second. The captured \texttt{forge test -vv} output mapped to each theorem lives in \texttt{foundry/PROOF\_OUTPUT.md} and serves as the deterministic regression target for the mock-pool tests; fork-test residuals vary between runs as live pool state changes (the qualitative claims hold deterministically).
+
+\section[Derivation for Theorem 4]{Derivation of $d\,\Delta R/d\delta$ for Theorem~4}\label{app:dr-derivation}
+
+The closed form for the token1 surplus on $\delta \in [0, w/2]$, from equation~\eqref{eq:dr-closed-form}, is
+\begin{equation}
+\Delta R(\delta) \;=\; L\,(s - s_a) \;-\; L\!\left(\frac{1/s - 1/s_b}{1/s - 1/(s + w/2)}\right)\!(w/2),
+\end{equation}
+with $s = \bar{s} + \delta$, $s_a = \bar{s} - w/2$, $s_b = \bar{s} + w/2$, $w = s_b - s_a$. Define
+\begin{equation}
+g(\delta) \;\equiv\; \frac{1/s - 1/s_b}{1/s - 1/(s + w/2)}.
+\end{equation}
+Using $1/s - 1/s_b = (s_b - s)/(s\,s_b)$ and $1/s - 1/(s + w/2) = (w/2)/(s\,(s + w/2))$, the factors of $s$ cancel and
+\begin{equation}\label{eq:g-simplified}
+g(\delta) \;=\; \frac{(s_b - s)\,(s + w/2)}{(w/2)\,s_b} \;=\; \frac{(w/2 - \delta)\,(\bar{s} + \delta + w/2)}{(w/2)\,(\bar{s} + w/2)}.
+\end{equation}
+Substituting $s = \bar{s} + \delta$ and $s_b = \bar{s} + w/2$ gives $\Delta R$ as an explicit rational function of $\delta$:
+\begin{equation}
+\Delta R(\delta) \;=\; L\,(w/2 + \delta) \;-\; L\,\frac{(w/2 - \delta)\,(\bar{s} + \delta + w/2)}{\bar{s} + w/2}.
+\end{equation}
+Applying the product rule to the second term, with $A(\delta) = w/2 - \delta$ and $B(\delta) = \bar{s} + \delta + w/2$ so that $A'(\delta) = -1$ and $B'(\delta) = 1$:
+\begin{equation}
+\frac{d}{d\delta}\bigl[A(\delta)\,B(\delta)\bigr] \;=\; -B(\delta) + A(\delta) \;=\; -(\bar{s} + \delta + w/2) + (w/2 - \delta).
+\end{equation}
+Therefore
+\begin{equation}
+\frac{d\,\Delta R}{d\delta} \;=\; L \;-\; \frac{L\bigl[\,-B(\delta) + A(\delta)\,\bigr]}{\bar{s} + w/2} \;=\; \frac{L\bigl[(\bar{s} + w/2) + B(\delta) - A(\delta)\bigr]}{\bar{s} + w/2}.
+\end{equation}
+Substituting and collecting,
+\begin{equation}
+(\bar{s} + w/2) + (\bar{s} + \delta + w/2) - (w/2 - \delta) \;=\; 2\bar{s} + 2\delta + w/2,
+\end{equation}
+so
+\begin{equation}
+\frac{d\,\Delta R}{d\delta} \;=\; L\,\frac{2\bar{s} + 2\delta + w/2}{\bar{s} + w/2}.
+\end{equation}
+For any economically meaningful CL position, $\bar{s} > 0$, $w > 0$ and $\delta \in (0, w/2]$, so $2\bar{s} + 2\delta + w/2 > 0$ and $\bar{s} + w/2 > 0$. Hence
+\begin{equation}
+\frac{d\,\Delta R}{d\delta} \;>\; 0 \quad\text{on}\quad (0, w/2],
+\end{equation}
+and $\Delta R$ is strictly increasing on $[0, w/2]$. At the endpoints, $\Delta R(0) = L(w/2) - L(w/2)(\bar{s} + w/2)/(\bar{s} + w/2) = 0$, consistent with Theorem~1 of \citet{ryan2026a}; and $\Delta R(w/2) = L \cdot w$, the full token1 balance at range exit.
+
+The downward case $\delta \in [-w/2, 0]$ proceeds analogously with token1 as the binding constraint: $L_{\text{new}}$ is set by $y_w$ rather than $x_w$, $g(\delta)$ takes the symmetric form, and the same calculation gives $d\,\Delta R/d\delta < 0$ on $[-w/2, 0)$. Combining the two cases, $|\Delta R(\delta)|$ is strictly increasing in $|\delta|$ on $(0, w/2]$, as claimed in Theorem~4.
 
 \section{Data and reproduction}
 
