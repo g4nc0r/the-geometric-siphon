@@ -1,6 +1,6 @@
 cff-version: 1.2.0
-message: "If you use this repository, please cite the underlying SSRN papers."
-title: "The Geometric Siphon — Research Repository"
+message: "If you use this repository, please cite the underlying SSRN papers (see references below)."
+title: "The Geometric Siphon: research repository"
 authors:
   - family-names: Ryan
     given-names: K. R.
@@ -10,19 +10,18 @@ type: software
 doi: "10.5281/zenodo.19526374"
 repository-code: "https://github.com/g4nc0r/the-geometric-siphon"
 license: MIT
-preferred-citation:
-  type: report
-  title: "The Geometric Siphon: Emergent Capital Reallocation in Concentrated Liquidity Portfolios"
-  authors:
-    - family-names: Ryan
-      given-names: K. R.
-      orcid: "https://orcid.org/0009-0004-6295-7040"
-  year: 2026
-  institution:
-    name: "Social Science Research Network"
-  number: "6374838"
-  url: "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6374838"
 references:
+  - type: report
+    title: "The Geometric Siphon: Emergent Capital Reallocation in Concentrated Liquidity Portfolios"
+    authors:
+      - family-names: Ryan
+        given-names: K. R.
+        orcid: "https://orcid.org/0009-0004-6295-7040"
+    year: 2026
+    institution:
+      name: "Social Science Research Network"
+    number: "6374838"
+    url: "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6374838"
   - type: report
     title: "The Geometric Siphon II: Directional Properties"
     authors:
@@ -34,3 +33,13 @@ references:
       name: "Social Science Research Network"
     number: "6481498"
     url: "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6481498"
+  - type: data
+    title: "Diffusion event log for The Geometric Siphon (K. R. Ryan, 2026)"
+    authors:
+      - family-names: Ryan
+        given-names: K. R.
+        orcid: "https://orcid.org/0009-0004-6295-7040"
+    year: 2026
+    version: "1.1"
+    doi: "10.5281/zenodo.19904832"
+    url: "https://doi.org/10.5281/zenodo.19904832"

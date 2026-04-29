@@ -7,9 +7,10 @@ optimizer = true
 optimizer_runs = 200
 via_ir = true
 
-# RPC endpoint for the live fork tests in test/GeometricResidualProof.t.sol.
-# Any working Base RPC URL works — the official public endpoint
-# https://mainnet.base.org is sufficient. Set RPC_BASE_ALCHEMY in your shell
-# (the env-var name is preserved for compatibility with the original test setup).
+# RPC endpoint for the live fork tests (GeometricResidualProof and
+# DirectionalExitForkProof). Any working Base RPC URL with archive support
+# works; the public endpoint https://mainnet.base.org is sufficient.
+# Set RPC_BASE_ALCHEMY in your shell to the RPC URL of your choice; the
+# env-var name is preserved for compatibility with the original test setup.
 [rpc_endpoints]
 base = "${RPC_BASE_ALCHEMY}"

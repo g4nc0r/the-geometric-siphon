@@ -1,31 +1,36 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.26;
 
-import {Test, console} from "forge-std/Test.sol";
+import {console} from "forge-std/Test.sol";
 import {MockCLPool} from "../src/MockCLPool.sol";
+import {MockPositionTestBase} from "./helpers/MockPositionTestBase.sol";
+import {TickHelpers} from "./helpers/Tick.sol";
 
 /// @title GeometricResidualProofClean
-/// @notice Clean proof that geometric residuals are a mathematical property of CL
-contract GeometricResidualProofClean is Test {
-    MockCLPool pool;
-    
-    // Mock ERC20 balances (test contract holds the tokens)
-    uint256 token0Balance;
-    uint256 token1Balance;
-    
-    // Position tracking
-    struct Position {
-        int24 tickLower;
-        int24 tickUpper;
-        uint128 liquidity;
-    }
-    
+/// @notice Mock-pool verification of Theorem 1.
+///
+/// Theorem 1 (Geometric Residual Existence, §3.4):
+///   For a CL position rebalanced to a new tick range while the V3 amount
+///   equations require a different token ratio at the new range, the
+///   rebalance produces a strictly positive geometric residual ΔR > 0.
+///   The residual vanishes if and only if the token ratio is preserved
+///   (e.g. a same-range rebalance after price displacement).
+///
+/// @dev Uses the linear-tick-math `MockCLPool` for fast, network-free
+///      regression. Quantitative cross-checks against exact V3 TickMath
+///      are in `GeometricResidualProof` (live fork).
+contract GeometricResidualProofClean is MockPositionTestBase {
     Position position1;
-    Position position2;
-    
+
     // Price assumption: 1 token0 = 2500 token1 (like WETH = 2500 USDC)
     // sqrtPrice = sqrt(2500) * 2^96 = 3968.5... * 2^96
     uint160 constant INITIAL_SQRT_PRICE = 314748404868481885948183330816; // ~tick 73135
+
+    // Same-range integer-rounding noise floors:
+    //   1e12 wei  ≈ 1 nano-WETH  ≈ $0.0000025 at $2500/WETH
+    //   1e3  units ≈ 0.001 USDC  ≈ $0.001
+    uint256 constant SAME_RANGE_TOKEN0_TOLERANCE = 1e12;
+    uint256 constant SAME_RANGE_TOKEN1_TOLERANCE = 1e3;
     
     function setUp() public {
         pool = new MockCLPool(INITIAL_SQRT_PRICE);
@@ -41,15 +46,15 @@ contract GeometricResidualProofClean is Test {
     }
     
     /// @notice Test 1: Range change creates measurable residual
-    function test_rangeChangeCreatesResidual() public {
+    function test_theorem1_rangeChangeCreatesResidual() public {
         console.log("\n=== TEST 1: Range Change Creates Residual ===");
         
         int24 currentTick = pool.tick();
         console.log("Current tick:", uint256(int256(currentTick)));
         
         // Create position 1: narrow range (500 ticks around current)
-        int24 tickLower1 = _nearestTick(currentTick - 500, 100);
-        int24 tickUpper1 = _nearestTick(currentTick + 500, 100);
+        int24 tickLower1 = TickHelpers.nearest(currentTick - 500, 100);
+        int24 tickUpper1 = TickHelpers.nearest(currentTick + 500, 100);
         
         // Deposit 1 token0 + whatever token1 needed
         uint256 deposit0 = 1 ether;
@@ -69,8 +74,8 @@ contract GeometricResidualProofClean is Test {
         uint256 balance1Before = token1Balance;
         
         // Rebalance position 1: withdraw from old range, deposit into WIDER range
-        int24 tickLower2 = _nearestTick(newTick - 1000, 100);
-        int24 tickUpper2 = _nearestTick(newTick + 1000, 100);
+        int24 tickLower2 = TickHelpers.nearest(newTick - 1000, 100);
+        int24 tickUpper2 = TickHelpers.nearest(newTick + 1000, 100);
         
         console.log("\n--- Rebalancing Position 1 ---");
         // Old range logged
@@ -98,12 +103,12 @@ contract GeometricResidualProofClean is Test {
     }
     
     /// @notice Test 2: Same range = zero residual (control)
-    function test_noRangeChange_noResidual() public {
+    function test_theorem1_noRangeChange_noResidual() public {
         console.log("\n=== TEST 2: Same Range = No Residual (Control) ===");
         
         int24 currentTick = pool.tick();
-        int24 tickLower = _nearestTick(currentTick - 500, 100);
-        int24 tickUpper = _nearestTick(currentTick + 500, 100);
+        int24 tickLower = TickHelpers.nearest(currentTick - 500, 100);
+        int24 tickUpper = TickHelpers.nearest(currentTick + 500, 100);
         
         position1 = _createPosition(tickLower, tickUpper, 1 ether, 2500e6);
         
@@ -124,167 +129,54 @@ contract GeometricResidualProofClean is Test {
         console.log("Token1 residual:", residual1);
         
         // PROOF: Same range should have minimal/zero residual
-        assertLt(residual0, 1e12, "Same range -> minimal token0 residual");
-        assertLt(residual1, 1e3, "Same range -> minimal token1 residual");
+        assertLt(residual0, SAME_RANGE_TOKEN0_TOLERANCE, "Same range -> minimal token0 residual");
+        assertLt(residual1, SAME_RANGE_TOKEN1_TOLERANCE, "Same range -> minimal token1 residual");
     }
     
-    /// @notice Test 3: Second position absorbs the dust (SKIP - requires full pool state)
-    function skip_test_sameRangeAbsorbsDust() public {
-        console.log("\n=== TEST 3: Dust Pool Redistribution ===");
-        
-        int24 currentTick = pool.tick();
-        int24 sharedLower = _nearestTick(currentTick - 500, 100);
-        int24 sharedUpper = _nearestTick(currentTick + 500, 100);
-        
-        // Create two positions in SAME range
-        position1 = _createPosition(sharedLower, sharedUpper, 1 ether, 2500e6);
-        position2 = _createPosition(sharedLower, sharedUpper, 0.5 ether, 1250e6);
-        
-        console.log("Position 1 liquidity:", position1.liquidity);
-        console.log("Position 2 liquidity:", position2.liquidity);
-        
-        // Move price
-        pool.movePriceToTick(currentTick + 200);
-        
-        // Rebalance position 1 to DIFFERENT range (creates dust)
-        int24 newLower = _nearestTick(currentTick + 200 - 1000, 100);
-        int24 newUpper = _nearestTick(currentTick + 200 + 1000, 100);
-        
-        console.log("\n--- Creating Dust via Position 1 Rebalance ---");
-        uint256 balance0Before = token0Balance;
-        uint256 balance1Before = token1Balance;
-        
-        (uint256 w0, uint256 w1) = _withdrawPosition(position1);
-        position1 = _createPosition(newLower, newUpper, w0, w1);
-        
-        uint256 dust0 = token0Balance - balance0Before;
-        uint256 dust1 = token1Balance - balance1Before;
-        uint256 dustUSD = (dust0 * 2500) / 1e18 + dust1 / 1e6;
-        
-        console.log("Dust created token0:", dust0);
-        console.log("Dust created token1:", dust1);
-        console.log("Dust USD:", dustUSD);
-        
-        // Measure position 2 liquidity before same-range rebalance
-        uint128 liq2Before = position2.liquidity;
-        
-        // Rebalance position 2 (SAME range -> should absorb dust)
-        console.log("\n--- Position 2 Rebalancing (Same Range) ---");
-        (w0, w1) = _withdrawPosition(position2);
-        position2 = _createPosition(sharedLower, sharedUpper, w0, w1);
-        
-        uint128 liq2After = position2.liquidity;
-        int128 liq2GrowthSigned = int128(liq2After) - int128(liq2Before);
-        uint128 liq2Growth = liq2GrowthSigned > 0 ? uint128(liq2GrowthSigned) : 0;
-        
-        console.log("Position 2 liquidity before:", liq2Before);
-        console.log("Position 2 liquidity after:", liq2After);
-        console.log("Position 2 growth:", liq2Growth);
-        
-        // PROOF: Position 2 must grow (absorbed dust)
-        assertGt(liq2After, liq2Before, "Same-range rebalance ABSORBS dust");
-        assertGt(liq2Growth, 0, "Position 2 grew from dust absorption");
-    }
+    /// @notice Stage-2 dust absorption is not verified on this mock: the linear
+    ///         pool does not implement the shared-liquidity / fee-accounting
+    ///         that absorption requires. The architectural precondition is
+    ///         instead verified on a stock NFPM in the fork test
+    ///         `GeometricResidualProof.test_section7_1_stockNfpmDoesNotAbsorbDust`,
+    ///         which asserts the inverse claim (no cross-position absorption
+    ///         on a vault-per-pool design); see paper §7.1.
     
-    /// @notice Test 4: Larger position = larger residual
-    function test_largerPosition_largerResidual() public {
-        console.log("\n=== TEST 4: Larger Position -> Larger Residual ===");
-        
-        int24 currentTick = pool.tick();
-        int24 tickLower = _nearestTick(currentTick - 500, 100);
-        int24 tickUpper = _nearestTick(currentTick + 500, 100);
-        
-        // Small position
-        Position memory smallPos = _createPosition(tickLower, tickUpper, 0.5 ether, 1250e6);
-        pool.movePriceToTick(currentTick + 200);
-        
-        uint256 bal0Before = token0Balance;
-        uint256 bal1Before = token1Balance;
-        
-        int24 newLower = _nearestTick(currentTick + 200 - 1000, 100);
-        int24 newUpper = _nearestTick(currentTick + 200 + 1000, 100);
-        
-        (uint256 w0, uint256 w1) = _withdrawPosition(smallPos);
-        _createPosition(newLower, newUpper, w0, w1);
-        
-        uint256 smallResidual = (token0Balance - bal0Before) + (token1Balance - bal1Before);
+    /// @notice Theorem 1: residual scales with position size.
+    function test_theorem1_largerPositionLargerResidual() public {
+        uint256 snap = vm.snapshotState();
+
+        uint256 smallResidual = _measureResidual(0.5 ether, 1250e6);
         console.log("Small position residual (raw sum):", smallResidual);
-        
-        // Reset
-        setUp();
-        currentTick = pool.tick();
-        
-        // Large position
-        Position memory largePos = _createPosition(tickLower, tickUpper, 2 ether, 5000e6);
-        pool.movePriceToTick(currentTick + 200);
-        
-        bal0Before = token0Balance;
-        bal1Before = token1Balance;
-        
-        (w0, w1) = _withdrawPosition(largePos);
-        _createPosition(newLower, newUpper, w0, w1);
-        
-        uint256 largeResidual = (token0Balance - bal0Before) + (token1Balance - bal1Before);
+
+        vm.revertToState(snap);
+
+        uint256 largeResidual = _measureResidual(2 ether, 5000e6);
         console.log("Large position residual (raw sum):", largeResidual);
-        
-        // PROOF: Larger position creates larger residual
+
         assertGt(largeResidual, smallResidual, "Larger position -> larger residual");
     }
-    
-    // =============================================================================
-    // Helper Functions
-    // =============================================================================
-    
-    function _nearestTick(int24 tick, int24 tickSpacing) internal pure returns (int24) {
-        int24 compressed = tick / tickSpacing;
-        if (tick < 0 && tick % tickSpacing != 0) compressed--;
-        return compressed * tickSpacing;
-    }
-    
-    function _createPosition(
-        int24 tickLower,
-        int24 tickUpper,
-        uint256 amount0Desired,
-        uint256 amount1Desired
-    ) internal returns (Position memory pos) {
-        // Get liquidity for these amounts
-        uint128 liquidity = pool.getLiquidityForAmounts(
-            amount0Desired,
-            amount1Desired,
-            tickLower,
-            tickUpper
-        );
-        
-        // Get actual amounts needed for this liquidity
-        (uint256 amount0, uint256 amount1) = pool.getAmountsForLiquidity(
-            liquidity,
-            tickLower,
-            tickUpper
-        );
-        
-        // "Deposit" tokens (reduce balance)
-        require(token0Balance >= amount0, "Insufficient token0");
-        require(token1Balance >= amount1, "Insufficient token1");
-        token0Balance -= amount0;
-        token1Balance -= amount1;
-        
-        pos = Position({
-            tickLower: tickLower,
-            tickUpper: tickUpper,
-            liquidity: liquidity
-        });
-    }
-    
-    function _withdrawPosition(Position memory pos) internal returns (uint256 amount0, uint256 amount1) {
-        // Get amounts for liquidity
-        (amount0, amount1) = pool.getAmountsForLiquidity(
-            pos.liquidity,
-            pos.tickLower,
-            pos.tickUpper
-        );
-        
-        // "Withdraw" tokens (increase balance)
-        token0Balance += amount0;
-        token1Balance += amount1;
+
+    /// @dev Mints a position around the current tick at the given deposit
+    ///      sizes, displaces the price, rebalances to a wider range, and
+    ///      returns the raw token-sum residual stranded in the depositor's
+    ///      mock-balance.
+    function _measureResidual(uint256 amount0, uint256 amount1) internal returns (uint256) {
+        int24 currentTick = pool.tick();
+        int24 tickLower = TickHelpers.nearest(currentTick - 500, 100);
+        int24 tickUpper = TickHelpers.nearest(currentTick + 500, 100);
+
+        Position memory pos = _createPosition(tickLower, tickUpper, amount0, amount1);
+        pool.movePriceToTick(currentTick + 200);
+
+        uint256 bal0Before = token0Balance;
+        uint256 bal1Before = token1Balance;
+
+        int24 newLower = TickHelpers.nearest(currentTick + 200 - 1000, 100);
+        int24 newUpper = TickHelpers.nearest(currentTick + 200 + 1000, 100);
+
+        (uint256 w0, uint256 w1) = _withdrawPosition(pos);
+        _createPosition(newLower, newUpper, w0, w1);
+
+        return (token0Balance - bal0Before) + (token1Balance - bal1Before);
     }
 }
