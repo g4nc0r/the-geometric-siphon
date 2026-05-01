@@ -215,7 +215,7 @@ Concentrated Liquidity Portfolios}
 \vspace{14pt}
 
 \begin{abstract}
-This paper identifies and formalises the \emph{Geometric Siphon}, a previously undocumented mechanism in concentrated-liquidity portfolio management. When multiple CL positions share a depositor-level token balance and are autonomously rebalanced, token-ratio mismatches between old and new tick ranges produce residuals that flow through the shared balance, transferring capital between positions in independent pools. Three theorems characterise the mechanism. I derive the geometric residual from the Uniswap V3 amount equations. Theorem~1 establishes that the residual is zero if and only if the old and new ranges demand the same token ratio at the current price. Theorem~2 proves that single-pool positions sharing a contract balance converge to equal value under repeated rebalancing. Theorem~3 proves that positions rebalancing without swap correction decay geometrically. A graph-theoretic \emph{Connector Rule} ties per-pool flow direction to portfolio topology, supported by a token-level decomposition across ten pools and five depositor groups. A Foundry suite verifies all three theorems against unmodified V3 contracts on Base mainnet, returning a 2{,}061 USDC residual on range changes against an analytical zero on same-range rebalances. A 1{,}380-event dataset across 39 positions and seven days on Aerodrome (Base) decomposes observed flow into residual and slippage at Spearman correlation 0.976, revealing a ${\sim}5\%/{\sim}95\%$ split between geometric creation and dust redistribution. A controlled value-to-pool-liquidity sweep collapses a $1{:}3{:}9$ size ratio to $1.37{:}1{:}1.20$ within 33 events. A USDC/ZARP position loses $99.8\%$ of its capital, falling from \$942 to \$1.59 across 14 zero-swap rebalances over 65 hours, matching the 11-rebalance extinction bound.
+This paper identifies and formalises the \emph{Geometric Siphon}, a previously undocumented mechanism in concentrated liquidity portfolio management. When multiple CL positions share a depositor-level token balance and are autonomously rebalanced, token ratio mismatches between old and new tick ranges produce residuals that flow through the shared balance, transferring capital between positions in independent pools. Three theorems characterise the mechanism. I derive the geometric residual from the Uniswap V3 amount equations. Theorem~1 establishes that the residual is zero if and only if the old and new ranges demand the same token ratio at the current price. Theorem~2 proves that single-pool positions sharing a contract balance converge to equal value under repeated rebalancing. Theorem~3 proves that positions rebalancing without swap correction decay geometrically. A graph-theoretic \emph{Connector Rule} ties per-pool flow direction to portfolio topology, supported by a token level decomposition across ten pools and five depositor groups. A Foundry suite verifies all three theorems against unmodified V3 contracts on Base mainnet, returning a 2{,}061 USDC residual on range changes against an analytical zero on same-range rebalances. A 1{,}380-event dataset across 39 positions and seven days on Aerodrome (Base) decomposes observed flow into residual and slippage at Spearman correlation 0.976, revealing a ${\sim}5\%/{\sim}95\%$ split between geometric creation and dust redistribution. A controlled value-to-pool-liquidity sweep collapses a $1{:}3{:}9$ size ratio to $1.37{:}1{:}1.20$ within 33 events. A USDC/ZARP position loses $99.8\%$ of its capital, falling from \$942 to \$1.59 across 14 zero-swap rebalances over 65 hours, matching the 11-rebalance extinction bound.
 \end{abstract}
 
 \vspace{24pt}
@@ -261,7 +261,7 @@ Phase & Period & Positions & Events & Contract & Focus \\
 
 Theorem~\ref{thm:residual} derives a closed-form residual fraction $\Delta R/V$ from the Uniswap V3 amount equations, with the residual vanishing if and only if the old and new ranges demand the same token ratio at the current price; Foundry tests against unmodified V3 contracts confirm that range changes create residuals, same-range rebalances do not, and residuals scale linearly with position size (\S\ref{sec:foundry}). Theorem~\ref{thm:convergence} proves that single-pool positions sharing a contract balance converge to equal value under repeated rebalancing (\S\ref{sec:equilibrium}), confirmed empirically by a $V/L_p$ sweep in which a $1{:}3{:}9$ size ratio collapses to $1.37{:}1{:}1.20$ within 33 events (\S\ref{sec:vl-sweep}). Theorem~\ref{thm:extinction} proves that positions rebalancing without swaps decay geometrically, confirmed by a complete USDC/ZARP lifecycle from $\$942$ to $\$1.59$ in 14 zero-swap rebalances (\S\ref{sec:zarp}) and four additional Foundry tests.
 
-Three further results characterise structure. The Stage~1/Stage~2 split distinguishes geometric creation (${\sim}5\%$ of events) from dust-pool redistribution (${\sim}95\%$ of events), governed by different variables (\S\ref{sec:two-mechanism}). A graph-theoretic \emph{Connector Rule} identifies the per-pool driver as the token with higher portfolio connectivity rather than the more volatile token (\S\ref{sec:connector}, \S\ref{sec:predictive}). A Simpson's paradox in CL analysis emerges from $V/L_p$ and volatility $\sigma$ being complementary predictors that reverse sign on aggregation (\S\ref{sec:predictive}). Three directional properties of the residual (monotonicity in displacement, directional asymmetry in USD terms, exit-side asymmetry) are derived and verified as Theorems~4--6 in the companion paper Ryan\cite{ryan2026b}, sharing the same Foundry verification suite.
+Three further results characterise structure. The Stage~1/Stage~2 split distinguishes geometric creation (${\sim}5\%$ of events) from dust pool redistribution (${\sim}95\%$ of events), governed by different variables (\S\ref{sec:two-mechanism}). A graph-theoretic \emph{Connector Rule} identifies the per-pool driver as the token with higher portfolio connectivity rather than the more volatile token (\S\ref{sec:connector}, \S\ref{sec:predictive}). A Simpson's paradox in CL analysis emerges from $V/L_p$ and volatility $\sigma$ being complementary predictors that reverse sign on aggregation (\S\ref{sec:predictive}). Three directional properties of the residual (monotonicity in displacement, directional asymmetry in USD terms, exit-side asymmetry) are derived and verified as Theorems~4--6 in the companion paper Ryan\cite{ryan2026b}, sharing the same Foundry verification suite.
 
 \section{Related work}\label{sec:related}
 
@@ -346,7 +346,7 @@ V_{\text{new}} = L_{\text{new}}\,\phi(s, s_{a'}, s_{b'}) = \frac{L(s - s_a)}{s -
 \]
 and $\Delta R/V = 0$.
 
-($\Rightarrow$) Suppose $R_{\text{old}} \neq R_{\text{new}}$. By~\eqref{eq:cases}, exactly one token binds the new liquidity and the other has a strict surplus exiting the mint as dust of strictly positive token-value $|\Delta R|$. By token-value conservation, $V_{\text{new}} = V_{\text{old}} - |\Delta R| < V_{\text{old}}$, so $\Delta R/V < 0$.
+($\Rightarrow$) Suppose $R_{\text{old}} \neq R_{\text{new}}$. By~\eqref{eq:cases}, exactly one token binds the new liquidity and the other has a strict surplus exiting the mint as dust of strictly positive token value $|\Delta R|$. By token value conservation, $V_{\text{new}} = V_{\text{old}} - |\Delta R| < V_{\text{old}}$, so $\Delta R/V < 0$.
 
 The ratio-preserving locus $\{(s_{a'}, s_{b'}) : R(s, s_{a'}, s_{b'}) = R_{\text{old}}\}$ is the zero set of $(1/s - 1/s_{b'})(s - s_a) - (1/s - 1/s_b)(s - s_{a'}) = 0$, a single equation in two unknowns which generically defines a smooth one-dimensional curve; the point $(s_a, s_b)$ lies on this curve but does not exhaust it.
 \end{proof}
@@ -433,7 +433,7 @@ Different pools have different $L_{\text{pool}}$, so equal $V/L_p$ means differe
 
 \subsection{The Connector Rule}\label{sec:connector}
 
-Token-level decomposition (\S\ref{sec:predictive}) shows that the siphon driver per pool is determined by \emph{token connectivity} in the portfolio graph.
+Token level decomposition (\S\ref{sec:predictive}) shows that the siphon driver per pool is determined by \emph{token connectivity} in the portfolio graph.
 
 \emph{Definition.} For a portfolio with positions in pools $\{P_k\}$, the \emph{connectivity} of token $T$ is the number of pools containing $T$:
 \begin{equation}\label{eq:connectivity}
@@ -498,7 +498,7 @@ The proof uses the CL amount equations~\eqref{eq:amounts}, the mint constraint~\
 \begin{equation}\label{eq:newliq}
 L_{\text{new}} = \min\!\left(\frac{0}{1/s - 1/s_{b'}}, \; \frac{y_w}{s - s_{a'}}\right) = 0,
 \end{equation}
-so the entire withdrawn value becomes residual ($\alpha = 1$). In a shared-balance context, contract dust $x_{\text{dust}} > 0$ from other positions may partially compensate the missing token, yielding $L_{\text{new}} > 0$ via~\eqref{eq:mint}. Since $x_w = 0$ strictly whilst the new range requires $x > 0$ for $L_{\text{new}} > 0$, and the shared dust pool is finite, the compensation is always partial: $V_1 < V_0$ with $0 < \alpha \leq 1$. The $s < s_a$ case is symmetric at the residual-fraction level; USD-denominated values for above-exits versus below-exits on volatile/stablecoin pairs are asymmetric, characterised as Theorem~6 in Ryan\cite{ryan2026b}.
+so the entire withdrawn value becomes residual ($\alpha = 1$). In a shared-balance context, contract dust $x_{\text{dust}} > 0$ from other positions may partially compensate the missing token, yielding $L_{\text{new}} > 0$ via~\eqref{eq:mint}. Since $x_w = 0$ strictly whilst the new range requires $x > 0$ for $L_{\text{new}} > 0$, and the shared dust pool is finite, the compensation is always partial: $V_1 < V_0$ with $0 < \alpha \leq 1$. The $s < s_a$ case is symmetric at the residual fraction level; USD-denominated values for above-exits versus below-exits on volatile/stablecoin pairs are asymmetric, characterised as Theorem~6 in Ryan\cite{ryan2026b}.
 
 \emph{Part (ii).} Let $\delta$ denote the displacement of $s$ from the old range midpoint, so the premise of Part~(i) requires $|\delta| \geq w/2$. As $|\delta|$ increases, the withdrawn amount of the binding token (opposite to the direction of exit) stays at zero whilst the new recentred range's required token fraction on that side grows with the gap, so $\alpha$ increases monotonically in $|\delta|/w$ for fixed dust supply. A detailed proof of the in-range analogue ($|\delta| \leq w/2$) is given as Theorem~4 in Ryan\cite{ryan2026b}.
 
@@ -704,7 +704,7 @@ $\sigma$ amplifies magnitude ($\rho = +0.26$ for $\sigma_{1h}$ vs $|D/V|$, $N = 
 
 \subsubsection*{Cross-group token decomposition}
 
-Token-level decomposition of 395 transaction receipts across 10 pools and 5 depositor groups confirms the Connector Rule (\S\ref{sec:connector}):
+Token level decomposition of 395 transaction receipts across 10 pools and 5 depositor groups confirms the Connector Rule (\S\ref{sec:connector}):
 
 \begin{table}[H]
 \centering
@@ -1061,7 +1061,7 @@ Cycle & Value (USD) & Decay factor \\
 \end{tabular}
 \end{table}
 
-Assertion: \texttt{assertTrue(V[k+1] < V[k])} for all $k$ . PASSED. Total decay: $92\%$ in 5 cycles. The alternating factor ($0.76 / 0.40$) reflects the token-ratio flip at each step. The two-step product $0.76 \times 0.40 = 0.30$ is the effective decay constant.
+Assertion: \texttt{assertTrue(V[k+1] < V[k])} for all $k$ . PASSED. Total decay: $92\%$ in 5 cycles. The alternating factor ($0.76 / 0.40$) reflects the token ratio flip at each step. The two-step product $0.76 \times 0.40 = 0.30$ is the effective decay constant.
 
 \subsection{Test 7: Deep out-of-range terminal event (Theorem~\ref{thm:extinction}, part ii extreme)}\label{sec:foundry-terminal}
 
@@ -1140,7 +1140,7 @@ Theorem~\ref{thm:convergence} proves convergence but does not bound the rate; th
 
 Five extensions follow naturally. An economic analysis quantifying the net cost or benefit of the siphon relative to vault-per-pool (ALM) and static LP strategies requires controlled long-duration comparisons.
 
-On emission-governance interaction, preliminary evidence from 33 post-flip events suggests ve(3,3) emission rates correlate with siphon role assignment, but separating emission effects from concurrent market regime changes requires observation across multiple epoch cycles.
+On emission governance interaction, preliminary evidence from 33 post-flip events suggests ve(3,3) emission rates correlate with siphon role assignment, but separating emission effects from concurrent market regime changes requires observation across multiple epoch cycles.
 
 An adversarial analysis is also open: an attacker who controls rebalance timing across multiple positions may be able to extract value from the siphon, and the feasibility and cost of such an attack are unknown.
 
@@ -1181,7 +1181,7 @@ Milionis, J., Moallemi, C.C., Roughgarden, T., Zhang, A.L. ``Automated Market Ma
 Milionis, J., Moallemi, C.C., Roughgarden, T. ``Automated Market Making and Arbitrage Profits in the Presence of Fees.'' \emph{Financial Cryptography and Data Security 2024} (2024) \url{https://arxiv.org/abs/2305.14604}.
 
 \bibitem{cartea2024}
-Cartea, \'A., Drissi, F., Monga, M. ``Decentralised Finance and Automated Market Making: Predictable Loss and Optimal Liquidity Provision.'' \emph{SIAM Journal on Financial Mathematics (forthcoming)} (2024) \url{https://doi.org/10.1137/23M1602103}.
+Cartea, \'A., Drissi, F., Monga, M. ``Decentralized Finance and Automated Market Making: Predictable Loss and Optimal Liquidity Provision.'' \emph{SIAM Journal on Financial Mathematics (forthcoming)} (2024) \url{https://doi.org/10.1137/23M1602103}.
 
 \bibitem{willetts2026}
 Willetts, M., Harrington, C. ``Pools as Portfolios: Observed Arbitrage Efficiency and LVR Analysis of Dynamic Weight AMMs.'' \emph{arXiv preprint 2602.22069} (2026) \url{https://arxiv.org/abs/2602.22069}.

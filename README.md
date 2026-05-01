@@ -1,12 +1,12 @@
 <p align="center">
-  <img src=".github/banner.jpg" alt="The Geometric Siphon: residual flows routing between rebalanced concentrated-liquidity positions" width="100%" />
+  <img src=".github/banner.jpg" alt="The Geometric Siphon: residual flows routing between rebalanced concentrated liquidity positions" width="100%" />
 </p>
 
 # The Geometric Siphon
 
 Paper sources, Foundry verification code, and reproduction scripts for the *Geometric Siphon* papers (K. R. Ryan, 2026).
 
-The *Geometric Siphon* is a mechanism arising from concentrated-liquidity rebalancing geometry, made observable through shared depositor balances. When autonomously rebalanced positions share a token balance, token-ratio mismatches between old and new tick ranges route residual tokens through that shared balance, transferring capital between positions in independent pools. Six theorems characterise the mechanism (Theorems 1–3 in Paper I, Theorems 4–6 in Paper II), and a graph-theoretic *Connector Rule* relating per-pool flow to portfolio topology is stated as a conjecture. A 16-test Foundry suite verifies all six theorems against unmodified V3 contracts on Base mainnet, with six fork tests against live Aerodrome Slipstream. A 1,380-event controlled dataset and a separate 35,910-event production-scale dataset anchor the empirical results.
+The *Geometric Siphon* is a mechanism arising from concentrated liquidity rebalancing geometry, made observable through shared depositor balances. When autonomously rebalanced positions share a token balance, token-ratio mismatches between old and new tick ranges route residual tokens through that shared balance, transferring capital between positions in independent pools. Six theorems characterise the mechanism (Theorems 1–3 in Paper I, Theorems 4–6 in Paper II), and a graph-theoretic *Connector Rule* relating per-pool flow to portfolio topology is stated as a conjecture. A 16-test Foundry suite verifies all six theorems against unmodified V3 contracts on Base mainnet, with six fork tests against live Aerodrome Slipstream. A 1,380-event controlled dataset and a separate 35,910-event production-scale dataset anchor the empirical results.
 
 | | |
 |---|---|
