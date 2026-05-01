@@ -1,39 +1,81 @@
-\documentclass{manuscript}
+\documentclass[11pt,a4paper]{article}
 
-% Additional packages not in manuscript.cls
-\usepackage[T1]{fontenc}
-\usepackage{booktabs}
-\usepackage{amssymb}
+% Fonts: TeX Gyre Termes (Times equivalent) with matching math
+\usepackage{fontspec}
+\usepackage{unicode-math}
+\setmainfont{texgyretermes}[
+  Extension      = .otf,
+  UprightFont    = *-regular,
+  BoldFont       = *-bold,
+  ItalicFont     = *-italic,
+  BoldItalicFont = *-bolditalic,
+]
+\setmathfont{texgyretermes-math.otf}
+\frenchspacing
+
+% Body size / leading: 11.5pt / 13.5pt
+\makeatletter
+\renewcommand{\@xpt}{11.5}
+\renewcommand{\@xiipt}{13.5}
+\renewcommand\normalsize{%
+  \@setfontsize\normalsize\@xpt\@xiipt
+  \abovedisplayskip 10\p@ \@plus2\p@ \@minus5\p@
+  \abovedisplayshortskip \z@ \@plus3\p@
+  \belowdisplayshortskip 6\p@ \@plus3\p@ \@minus3\p@
+  \belowdisplayskip \abovedisplayskip
+  \let\@listi\@listI}
+\makeatother
+\normalsize
+
+% Page layout
+\usepackage[margin=1in]{geometry}
+
+% Math
+\usepackage{amsmath,amsthm}
+
+% Tables
 \usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\usepackage{booktabs}
+\setlength{\extrarowheight}{2pt}
+
+% Float placement
 \usepackage{float}
 \usepackage[section]{placeins}
-\usepackage{needspace}
-\usepackage{indentfirst}
+
+% Captions
+\usepackage{caption}
+\captionsetup{figurename=Fig.,labelsep=period,margin=1.2cm,labelfont=footnotesize}
+
+% Lists
+\usepackage{enumitem}
+
+% Section heading style
+\usepackage{titlesec}
+\titleformat{\section}[block]{\fontsize{13pt}{15pt}\bfseries}{\thesection.}{0.6em}{}
+\titlespacing*{\section}{0pt}{18pt}{8pt}
+\titleformat{\subsection}[block]{\fontsize{11.5pt}{13.5pt}\bfseries\itshape}{\thesubsection.}{0.6em}{}
+\titlespacing*{\subsection}{0pt}{14pt}{6pt}
+
+% Graphics + TikZ + pgfplots
+\usepackage{graphicx}
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows,calc,shadows}
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.18}
-
 \graphicspath{{./images/}}
 
-% PDF metadata
-\hypersetup{pdfauthor={Ryan, K. R.}, pdftitle={The Geometric Siphon: Existence, Equilibrium, and Directional Properties of the Residual in Concentrated Liquidity Portfolios}}
-
-\renewcommand{\thetheorem}{\arabic{theorem}}
-
-\PassOptionsToPackage{hyphens}{url}
-\Urlmuskip=0mu plus 1mu
+% Paragraph rules
+\usepackage{indentfirst}
 \setlength{\emergencystretch}{3em}
 \widowpenalty=10000
 \clubpenalty=10000
+\usepackage{needspace}
 
-\titleformat{\subsection}{\fontshape{it}\selectfont\bfseries}{\thesubsection.}{0.5em}{}
-\titlespacing*{\subsection}{0pt}{10pt}{4pt}
-
+% Float / display-math spacing
 \setlength{\intextsep}{8pt plus 2pt minus 2pt}
 \setlength{\floatsep}{8pt plus 2pt minus 2pt}
 \setlength{\textfloatsep}{10pt plus 2pt minus 2pt}
-
 \AtBeginDocument{%
   \setlength{\abovedisplayskip}{18pt plus 3pt minus 2pt}%
   \setlength{\belowdisplayskip}{18pt plus 3pt minus 2pt}%
@@ -41,39 +83,148 @@
   \setlength{\belowdisplayshortskip}{14pt plus 2pt minus 1pt}%
 }
 
+% Tables: 1.05 row stretch, content at \footnotesize
+\renewcommand{\arraystretch}{1.05}
+\AtBeginEnvironment{tabular}{\footnotesize}
 
-\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
-\renewcommand{\arraystretch}{1.2}
-\AtBeginEnvironment{tabular}{\small}
+% Microtype
+\usepackage{microtype}
 
-\title{The Geometric Siphon:\\
-Existence, Equilibrium, and Directional Properties of the Residual in Concentrated Liquidity Portfolios}
-\author{K.\,R.~Ryan\thanks{K.\,R.~Ryan (\texttt{gancor@gancor.xyz}) is an independent researcher; ORCID 0009-0004-6295-7040.}}
+% Citations: superscript numeric, with superscript labels in bibliography
+\usepackage[superscript,biblabel]{cite}
 
-\pagestyle{pagemain}
+% Bibliography: hanging indent with the label sitting in its own column
+\makeatletter
+\renewenvironment{thebibliography}[1]
+  {\section*{\refname}%
+   \fontsize{10pt}{12pt}\selectfont
+   \list{\@biblabel{\@arabic\c@enumiv}}%
+        {\settowidth\labelwidth{\@biblabel{#1}}%
+         \leftmargin\labelwidth
+         \advance\leftmargin-0.8em
+         \advance\leftmargin\labelsep
+         \setlength\itemindent{1em}%
+         \setlength\itemsep{6pt plus 1pt minus 1pt}%
+         \setlength\parsep{0pt}%
+         \usecounter{enumiv}%
+         \let\p@enumiv\@empty
+         \renewcommand\theenumiv{\@arabic\c@enumiv}}%
+   \sloppy\clubpenalty4000\widowpenalty4000\sfcode`\.\@m}
+  {\def\@noitemerr{\@latex@warning{Empty `thebibliography' environment}}%
+   \endlist}
+\makeatother
 
-\pretitle{
-  \centering \selectfont RESEARCH ARTICLE \par
-  \fontsize{24pt}{28pt}\selectfont}
+\usepackage{etoolbox}
+
+% Abstract: 10pt/13pt, run-in "Abstract." lead, inset 0.5in each side
+\renewenvironment{abstract}{%
+  \fontsize{10pt}{13pt}\selectfont
+  \begin{list}{}{%
+    \setlength{\leftmargin}{0.5in}%
+    \setlength{\rightmargin}{0.5in}%
+    \setlength{\listparindent}{0pt}%
+    \setlength{\parsep}{6pt plus 2pt minus 1pt}%
+    \setlength{\topsep}{0pt}%
+    \setlength{\partopsep}{0pt}%
+  }\item[]\noindent\textbf{Abstract.}\hspace{0.5em}\ignorespaces
+}{\end{list}}
+
+% Colours
+\usepackage{xcolor}
+
+% Hyperlinks + PDF metadata
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  allcolors=blue!50!black,
+  pdfauthor={K.R. Ryan},
+  pdftitle={The Geometric Siphon: Existence, Equilibrium, and Directional Properties of the Residual in Concentrated Liquidity Portfolios},
+  pdfsubject={Concentrated liquidity, geometric residual, directional and exit asymmetries},
+  pdfkeywords={geometric residual, directional asymmetry, exit asymmetry, automated market maker, Uniswap V3, Aerodrome, DeFi mechanism design}
+}
+\PassOptionsToPackage{hyphens}{url}
+\Urlmuskip=0mu plus 1mu
+
+% Footnote pinning
+\usepackage[bottom]{footmisc}
+
+% Running header (author left, page number centred footer)
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\itshape K.R.\ Ryan}
+\fancyhead[R]{}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\fancypagestyle{plain}{%
+  \fancyhf{}%
+  \fancyfoot[C]{\thepage}%
+  \renewcommand{\headrulewidth}{0pt}%
+}
+
+% Theorem environments
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}
+\newtheorem{conjecture}{Conjecture}
+\renewcommand{\thetheorem}{\arabic{theorem}}
+
+% QED symbol (filled black square)
+\renewcommand\qedsymbol{\ensuremath{\mdlgblksquare}}
+
+% Code-block environment (cream-tinted, footnotesize)
+\usepackage{mdframed}
+\newenvironment{codeblock}{%
+  \begin{mdframed}[%
+    backgroundcolor=brown!3!white,%
+    linewidth=0pt,%
+    innertopmargin=6pt,%
+    innerbottommargin=6pt,%
+    innerleftmargin=12pt,%
+    innerrightmargin=12pt,%
+    leftmargin=0.075\linewidth,%
+    rightmargin=0.075\linewidth,%
+    skipabove=6pt,%
+    skipbelow=6pt%
+  ]\footnotesize%
+}{%
+  \end{mdframed}%
+}
+
+% Paragraph spacing: indented first line, no gap between paragraphs
+\setlength{\parindent}{18pt}
+\setlength{\parskip}{0pt}
 
 \begin{document}
+\sloppy
+\thispagestyle{plain}
 
-\maketitle
-\thispagestyle{pagefirst}
+\begin{center}
+{\huge The Geometric Siphon:\\[6pt]
+Existence, Equilibrium, and Directional\\[6pt]
+Properties of the Residual in Concentrated\\[8pt]
+Liquidity Portfolios\strut}
+
+\vspace{14pt}
+{\large K.R.\ Ryan}\\[4pt]
+{\fontsize{9pt}{11pt}\selectfont Independent Researcher \quad|\quad ORCID - 0009-0004-6295-7040 \quad|\quad \href{mailto:gancor@gancor.xyz}{gancor@gancor.xyz}}\\[4pt]
+{\fontsize{9pt}{11pt}\selectfont April 2026}
+
+\vspace{12pt}
+{\fontsize{9pt}{11pt}\selectfont
+\begin{minipage}{0.82\linewidth}\centering
+\textbf{Keywords}\hspace{0.6em}geometric residual \textperiodcentered\ directional asymmetry \textperiodcentered\ automated market maker \textperiodcentered\ Uniswap V3 \textperiodcentered\ Aerodrome \textperiodcentered\ DeFi mechanism design\\[4pt]
+\textbf{JEL:} G12, G14, G19, G23
+\end{minipage}}
+\end{center}
+
+\vspace{-1pt}
+\centerline{\scalebox{1.5}{$\therefore$}}
+\vspace{14pt}
 
 \begin{abstract}
 This paper identifies and formalises the \emph{Geometric Siphon}, a previously undocumented mechanism arising from concentrated-liquidity rebalancing geometry and made observable across positions by shared depositor balances. When autonomously rebalanced positions share a token balance, token-ratio mismatches between old and new tick ranges route residual tokens through that shared balance, transferring capital between positions in independent pools. Six theorems characterise the mechanism. They establish a closed-form residual with an iff vanishing condition, convergence in expectation for same-pool positions sharing a contract balance, and geometric extinction without swap correction. On volatile/stablecoin pairs in V3 ordering, they also establish strict residual monotonicity in displacement together with USD-denominated directional and exit asymmetries. A graph-theoretic \emph{Connector Rule} relating per-pool flow to portfolio topology is stated as a conjecture. A 16-test Foundry suite verifies all six theorems against unmodified V3 contracts on Base mainnet. Empirically, a 1{,}380-event controlled dataset is consistent with the existence claim, contains a complete USDC/ZARP extinction lifecycle, and includes an observed single-pool convergence episode. A separate 35{,}910-event production-scale dataset spanning five independent portfolios replicates the directional asymmetry in every portfolio, the exit asymmetry in four of five, and exhibits the predicted sign flip in the largest portfolio's reversed-ordering negative control.
-
-\begin{keywords}
-\item Concentrated liquidity.
-\item Geometric residual.
-\item Directional asymmetry.
-\item Automated market maker.
-\item Uniswap V3.
-\end{keywords}
 \end{abstract}
-
-\let\item\olditem
 
 \section{Introduction}\label{sec:introduction}
 
@@ -109,7 +260,6 @@ Geometric residual flows between CL positions sharing depositor-level balances d
 
 A concurrent SSRN preprint by I.\,P.\cite{secondoperator2026} develops a graph-theoretic treatment of the same mechanism on a port of the present author's Position Manager to Uniswap V3. Its results are compatible with those here, including a residual-generation lemma equivalent to Theorem~\ref{thm:residual}, a circulation-paths condition for cross-pool absorption (token degree $\geq 2$ in the portfolio graph), and a directional-convexity scaling for symmetric price displacements.
 
-\clearpage
 \section{Theoretical framework}\label{sec:theory}
 
 Taken together, the results in this section proceed from existence to dynamics to asymmetry. Theorem~\ref{thm:residual} identifies when a rebalance does and does not generate a geometric residual, separating geometry-driven flow from slippage and motivating the decomposition tested in \S\ref{sec:decomposition}. Theorems~\ref{thm:convergence} and~\ref{thm:extinction} then characterise opposite dynamical regimes of the same mechanism, with Theorem~\ref{thm:convergence} giving expected same-pool convergence under shared balances and Theorem~\ref{thm:extinction} giving geometric extinction under repeated zero-swap rebalancing. Theorems~\ref{thm:monotonicity}--\ref{thm:exit} turn to displacement, direction, and exit type, showing how residual magnitude and retained USD value vary once a stablecoin num\'eraire is fixed. These results provide the formal link between the V3 amount equations and the production-scale directional patterns examined in \S\S\ref{sec:directional-empirical}--\ref{sec:exit-empirical}. Readers primarily interested in the empirical results may treat this section as a guide to the formal claims; full derivations are in Appendix~\ref{app:dr-derivation}.
@@ -1009,8 +1159,6 @@ The single-operator dataset of 1{,}380 events is consistent with the existence c
 
 The mechanism follows directly from the V3 amount equations once depositor-level shared balances are present. Any protocol that adopts that architecture is subject to it.
 
-\backmatternotes
-
 \section*{Acknowledgements}
 
 The author thanks members of the DeFinancier Social Club for helpful discussion, testing feedback, and observations, and his fianc\'ee Ernesta, who looked after their young child and provided patient support during the work that produced this paper.
@@ -1027,24 +1175,54 @@ The author operates the off-chain concentrated-liquidity rebalancing system from
 
 The Foundry verification suite is publicly available on GitHub at \url{https://github.com/g4nc0r/the-geometric-siphon}, with an immutable archival snapshot on Zenodo at \url{https://doi.org/10.5281/zenodo.19905208}. A clean checkout reproduces every theorem verification described in \S\ref{sec:foundry}. The diffusion-event logs supporting the empirical analyses in \S\S\ref{sec:decomposition}--\ref{sec:exit-empirical}, together with a Python reproduction harness that regenerates the empirical tables and the V3-ordering classification used for the segmented Phase~3 analysis, are deposited on Zenodo at \url{https://doi.org/10.5281/zenodo.19904832}.
 
-\bibliographystyle{manuscript}
-\bibliography{references}
+\addcontentsline{toc}{section}{References}
+\begin{thebibliography}{99}
+
+\bibitem{adams2021}
+Adams, H., Zinsmeister, N., Salem, M., Keefer, R., Robinson, D. ``Uniswap v3 Core.'' \emph{Uniswap Labs Technical Whitepaper} (2021) \url{https://uniswap.org/whitepaper-v3.pdf}.
+
+\bibitem{hasbrouck2025}
+Hasbrouck, J., Rivera, T.J., Saleh, F. ``An Economic Model of a Decentralized Exchange with Concentrated Liquidity.'' \emph{Management Science (forthcoming)} (2025) \url{https://doi.org/10.1287/mnsc.2024.04510}.
+
+\bibitem{cartea2024}
+Cartea, \'A., Drissi, F., Monga, M. ``Decentralised Finance and Automated Market Making: Predictable Loss and Optimal Liquidity Provision.'' \emph{SIAM Journal on Financial Mathematics (forthcoming)} (2024) \url{https://doi.org/10.1137/23M1602103}.
+
+\bibitem{milionis2022b}
+Milionis, J., Moallemi, C.C., Roughgarden, T., Zhang, A.L. ``Automated Market Making and Loss-Versus-Rebalancing.'' \emph{arXiv:2208.06046} (2022) \url{https://arxiv.org/abs/2208.06046}.
+
+\bibitem{milionis2024}
+Milionis, J., Moallemi, C.C., Roughgarden, T. ``Automated Market Making and Arbitrage Profits in the Presence of Fees.'' \emph{Financial Cryptography and Data Security} (2024) \url{https://arxiv.org/abs/2305.14604}.
+
+\bibitem{heimbach2022}
+Heimbach, L., Schertenleib, E., Wattenhofer, R. ``Risks and Returns of Uniswap V3 Liquidity Providers.'' \emph{Proceedings of the 4th ACM Conference on Advances in Financial Technologies (AFT 2022)} (2022) \url{https://doi.org/10.1145/3558535.3559772}.
+
+\bibitem{willetts2026}
+Willetts, M., Harrington, C. ``Pools as Portfolios: Observed arbitrage efficiency and LVR analysis of dynamic weight AMMs.'' \emph{arXiv:2602.22069} (2026) \url{https://arxiv.org/abs/2602.22069}.
+
+\bibitem{fan2023}
+Fan, Z., Marmolejo-Coss\'io, F.J., Altschuler, B., Sun, H., Wang, X., Parkes, D.C. ``Strategic Liquidity Provision in Uniswap v3.'' \emph{Proceedings of the 5th Conference on Advances in Financial Technologies (AFT 2023), LIPIcs vol.~282, Article 25} (2023) \url{https://doi.org/10.4230/LIPIcs.AFT.2023.25}.
+
+\bibitem{martinelli2019}
+Martinelli, F., Mushegian, N. ``A non-custodial portfolio manager, liquidity provider, and price sensor.'' \emph{Balancer Labs Whitepaper} (2019) \url{https://docs.balancer.fi/whitepaper.pdf}.
+
+\bibitem{baxley2023}
+Baxley, B. ``Maverick Protocol: Dynamic Distribution AMM.'' \emph{Maverick Protocol Documentation} (2023) \url{https://docs.mav.xyz/}.
+
+\bibitem{secondoperator2026}
+P., I. ``Convexity and Topology in Cross-Pool Dust Redistribution: Structural Edge in Active CL Management.'' \emph{SSRN preprint 6509938} (2026) \url{https://doi.org/10.2139/ssrn.6509938}.
+
+\end{thebibliography}
 
 \appendix
-\setcounter{section}{0}
-\renewcommand{\thesection}{\Alph{section}}
-\setcounter{secnumdepth}{2}
-
-\titleformat{\subsection}{\fontshape{it}\selectfont\bfseries}{\thesubsection.}{0.5em}{}
-\titlespacing*{\subsection}{0pt}{10pt}{4pt}
+\titleformat{\section}[block]{\fontsize{13pt}{15pt}\bfseries}{Appendix \thesection:}{0.6em}{}
+\titlespacing*{\section}{0pt}{18pt}{8pt}
 
 \titleformat{\subsubsection}[runin]{\fontshape{it}\selectfont\bfseries}{}{0pt}{}[.]
 \titlespacing*{\subsubsection}{0pt}{6pt}{0.5em}
 
 \section{Contract architecture}\label{app:contract}
 
-\AtBeginEnvironment{verbatim}{\small}
-
+\begin{codeblock}
 \begin{verbatim}
 // Dust balance keyed by depositor and token, no pool dimension
 mapping(address => mapping(address => uint256)) public dustBalance;
@@ -1058,6 +1236,7 @@ function rebalanceCL(
     SwapParams swapParams
 ) external returns (uint256 newTokenId);
 \end{verbatim}
+\end{codeblock}
 
 The \texttt{dustBalance[depositor][token]} keying makes leftover tokens from any pool's rebalance accessible to any subsequent mint under the same depositor; a vault-per-pool architecture instead uses \texttt{dustBalance[pool][token]} (or equivalent), isolating residuals per pair.
 
@@ -1310,21 +1489,24 @@ with $P' = (s_a-d)^2$, $P_a = s_a^2$, and $P_b = s_b^2$.
 
 \section{Foundry test suite reproduction}\label{app:foundry}
 
-\AtBeginEnvironment{verbatim}{\small}
-
 The full verification suite comprises 16 tests across 5 contracts, with the test--theorem mapping given in \S\ref{sec:foundry}. Reproducing the suite requires Foundry \texttt{forge} and, for the fork-based tests, any working Base RPC endpoint.
 
 The mock-pool tests run locally without network access:
 
+\begin{codeblock}
 \begin{verbatim}
-forge test -vv --no-match-contract "(GeometricResidualProof|DirectionalExitForkProof)$"
+forge test -vv \
+  --no-match-contract "(GeometricResidualProof|DirectionalExitForkProof)$"
 \end{verbatim}
+\end{codeblock}
 
 The full suite, including the 6 live fork tests, runs with:
 
+\begin{codeblock}
 \begin{verbatim}
 RPC_BASE_ALCHEMY=https://mainnet.base.org forge test -vv
 \end{verbatim}
+\end{codeblock}
 
 Recorded \texttt{forge test -vv} output corresponding to the subsections of \S\ref{sec:foundry} is provided in \texttt{foundry/PROOF\_OUTPUT.md} and serves as the deterministic regression target for the mock-pool tests.
 
@@ -1551,7 +1733,5 @@ Event & Time (UTC) & Pre (\$) & Post (\$) & Dust $D$ & $V/L_p$ & $\alpha$ & $L_p
 \bottomrule
 \end{tabular}
 \end{table}
-
-\thispagestyle{pagelast}
 
 \end{document}

@@ -26,7 +26,7 @@ The *Geometric Siphon* is a mechanism arising from concentrated-liquidity rebala
 |---|---|---|
 | Paper I: Emergent Capital Reallocation in Concentrated Liquidity Portfolios | [SSRN 6374838](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6374838); source in `papers/ssrn/` | Live preprint |
 | Paper II: Directional Properties | [SSRN 6481498](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6481498); source in `papers/ssrn/` | Live preprint |
-| Geometric Siphon (consolidated) | [`papers/manuscript/`](./papers/manuscript/) | Working draft, in preparation for journal submission |
+| Geometric Siphon (consolidated) | [SSRN 6686798](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6686798); source in `papers/ssrn/` | Live preprint |
 
 ## Citation
 
