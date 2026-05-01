@@ -1,19 +1,31 @@
 \documentclass[11pt,a4paper]{article}
 
-% Fonts: TeX Gyre Pagella with matching math (Palatino-style, conventional academic look)
-% Loaded by file name because the TeX Live OpenType files are not registered
-% with the OS font database on most Linux distributions.
+% Fonts: TeX Gyre Termes (Times equivalent) with matching math
 \usepackage{fontspec}
 \usepackage{unicode-math}
-\setmainfont{texgyrepagella}[
+\setmainfont{texgyretermes}[
   Extension      = .otf,
   UprightFont    = *-regular,
   BoldFont       = *-bold,
   ItalicFont     = *-italic,
   BoldItalicFont = *-bolditalic,
 ]
-\setmathfont{texgyrepagella-math.otf}
+\setmathfont{texgyretermes-math.otf}
 \frenchspacing
+
+% Body size / leading: 11.5pt / 13.5pt
+\makeatletter
+\renewcommand{\@xpt}{11.5}
+\renewcommand{\@xiipt}{13.5}
+\renewcommand\normalsize{%
+  \@setfontsize\normalsize\@xpt\@xiipt
+  \abovedisplayskip 10\p@ \@plus2\p@ \@minus5\p@
+  \abovedisplayshortskip \z@ \@plus3\p@
+  \belowdisplayshortskip 6\p@ \@plus3\p@ \@minus3\p@
+  \belowdisplayskip \abovedisplayskip
+  \let\@listi\@listI}
+\makeatother
+\normalsize
 
 % Page layout
 \usepackage[margin=1in]{geometry}
@@ -22,63 +34,129 @@
 \usepackage{amsmath,amsthm}
 
 % Tables
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 \usepackage{booktabs}
+\setlength{\extrarowheight}{2pt}
 
-% Float placement (provides [H] specifier for strict inline placement)
+% Float placement
 \usepackage{float}
 
-% Captions: small, bold-labelled
+% Captions: "Fig. N." / "Table N." period separator, label smaller
 \usepackage{caption}
-\captionsetup{font=small,labelfont=bf}
+\captionsetup{figurename=Fig.,labelsep=period,margin=1.2cm,labelfont=footnotesize}
 
-% Enumerated lists
+% Lists
 \usepackage{enumitem}
 
-% Prevent orphaned headings
+% Section heading style (lighter than article default)
+\usepackage{titlesec}
+\titleformat{\section}[block]{\fontsize{13pt}{15pt}\bfseries}{\thesection.}{0.6em}{}
+\titlespacing*{\section}{0pt}{18pt}{8pt}
+\titleformat{\subsection}[block]{\fontsize{11.5pt}{13.5pt}\bfseries\itshape}{\thesubsection.}{0.6em}{}
+\titlespacing*{\subsection}{0pt}{14pt}{6pt}
+
+% Graphics + TikZ + pgfplots (in-document figures)
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows,calc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+% Paragraph rules (indented first line, no gap, indentfirst on)
+\usepackage{indentfirst}
+\emergencystretch=1em
+\widowpenalty=10000
+\clubpenalty=10000
 \usepackage{needspace}
 
-% Paragraph formatting
-\usepackage{parskip}
-\emergencystretch=1em
-\hyphenpenalty=200
+% Float / display-math spacing
+\setlength{\intextsep}{8pt plus 2pt minus 2pt}
+\setlength{\floatsep}{8pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{10pt plus 2pt minus 2pt}
+\AtBeginDocument{%
+  \setlength{\abovedisplayskip}{18pt plus 3pt minus 2pt}%
+  \setlength{\belowdisplayskip}{18pt plus 3pt minus 2pt}%
+  \setlength{\abovedisplayshortskip}{14pt plus 2pt minus 1pt}%
+  \setlength{\belowdisplayshortskip}{14pt plus 2pt minus 1pt}%
+}
 
-% Typographic refinement (better letter spacing, hyphenation, line breaks)
+% Tables: 1.05 row stretch, content at \footnotesize
+\renewcommand{\arraystretch}{1.05}
+\AtBeginEnvironment{tabular}{\footnotesize}
+
+% Microtype
 \usepackage{microtype}
 
-% Author-date citations (Harvard style, finance/economics convention)
-\usepackage[authoryear,round]{natbib}
-\bibpunct{(}{)}{;}{a}{,}{,}
+% Citations: superscript numeric, with superscript labels in bibliography
+\usepackage[superscript,biblabel]{cite}
 
-% Tighter bibliography spacing
+% Bibliography: hanging indent with the label sitting in its own column
+\makeatletter
+\renewenvironment{thebibliography}[1]
+  {\section*{\refname}%
+   \fontsize{10pt}{12pt}\selectfont
+   \list{\@biblabel{\@arabic\c@enumiv}}%
+        {\settowidth\labelwidth{\@biblabel{#1}}%
+         \leftmargin\labelwidth
+         \advance\leftmargin-0.8em
+         \advance\leftmargin\labelsep
+         \setlength\itemindent{1em}%
+         \setlength\itemsep{6pt plus 1pt minus 1pt}%
+         \setlength\parsep{0pt}%
+         \usecounter{enumiv}%
+         \let\p@enumiv\@empty
+         \renewcommand\theenumiv{\@arabic\c@enumiv}}%
+   \sloppy\clubpenalty4000\widowpenalty4000\sfcode`\.\@m}
+  {\def\@noitemerr{\@latex@warning{Empty `thebibliography' environment}}%
+   \endlist}
+\makeatother
+
 \usepackage{etoolbox}
-\AtBeginEnvironment{thebibliography}{\setlength{\itemsep}{4pt plus 0.5pt}\setlength{\parsep}{0pt}}
 
-% Colour expressions for hyperref
+% Abstract: 10pt/13pt, run-in "Abstract." lead, inset 0.5in each side
+\renewenvironment{abstract}{%
+  \fontsize{10pt}{13pt}\selectfont
+  \begin{list}{}{%
+    \setlength{\leftmargin}{0.5in}%
+    \setlength{\rightmargin}{0.5in}%
+    \setlength{\listparindent}{0pt}%
+    \setlength{\parsep}{6pt plus 2pt minus 1pt}%
+    \setlength{\topsep}{0pt}%
+    \setlength{\partopsep}{0pt}%
+  }\item[]\noindent\textbf{Abstract.}\hspace{0.5em}\ignorespaces
+}{\end{list}}
+
+% Colours
 \usepackage{xcolor}
 
-% Hyperlinks (subtle dark-blue, all-clickable)
+% Hyperlinks + PDF metadata
 \usepackage{hyperref}
 \hypersetup{
   colorlinks=true,
   allcolors=blue!50!black,
   pdfauthor={K.R. Ryan},
-  pdftitle={The Geometric Siphon II: Directional Properties}
+  pdftitle={The Geometric Siphon II: Directional Properties},
+  pdfsubject={Concentrated liquidity, directional and exit asymmetry},
+  pdfkeywords={concentrated liquidity, geometric residual, directional asymmetry, exit asymmetry, Uniswap V3, Aerodrome}
 }
 
-% Running header on pages 2+
+% Running header (author left, page number centred footer)
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small\itshape K.R.\ Ryan}
-\fancyhead[R]{\small\itshape The Geometric Siphon II}
+\fancyhead[R]{}
 \fancyfoot[C]{\thepage}
-\renewcommand{\headrulewidth}{0.4pt}
-% Title page (page 1) suppresses the running header
+\renewcommand{\headrulewidth}{0pt}
 \fancypagestyle{plain}{%
   \fancyhf{}%
   \fancyfoot[C]{\thepage}%
   \renewcommand{\headrulewidth}{0pt}%
 }
+
+% Footnote pinning
+\usepackage[bottom]{footmisc}
 
 % Theorem environments
 \newtheorem{theorem}{Theorem}
@@ -87,82 +165,94 @@
 \theoremstyle{definition}
 \newtheorem*{notation}{Notation}
 
+% QED symbol (filled black square)
+\renewcommand\qedsymbol{\ensuremath{\mdlgblksquare}}
+
+% Code-block environment (cream-tinted, footnotesize)
+\usepackage{mdframed}
+\newenvironment{codeblock}{%
+  \begin{mdframed}[%
+    backgroundcolor=brown!3!white,%
+    linewidth=0pt,%
+    innertopmargin=6pt,%
+    innerbottommargin=6pt,%
+    innerleftmargin=12pt,%
+    innerrightmargin=12pt,%
+    leftmargin=0.075\linewidth,%
+    rightmargin=0.075\linewidth,%
+    skipabove=6pt,%
+    skipbelow=6pt%
+  ]\footnotesize%
+}{%
+  \end{mdframed}%
+}
+
+% Paragraph spacing: indented first line, no gap between paragraphs
+\setlength{\parindent}{18pt}
+\setlength{\parskip}{0pt}
+
 \title{The Geometric Siphon II: Directional Properties}
 
-% No paragraph indent, space between paragraphs (match Paper I)
-\setlength{\parindent}{0pt}
-\setlength{\parskip}{6pt plus 2pt minus 1pt}
-
 \begin{document}
+\sloppy
 \thispagestyle{plain}
 
 \begin{center}
-{\LARGE\bfseries The Geometric Siphon II: Directional Properties}
+{\huge The Geometric Siphon II:\\[6pt]
+Directional Properties}
+
+\vspace{14pt}
+{\large K.R.\ Ryan}\\[4pt]
+{\fontsize{9pt}{11pt}\selectfont Independent Researcher \quad|\quad ORCID - 0009-0004-6295-7040 \quad|\quad \href{mailto:gancor@gancor.xyz}{gancor@gancor.xyz}}\\[4pt]
+{\fontsize{9pt}{11pt}\selectfont March 2026}
 
 \vspace{12pt}
-{\large K.R.\ Ryan}\\[4pt]
-{\small Independent Researcher}\\[2pt]
-{\small \href{mailto:gancor@gancor.xyz}{gancor@gancor.xyz} \quad|\quad ORCID: 0009-0004-6295-7040}
-
-\vspace{8pt}
-March 2026
-
-\vspace{6pt}
-{\small\textbf{Keywords:} concentrated liquidity, geometric residual, directional asymmetry,\\
-exit asymmetry, Uniswap V3, Aerodrome, DeFi mechanism design}
-
-\vspace{4pt}
-{\small\textbf{JEL classification:} G12, G14, G19, G23}
+{\fontsize{9pt}{11pt}\selectfont
+\begin{minipage}{0.72\linewidth}\centering
+\textbf{Keywords}\hspace{0.6em}geometric residual \textperiodcentered\ directional asymmetry \textperiodcentered\ exit asymmetry \textperiodcentered\ Uniswap V3 \textperiodcentered\ Aerodrome \textperiodcentered\ DeFi mechanism design\\[4pt]
+\textbf{JEL:} G12, G14, G19, G23
+\end{minipage}}
 \end{center}
 
-\vspace{8pt}
-\hrule
-\vspace{12pt}
+\vspace{-1pt}
+\centerline{\scalebox{1.5}{$\therefore$}}
+\vspace{14pt}
 
 \begin{abstract}
-In a companion paper \citep{ryan2026a}, I identified the Geometric Siphon, a mechanism by which concentrated-liquidity (CL) positions sharing a depositor-level token balance transfer capital between positions under autonomous rebalancing. A token-ratio mismatch between the old and new tick ranges produces residuals that flow through the shared balance. This paper establishes three results on the directional properties of the residual.
-
-For a rebalance into a new range of equal width recentred on the current price, Theorem~4 shows that the absolute residual $|\Delta R|$ increases strictly with displacement from the midpoint of the original range, up to the range boundary. Theorems~5 and~6 concern pools pairing a volatile asset at $T_0$ with a stablecoin at $T_1$ in Uniswap V3's pair ordering. Under symmetric sqrt-price displacements $\pm\delta$ that leave both displaced prices in range, the up-move position retains strictly more USD-denominated value than the down-move (Theorem~5). Under symmetric displacement past the range boundary, a below-range exit retains strictly less USD value than an above-range exit (Theorem~6) for the same pair ordering. Residual magnitudes scale with position value, so the USD-denominated $|\Delta R|$ inherits these asymmetries by a scaling argument under the same domain assumptions.
-
-All three results are verified by Foundry tests against a harness implementing exact Uniswap V3 \texttt{TickMath} and amount-equation constants. Across 36{,}337 rebalance events on 58 positions over 18 days on Aerodrome (Base), observed dust flows are consistent with the predicted direction. Rising markets show USD-denominated flow about $5\times$ larger than falling markets despite a near-identical frequency of positive-dust events. The dataset is unsegmented by pool composition (\S\ref{sec:limitations}), so these figures support the prediction at production scale without strictly confirming Theorems~5 and~6 in their volatile/stablecoin domain.
+In a companion paper\cite{ryan2026a}, I identified the Geometric Siphon, a mechanism by which concentrated-liquidity (CL) positions sharing a depositor-level token balance transfer capital between positions under autonomous rebalancing, with token-ratio mismatches between old and new tick ranges producing residuals that flow through the shared balance. This paper establishes three results on the directional properties of that residual. Theorem~4 shows that the absolute residual increases strictly with displacement from the midpoint of the original range, up to the range boundary. Theorems~5 and~6 specialise to pools pairing a volatile asset at token0 with a stablecoin at token1 in Uniswap V3's pair ordering. Under symmetric in-range sqrt-price displacements, the up-move position retains strictly more USD-denominated value than the down-move; under symmetric displacement past the range boundary, a below-range exit retains strictly less USD value than an above-range exit. Residual magnitudes scale with position value, so the USD-denominated absolute residual inherits these asymmetries by a scaling argument under the same domain assumptions. All three results are verified by Foundry tests against a harness implementing exact Uniswap V3 tick-math and amount-equation constants. Across 36{,}337 rebalance events on 58 positions over 18 days on Aerodrome (Base), observed dust flows are consistent with the predicted direction; rising markets show USD-denominated flow about $5\times$ larger than falling markets despite a near-identical frequency of positive-dust events. The dataset is unsegmented by pool composition, so these figures support the prediction at production scale without strictly confirming Theorems~5 and~6 in their volatile/stablecoin domain.
 \end{abstract}
 
-\section{Introduction}
+\vspace{24pt}
 
-The Geometric Siphon is a mechanism in concentrated-liquidity (CL) portfolio management: when multiple CL positions share a depositor-level token balance, autonomous rebalancing produces residuals from token-ratio mismatches between old and new tick ranges, and those residuals flow through the shared balance as inter-position capital transfers. \citet{ryan2026a} established that a CL rebalance produces a zero geometric residual if and only if the old and new ranges demand the same token ratio at current price (Theorem~1), that single-pool positions sharing a contract balance converge to equal value under repeated rebalancing (Theorem~2), and that positions rebalancing without swaps decay geometrically (Theorem~3). Those results characterise the existence, equilibrium and extinction behaviour of the siphon. They do not address how the residual responds to displacement magnitude, price direction or exit type.
+\begin{list}{}{%
+  \setlength{\leftmargin}{0.5in}%
+  \setlength{\rightmargin}{0.5in}%
+  \setlength{\listparindent}{0pt}%
+  \setlength{\topsep}{0pt}%
+  \setlength{\partopsep}{0pt}%
+}\item[]\fontsize{10pt}{13pt}\selectfont\noindent\textbf{Note on supersession.} This preprint and its companion \emph{The Geometric Siphon: Emergent Capital Reallocation in Concentrated Liquidity Portfolios} have been consolidated into a single revised manuscript (\emph{The Geometric Siphon: Existence, Equilibrium, and Directional Properties of the Residual in Concentrated Liquidity Portfolios}). The Foundry verification suite and the public dataset now align with the consolidated manuscript.\footnote{Consolidated manuscript: \url{https://github.com/g4nc0r/the-geometric-siphon}. Foundry suite (Code DOI): \url{https://doi.org/10.5281/zenodo.19905208}. Public dataset (Data DOI): \url{https://doi.org/10.5281/zenodo.19904832}.} The empirical findings reported in this preprint remain the citable record for this version of the analysis.\end{list}
 
-Three theorems below address those questions. Theorem~4 (Residual Monotonicity) gives strict monotonicity of $|\Delta R|$ in displacement up to the range boundary; the result holds for any pair composition. Theorem~5 (Directional Asymmetry) gives an asymmetry in USD-denominated position value under symmetric sqrt-price displacement, for volatile/stablecoin pairs with the volatile asset at $T_0$. Theorem~6 (Exit Asymmetry) gives an asymmetry in USD-denominated position value between above-range and below-range exits at symmetric displacement past the boundary, for the same pair ordering. Residual magnitudes scale with position value (Theorem~1 of \citet{ryan2026a}), so the USD-denominated $|\Delta R|$ inherits the asymmetries of Theorems~5 and~6 by a scaling argument under the same domain assumptions; the bridge is developed in the remark following Theorem~5. The three results together identify when USD-denominated dust accounting acquires a directional bias even though the residual-generating mechanism is directionally blind.
+\clearpage
 
-\subsection{Scope}
+\section{Introduction}\label{sec:introduction}
 
-The empirical confirmations below draw on Phase~3 operational data from a live CL portfolio management system on Aerodrome (Base).
+The Geometric Siphon is a mechanism in concentrated-liquidity (CL) portfolio management: when multiple CL positions share a depositor-level token balance, autonomous rebalancing produces residuals from token-ratio mismatches between old and new tick ranges, and those residuals flow through the shared balance as inter-position capital transfers. Ryan\cite{ryan2026a} established that a CL rebalance produces a zero geometric residual if and only if the old and new ranges demand the same token ratio at current price (Theorem~1), that single-pool positions sharing a contract balance converge to equal value under repeated rebalancing (Theorem~2), and that positions rebalancing without swaps decay geometrically (Theorem~3). Those results characterise the existence, equilibrium and extinction behaviour of the siphon. They do not address how the residual responds to displacement magnitude, price direction or exit type.
 
-\begin{table}[H]
-\centering
-\begin{tabular}{@{}ll@{}}
-\toprule
-Parameter & Value \\
-\midrule
-Period & 6–24 March 2026 (18 days) \\
-Positions & 58 across 5 depositor groups \\
-Events & 36,337 rebalance events \\
-Contract versions & PM V8, PM V9 \\
-DEX & Aerodrome Slipstream (Base) \\
-\bottomrule
-\end{tabular}
-\end{table}
+Three theorems below address those questions. Theorem~4 (Residual Monotonicity) gives strict monotonicity of $|\Delta R|$ in displacement up to the range boundary; the result holds for any pair composition. Theorem~5 (Directional Asymmetry) gives an asymmetry in USD-denominated position value under symmetric sqrt-price displacement, for volatile/stablecoin pairs with the volatile asset at $T_0$. Theorem~6 (Exit Asymmetry) gives an asymmetry in USD-denominated position value between above-range and below-range exits at symmetric displacement past the boundary, for the same pair ordering. Residual magnitudes scale with position value (Theorem~1 of Ryan\cite{ryan2026a}), so the USD-denominated $|\Delta R|$ inherits the asymmetries of Theorems~5 and~6 by a scaling argument under the same domain assumptions; the bridge is developed in the remark following Theorem~5. The three results together identify when USD-denominated dust accounting acquires a directional bias even though the residual-generating mechanism is directionally blind.
 
-\subsection{Related work}\label{sec:related}
+The empirical confirmations below draw on Phase~3 operational data from a live CL portfolio management system on Aerodrome (Base): 36{,}337 rebalance events on 58 positions across five depositor groups over 18 days from 6--24 March 2026, executed by two contract versions (PM V8 and PM V9) on Aerodrome Slipstream.
 
-\citet{adams2021} introduced concentrated liquidity in Uniswap V3. The amount equations from that paper are the source of all three theorems below. \citet{ryan2026a} established existence, equilibrium and extinction behaviour for the geometric residual under shared depositor balances; the present paper extends that framework to directional properties.
+\section{Related work}
 
-\citet{hasbrouck2025} model V3 CL provision as a covered call sold at intrinsic rather than market value, with LPs forgoing the option's time premium in exchange for fees. Theorems~5 and~6 below identify a related asymmetry. Position value in volatile/stablecoin pairs is structurally asymmetric under symmetric sqrt-price displacement, and the asymmetry intensifies at range exits. The proofs use only the V3 amount equations and the chosen num\'eraire.
+Adams \emph{et al.}\cite{adams2021} introduced concentrated liquidity in Uniswap V3. The amount equations from that paper are the source of all three theorems below. Ryan\cite{ryan2026a} established existence, equilibrium and extinction behaviour for the geometric residual under shared depositor balances; the present paper extends that framework to directional properties.
 
-\citet{cartea2024} introduce \emph{predictable loss}, a closed-form measure of the unhedgeable losses an LP incurs from holding assets in a CL pool, and analyse \emph{concentration risk}, the decrease in fee revenue when the marginal exchange rate exits the LP's range of liquidity. Theorem~6 below addresses the asymmetry of position value at the moment of range exit.
+Hasbrouck \emph{et al.}\cite{hasbrouck2025} model V3 CL provision as a covered call sold at intrinsic rather than market value, with LPs forgoing the option's time premium in exchange for fees. Theorems~5 and~6 below identify a related asymmetry. Position value in volatile/stablecoin pairs is structurally asymmetric under symmetric sqrt-price displacement, and the asymmetry intensifies at range exits. The proofs use only the V3 amount equations and the chosen num\'eraire.
 
-\citet{heimbach2022} model and empirically analyse V3 LP risks and returns, finding wide cross-strategy variation. The 36{,}337-event Phase~3 dataset below adds a single-operator observation point to that record. \citet{fan2023} formulate the strategic LP problem of choosing tick ranges to maximise fees net of repositioning costs. Theorems~5 and~6 describe asymmetries any such strategy faces under directional price moves and at range exits.
+Cartea \emph{et al.}\cite{cartea2024} introduce \emph{predictable loss}, a closed-form measure of the unhedgeable losses an LP incurs from holding assets in a CL pool, and analyse \emph{concentration risk}, the decrease in fee revenue when the marginal exchange rate exits the LP's range of liquidity. Theorem~6 below addresses the asymmetry of position value at the moment of range exit.
 
-\subsection{Preliminaries from \citet{ryan2026a}}
+Heimbach \emph{et al.}\cite{heimbach2022} model and empirically analyse V3 LP risks and returns, finding wide cross-strategy variation. The 36{,}337-event Phase~3 dataset below adds a single-operator observation point to that record. Fan \emph{et al.}\cite{fan2023} formulate the strategic LP problem of choosing tick ranges to maximise fees net of repositioning costs. Theorems~5 and~6 describe asymmetries any such strategy faces under directional price moves and at range exits.
+
+\section{Preliminaries}
 
 For a position with liquidity $L$ in tick range $[s_a, s_b]$ at current sqrt price $s$, the Uniswap V3 amount equations give
 \begin{equation}\label{eq:amounts-prelim}
@@ -173,33 +263,16 @@ where $x$ is token0 (lower address) and $y$ is token1 (higher address). The posi
 V = L \cdot \phi(s, s_a, s_b), \qquad \phi(s, s_a, s_b) = 2s - s^2/s_b - s_a.
 \end{equation}
 
-Theorem~1 of \citet{ryan2026a} establishes that a rebalance from range $[s_a, s_b]$ to $[s_{a'}, s_{b'}]$ at current sqrt price $s$ produces a zero geometric residual if and only if the old and new ranges demand the same token ratio at $s$. Range equality is a sufficient condition but not the only one; any range change that shifts the required token ratio produces a non-zero residual, with the sign determined by which token is the binding constraint in the new range's mint.
+Theorem~1 of Ryan\cite{ryan2026a} establishes that a rebalance from range $[s_a, s_b]$ to $[s_{a'}, s_{b'}]$ at current sqrt price $s$ produces a zero geometric residual if and only if the old and new ranges demand the same token ratio at $s$. Range equality is a sufficient condition but not the only one; any range change that shifts the required token ratio produces a non-zero residual, with the sign determined by which token is the binding constraint in the new range's mint. The results below characterise how the magnitude and USD valuation of that residual respond to displacement direction, displacement magnitude and exit type.
 
-The results below characterise how the magnitude and USD valuation of that residual respond to displacement direction, displacement magnitude and exit type.
-
-\subsection{Notation}
-
-Following \citet{ryan2026a}:
-
-\begin{itemize}[nosep]
-    \item $s = \sqrt{p}$, the current sqrt price
-    \item $[s_a, s_b]$, position range boundaries in sqrt-price space
-    \item $L$, position liquidity
-    \item $w = s_b - s_a$, range width in sqrt-price space
-    \item $\delta$, displacement from range centre in sqrt-price space
-    \item $nd = \delta / (w/2)$, normalised displacement ($0$ = centre, $1$ = range edge)
-    \item $D$, dust flow (USD-denominated net position value change from non-swap sources)
-    \item $\Delta R$, geometric residual (token surplus from a token-ratio mismatch between old and new ranges at current price)
-\end{itemize}
-
-Uniswap V3 places token0 at the pool's lower contract address. Theorems~5 and~6 below are stated for pools in which the volatile asset occupies $T_0$ (and the stablecoin $T_1$); in pools with the opposite address ordering, the USD-denominated inequalities invert but the mechanism is unchanged.
+The notation throughout is that of Ryan\cite{ryan2026a}: $s = \sqrt{p}$ is the current sqrt price; $[s_a, s_b]$ are the position range boundaries in sqrt-price space; $L$ is position liquidity; $w = s_b - s_a$ is the range width; $\delta$ is the displacement from the range centre; $nd = \delta/(w/2)$ is the normalised displacement ($0$ at the centre, $1$ at the range edge); $D$ is the dust flow (USD-denominated net position value change from non-swap sources); and $\Delta R$ is the geometric residual (token surplus from a token-ratio mismatch between old and new ranges at the current price). Uniswap V3 places token0 at the pool's lower contract address. Theorems~5 and~6 below are stated for pools in which the volatile asset occupies $T_0$ (and the stablecoin $T_1$); in pools with the opposite address ordering, the USD-denominated inequalities invert but the mechanism is unchanged.
 
 \section{Theoretical results}
 
 \subsection{Theorem 4 (Residual Monotonicity)}
 
 \begin{theorem}[Residual Monotonicity]
-For a CL position in range $[s_a, s_b]$ rebalanced to a new range of equal width centred on the current sqrt price $s$, where $s$ has been displaced by $\delta$ from the midpoint $\bar{s} = (s_a + s_b)/2$, the absolute geometric residual $|\Delta R|$ is strictly increasing in $|\delta|$ on $(0, w/2]$, with $\Delta R(0) = 0$ and $\Delta R(\pm w/2) = L \cdot w$.
+For a CL position in range $[s_a, s_b]$ rebalanced to a new range of equal width centred on the current sqrt price $s$, where $s$ has been displaced by $\delta$ from the midpoint $\bar{s} = (s_a + s_b)/2$, the absolute geometric residual $|\Delta R|$ is strictly increasing in $|\delta|$ on $(0, w/2]$, with $\Delta R(0) = 0$ and $\Delta R(w/2) = L \cdot w$. The boundary magnitude on the downward branch is smaller by a factor of $\bar{s}/s_b$ (Theorem~5).
 \end{theorem}
 
 \begin{proof}
@@ -208,7 +281,7 @@ Consider a position with liquidity $L$ in range $[s_a, s_b]$ at current sqrt pri
 x_w = L \cdot \left(\frac{1}{s} - \frac{1}{s_b}\right), \quad y_w = L \cdot (s - s_a)
 \end{equation}
 
-The new range, centred on $s$ with the same width $w$, has boundaries $s_{a'} = s - w/2$ and $s_{b'} = s + w/2$. At the range midpoint ($\delta = 0$), $R_{\text{old}} = R_{\text{new}}$ and the residual is zero by Theorem~1 of \citet{ryan2026a}.
+The new range, centred on $s$ with the same width $w$, has boundaries $s_{a'} = s - w/2$ and $s_{b'} = s + w/2$. At the range midpoint ($\delta = 0$), $R_{\text{old}} = R_{\text{new}}$ and the residual is zero by Theorem~1 of Ryan\cite{ryan2026a}.
 
 For upward displacement ($\delta > 0$), $x_w$ is strictly decreasing in $\delta$ (since $\partial x_w / \partial s = -L/s^2 < 0$) whilst $y_w$ is strictly increasing ($\partial y_w / \partial s = L > 0$). As $s$ moves above the midpoint, the position becomes increasingly token1-heavy. The new range, centred on $s$, demands a ratio closer to 50/50 at its midpoint, requiring more token0 than the old position holds. Token0 is therefore the binding constraint.
 
@@ -230,6 +303,7 @@ The downward displacement case ($\delta < 0$) is symmetric with the roles of tok
 
 \begin{table}[H]
 \centering
+\caption{Residual monotonicity, Foundry verification.}\label{tab:t4-foundry}
 \begin{tabular}{@{}lrl@{}}
 \toprule
 Displacement (ticks) & Dust (USD) & Monotonic \\
@@ -245,7 +319,6 @@ $+500$ & \$9{,}297 (range exit) & \checkmark \\
 
 \noindent Zero violations occur across the five rows within the theorem's domain ($|\delta| \leq 500$ ticks for this 1,000-tick range). At $|\delta| = w/2$ the position fully exits range, $x_w = 0$, and the residual equals the full token1 balance ($L \cdot w$), as derived above; additional Foundry runs at $|\delta| > w/2$ (not shown) plateau at this boundary value, consistent with saturation outside the theorem's domain.
 
-\needspace{12\baselineskip}
 \subsection{Theorem 5 (Directional Asymmetry)}
 
 \begin{theorem}[Directional Asymmetry]
@@ -253,7 +326,7 @@ For a CL position in pool $(T_0, T_1)$ where $T_0$ is the volatile asset and $T_
 \end{theorem}
 
 \begin{proof}
-The CL value function in token1 (stablecoin) units \citep[eq.~3]{ryan2026a} is
+The CL value function in token1 (stablecoin) units \cite{ryan2026a} is
 \begin{equation}
 V = L \cdot \phi(s, s_a, s_b)
 \end{equation}
@@ -273,7 +346,7 @@ Expanding:
 Since $s < s_b$ strictly for any position whose current price lies in the interior of its range, the factor $(1 - s/s_b) > 0$, and therefore $V(s + \delta) > V(s - \delta)$ for all $\delta > 0$ satisfying the range constraint.
 \end{proof}
 
-\noindent\textit{Remark (Residual--value bridge).} Theorem~1 of \citet{ryan2026a} gives the residual fraction $|\Delta R|/V$ as a function of range geometry and the current price, independent of $L$; at equal $|\delta|/w$, absolute residual magnitude scales with position value. Combined with Theorem~5, this implies that USD-denominated residual magnitudes inherit the directional asymmetry proved above, under the same pair-ordering and stablecoin assumptions. Theorem~5 itself establishes only the $V$ inequality; the corresponding $|\Delta R|$ statement follows by scaling from \citet{ryan2026a}.
+\noindent\textit{Remark (Residual--value bridge).} Theorem~1 of Ryan\cite{ryan2026a} gives the residual fraction $|\Delta R|/V$ as a function of range geometry and the current price, independent of $L$; at equal $|\delta|/w$, absolute residual magnitude scales with position value. Combined with Theorem~5, this implies that USD-denominated residual magnitudes inherit the directional asymmetry proved above, under the same pair-ordering and stablecoin assumptions. Theorem~5 itself establishes only the $V$ inequality; the corresponding $|\Delta R|$ statement follows by scaling from Ryan\cite{ryan2026a}.
 
 The asymmetry is numéraire-dependent. The proof measures value in token1 units, in which up-moves retain more value. Measured in token0 units, down-moves retain more value. The mechanism is directionally blind; the apparent bias comes from the choice of unit of account. Since USD aligns with stablecoins (typically token1 in Uniswap V3 pair ordering), USD-denominated accounting favours up-moves.
 
@@ -282,6 +355,7 @@ The asymmetry is numéraire-dependent. The proof measures value in token1 units,
 
 \begin{table}[H]
 \centering
+\caption{Directional asymmetry, Foundry verification.}\label{tab:t5-foundry}
 \begin{tabular}{@{}lrrr@{}}
 \toprule
 Displacement & Up value (USD) & Down value (USD) & Gap \\
@@ -302,6 +376,7 @@ $\pm 450$ ticks & \$8,346 & \$0 & $+$\$8,346 \\
 
 \begin{table}[H]
 \centering
+\caption{Directional asymmetry, empirical confirmation.}\label{tab:t5-empirical}
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
 Direction & Events & Total Dust & Avg Dust & \% Positive \\
@@ -317,7 +392,7 @@ Falling ($nd < -0.1$) & 8,312 & $-$\$103,308 & $-$\$12.43 & 36.2\% \\
 \subsection{Theorem 6 (Exit Asymmetry)}
 
 \begin{theorem}[Exit Asymmetry]
-For a CL position in pool $(T_0, T_1)$ where $T_0$ is the volatile asset and $T_1$ is a stablecoin, a below-range exit retains less USD value than an above-range exit at symmetric sqrt-price displacement $d$ past the respective range boundary.
+For a CL position in pool $(T_0, T_1)$ where $T_0$ is the volatile asset and $T_1$ is a stablecoin, a below-range exit retains strictly less USD value than an above-range exit at any sqrt-price displacement $d > 0$ past the corresponding boundary.
 \end{theorem}
 
 \begin{proof}
@@ -346,6 +421,7 @@ For any $d > 0$, the ratio $V_{\text{below}}/V_{\text{above}}$ decreases with $d
 
 \begin{table}[H]
 \centering
+\caption{Exit asymmetry, Foundry verification.}\label{tab:t6-foundry}
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
 Exit distance & Above value & Below value & Above swap frac & Below swap frac \\
@@ -366,6 +442,7 @@ $\pm 500$ ticks & \$9,297 & \$0 & 0 bps & 9,999 bps \\
 
 \begin{table}[H]
 \centering
+\caption{Exit asymmetry, empirical confirmation.}\label{tab:t6-empirical}
 \begin{tabular}{@{}lrrrrr@{}}
 \toprule
 Exit type & Events & Avg Dust & Median & P5 (worst) & P95 (best) \\
@@ -384,10 +461,11 @@ Theorem~4 gives strict monotonicity of $|\Delta R|$ in displacement up to the ra
 
 The siphon moves tokens between positions through a shared dust pool based on geometric ratios. It does not take directional views. When the token flows are valued in USD, the accounting reflects the price exposure of the tokens being moved. In a portfolio where a volatile asset appears in multiple pools paired against stablecoins (a hub topology of the kind Theorems~5 and~6 cover), token surpluses generated by rebalancing carry that asset's price exposure. The USD value of those flows is predicted to rise during rallies relative to selloffs at comparable displacement (Theorem~5 via the residual--value bridge), and below-range exits are predicted to retain less USD value than above-range exits at symmetric displacement past the boundary (Theorem~6). For portfolios with this composition, USD-denominated performance metrics reflect the hub token's directional exposure. In pools with the opposite address ordering or non-stablecoin pairings, the asymmetry inverts or attenuates with the numéraire.
 
-\section{Foundry verification suite}
+\section{Foundry verification suite}\label{sec:foundry}
 
-The directional theorems were verified against a mock pool implementing exact Uniswap V3 TickMath constants for sqrt-price and liquidity computations (\texttt{MockCLPoolV2}). The full Foundry suite is shared with the companion paper \citep{ryan2026a} and runs as 15 tests across four contracts:
+The directional theorems were verified against a mock pool implementing exact Uniswap V3 TickMath constants for sqrt-price and liquidity computations (\texttt{MockCLPoolV2}). The full Foundry suite is shared with the companion paper \cite{ryan2026a} and runs as 15 tests across four contracts:
 
+\begin{codeblock}
 \begin{verbatim}
 cd foundry
 forge test -vv --no-match-contract 'GeometricResidualProof$'
@@ -396,6 +474,7 @@ Suite result: ok. 10 passed; 0 failed; 0 skipped     (mock-pool tests)
 RPC_BASE_ALCHEMY=https://mainnet.base.org forge test -vv
 Suite result: ok. 5 passed; 0 failed; 0 skipped      (live fork tests)
 \end{verbatim}
+\end{codeblock}
 
 The mock-pool subset (10 tests) verifies existence and the scaling-with-position-size property of the residual (Theorem~1), zero-swap extinction (Theorem~3), and the three directional theorems below. The live fork subset (5 tests) reproduces the Theorem~1 scenarios against unmodified Aerodrome Slipstream contracts on Base mainnet via \texttt{vm.createSelectFork}, exercising the same withdraw-mint sequence on real on-chain V3 geometry. The qualitative claims (residual existence, same-range control, residual scaling with position size at fixed range geometry) hold deterministically; the exact residual values vary between runs as live pool state changes.
 
@@ -403,6 +482,7 @@ Tests 8--10 below verify the directional theorems introduced in this paper:
 
 \begin{table}[H]
 \centering
+\caption{Tests for the directional theorems.}\label{tab:test-summary}
 \begin{tabular}{@{}llll@{}}
 \toprule
 Test & Theorem & Assertion & Result \\
@@ -414,64 +494,65 @@ Test & Theorem & Assertion & Result \\
 \end{tabular}
 \end{table}
 
-\noindent Tests 1--7 (Theorems 1 and 3 from \citet{ryan2026a}) and the five live fork tests are included for completeness and all pass.
+\noindent Tests 1--7 (Theorems 1 and 3 from Ryan\cite{ryan2026a}) and the five live fork tests are included for completeness and all pass.
 
 \section{Limitations}\label{sec:limitations}
 
-\begin{enumerate}
-    \item \textbf{Empirical scope.} All empirical data come from one operator's positions on Aerodrome (Base). The theorem proofs are general, derived from the V3 amount equations, but the empirical ratios ($5\times$ directional asymmetry, 58\% exit asymmetry) are specific to this dataset and may differ under other protocols, pairs or market conditions.
+Four limitations should be flagged. \emph{Empirical scope.} All empirical data come from one operator's positions on Aerodrome (Base). The theorem proofs are general, derived from the V3 amount equations, but the empirical ratios ($5\times$ directional asymmetry, 58\% exit asymmetry) are specific to this dataset and may differ under other protocols, pairs or market conditions.
 
-    \item \textbf{Observation window.} 18 days of continuous operation. The dataset does not span a full market cycle.
+\emph{Observation window.} 18 days of continuous operation. The dataset does not span a full market cycle.
 
-    \item \textbf{Unsegmented pool composition.} The empirical confirmations for Theorems 5 and 6 ($N = 26{,}191$ directional events and $N = 2{,}225$ exit events) are drawn from the full Phase 3 dataset without segmentation by pool type. The reported ratios may therefore conflate volatile/stablecoin pools, to which the theorems strictly apply, with any other pool compositions present. Segmented analysis is left to future work.
+\emph{Unsegmented pool composition.} The empirical confirmations for Theorems~5 and~6 ($N = 26{,}191$ directional events and $N = 2{,}225$ exit events) are drawn from the full Phase~3 dataset without segmentation by pool type. The reported ratios may therefore conflate volatile/stablecoin pools, to which the theorems strictly apply, with any other pool compositions present. Segmented analysis is left to future work.
 
-    \item \textbf{Numéraire dependence.} Theorems 5 and 6 are proved in token1 units. Measured in token0 units, the inequalities reverse. The directional asymmetry is therefore an artefact of the chosen unit of account, not an intrinsic property of the mechanism. The USD interpretation holds when token1 is a stablecoin or when token1's USD price is approximately stable over the rebalance interval.
-\end{enumerate}
+\emph{Num\'eraire dependence.} Theorems~5 and~6 are proved in token1 units. Measured in token0 units, the inequalities reverse. The directional asymmetry is therefore an artefact of the chosen unit of account, not an intrinsic property of the mechanism. The USD interpretation holds when token1 is a stablecoin or when token1's USD price is approximately stable over the rebalance interval.
 
 \section{Conclusion}
 
-In concentrated-liquidity rebalancing, the geometric residual increases strictly monotonically with displacement up to the range boundary (Theorem~4, Residual Monotonicity). For volatile/stablecoin pairs with the volatile asset at $T_0$, position value is directionally asymmetric in USD terms under symmetric in-range displacement (Theorem~5, Directional Asymmetry); USD-denominated residuals inherit this asymmetry by a scaling argument from the residual-fraction result of \citet{ryan2026a}. For the same pair ordering, below-range exits retain less USD value than above-range exits at symmetric displacement past the boundary (Theorem~6, Exit Asymmetry). All three results follow from the Uniswap V3 amount equations and are verified by Foundry tests using exact V3 \texttt{TickMath} constants for sqrt-price and liquidity computations.
+In concentrated-liquidity rebalancing, the geometric residual increases strictly monotonically with displacement up to the range boundary (Theorem~4, Residual Monotonicity). For volatile/stablecoin pairs with the volatile asset at $T_0$, position value is directionally asymmetric in USD terms under symmetric in-range displacement (Theorem~5, Directional Asymmetry); USD-denominated residuals inherit this asymmetry by a scaling argument from the residual-fraction result of Ryan\cite{ryan2026a}. For the same pair ordering, below-range exits retain less USD value than above-range exits at symmetric displacement past the boundary (Theorem~6, Exit Asymmetry). All three results follow from the Uniswap V3 amount equations and are verified by Foundry tests using exact V3 \texttt{TickMath} constants for sqrt-price and liquidity computations.
 
 The empirical dataset of 36{,}337 events across 58 positions and 18 days is consistent with the predicted directions at production scale. USD-denominated dust flows are about $5\times$ larger in rising markets than in falling markets despite a near-identical frequency of positive-dust events, and below-range exits show $58\%$ larger average negative dust flow than above-range exits at comparable displacement. The dataset is not segmented by pool composition (\S\ref{sec:limitations}); the figures support the predictions at production scale without strictly confirming Theorems~5 and~6 in their volatile/stablecoin domain.
 
-\citet{ryan2026a} established existence (Theorem~1), equilibrium (Theorem~2) and extinction (Theorem~3) of the geometric residual under shared depositor balances. The three theorems above extend that framework to displacement magnitude, price direction and exit type. The proofs follow from the V3 amount equations and the chosen num\'eraire; under the stated domain assumptions, the same properties should manifest in any system performing autonomous CL rebalancing with shared depositor balances.
+Ryan\cite{ryan2026a} established existence (Theorem~1), equilibrium (Theorem~2) and extinction (Theorem~3) of the geometric residual under shared depositor balances. The three theorems above extend that framework to displacement magnitude, price direction and exit type. The proofs follow from the V3 amount equations and the chosen num\'eraire; under the stated domain assumptions, the same properties should manifest in any system performing autonomous CL rebalancing with shared depositor balances.
 
 \addcontentsline{toc}{section}{References}
 \begin{thebibliography}{9}
 
-\bibitem[Adams et~al.(2021)]{adams2021}
-Adams, H., Zinsmeister, N., Salem, M., Keefer, R. and Robinson, D. (2021) `Uniswap v3 Core', \emph{Uniswap Labs Technical Whitepaper}. \url{https://uniswap.org/whitepaper-v3.pdf}.
+\bibitem{ryan2026a}
+Ryan, K.R. ``The Geometric Siphon: Emergent Capital Reallocation in Concentrated Liquidity Portfolios.'' \emph{SSRN preprint 6374838} (2026) \url{https://doi.org/10.2139/ssrn.6374838}.
 
-\bibitem[Cartea et~al.(2024)]{cartea2024}
-Cartea, \'A., Drissi, F. and Monga, M. (2024) `Decentralised Finance and Automated Market Making: Predictable Loss and Optimal Liquidity Provision', \emph{SIAM Journal on Financial Mathematics}, forthcoming. \url{https://doi.org/10.1137/23M1602103}. Preprint: arXiv:2309.08431.
+\bibitem{adams2021}
+Adams, H., Zinsmeister, N., Salem, M., Keefer, R., Robinson, D. ``Uniswap v3 Core.'' \emph{Uniswap Labs Technical Whitepaper} (2021) \url{https://uniswap.org/whitepaper-v3.pdf}.
 
-\bibitem[Fan et~al.(2023)]{fan2023}
-Fan, Z., Marmolejo-Cossío, F.J., Moroz, D., Neuder, M., Rao, R. and Parkes, D.C. (2023) `Strategic Liquidity Provision in Uniswap v3', in \emph{Proceedings of the 5th Conference on Advances in Financial Technologies (AFT 2023)}, LIPIcs vol.~282, Article 25. \url{https://doi.org/10.4230/LIPIcs.AFT.2023.25}. Preprint: arXiv:2106.12033.
+\bibitem{hasbrouck2025}
+Hasbrouck, J., Rivera, T.J., Saleh, F. ``An Economic Model of a Decentralized Exchange with Concentrated Liquidity.'' \emph{Management Science (forthcoming)} (2025) \url{https://doi.org/10.1287/mnsc.2024.04510}.
 
-\bibitem[Hasbrouck et~al.(2025)]{hasbrouck2025}
-Hasbrouck, J., Rivera, T.J. and Saleh, F. (2025) `An Economic Model of a Decentralized Exchange with Concentrated Liquidity', \emph{Management Science}, forthcoming. \url{https://doi.org/10.1287/mnsc.2024.04510}. SSRN: 4529513.
+\bibitem{cartea2024}
+Cartea, \'A., Drissi, F., Monga, M. ``Decentralised Finance and Automated Market Making: Predictable Loss and Optimal Liquidity Provision.'' \emph{SIAM Journal on Financial Mathematics (forthcoming)} (2024) \url{https://doi.org/10.1137/23M1602103}.
 
-\bibitem[Heimbach et~al.(2022)]{heimbach2022}
-Heimbach, L., Schertenleib, E. and Wattenhofer, R. (2022) `Risks and Returns of Uniswap V3 Liquidity Providers', in \emph{Proceedings of the 4th ACM Conference on Advances in Financial Technologies (AFT 2022)}. \url{https://doi.org/10.1145/3558535.3559772}. Preprint: arXiv:2205.08904.
+\bibitem{heimbach2022}
+Heimbach, L., Schertenleib, E., Wattenhofer, R. ``Risks and Returns of Uniswap V3 Liquidity Providers.'' \emph{Proceedings of the 4th ACM Conference on Advances in Financial Technologies (AFT 2022)} (2022) \url{https://doi.org/10.1145/3558535.3559772}.
 
-\bibitem[Ryan(2026a)]{ryan2026a}
-Ryan, K.R.\ (2026a) `The Geometric Siphon: Emergent Capital Reallocation in Concentrated Liquidity Portfolios'. \url{https://doi.org/10.2139/ssrn.6374838}.
+\bibitem{fan2023}
+Fan, Z., Marmolejo-Cossío, F.J., Moroz, D., Neuder, M., Rao, R., Parkes, D.C. ``Strategic Liquidity Provision in Uniswap v3.'' \emph{Proceedings of the 5th Conference on Advances in Financial Technologies (AFT 2023), LIPIcs vol.~282, Article 25} (2023) \url{https://doi.org/10.4230/LIPIcs.AFT.2023.25}.
 
 \end{thebibliography}
 
 \appendix
-\newpage
+\titleformat{\section}[block]{\fontsize{13pt}{15pt}\bfseries}{Appendix \thesection:}{0.6em}{}
+\titlespacing*{\section}{0pt}{18pt}{8pt}
 
-\section{Foundry test reproduction}
+\section{Foundry test reproduction}\label{app:foundry}
 
 Requirements: Foundry \texttt{forge} (installation instructions at \url{https://book.getfoundry.sh}) and, for the fork tests, any working Base RPC URL. The \texttt{forge-std} library is included as a git submodule; the \texttt{git submodule update} command below fetches it into \texttt{foundry/lib/forge-std}.
 
+\begin{codeblock}
 \begin{verbatim}
 cd foundry
 git submodule update --init --recursive
 
 # Mock-pool tests only, no network access required (10 tests)
-forge test -vv --no-match-contract 'GeometricResidualProof$'
+forge test -vv \
+  --no-match-contract '(GeometricResidualProof|DirectionalExitForkProof)$'
 
 # Full suite, including the 5 live fork tests (15 tests)
 RPC_BASE_ALCHEMY=https://mainnet.base.org forge test -vv
@@ -484,6 +565,7 @@ forge test -vv --match-contract NewTheoremsProof
 
 # MockCLPoolV2.sol uses exact Uniswap V3 TickMath constants.
 \end{verbatim}
+\end{codeblock}
 
 \noindent The official public endpoint above is sufficient for all five fork tests; any Alchemy, Infura, QuickNode or other Base RPC URL is equally acceptable in \texttt{RPC\_BASE\_ALCHEMY}. Forge caches RPC responses locally, so repeat runs are fast; mock-pool tests complete in under a second. The captured \texttt{forge test -vv} output mapped to each theorem lives in \texttt{foundry/PROOF\_OUTPUT.md} and serves as the deterministic regression target for the mock-pool tests; fork-test residuals vary between runs as live pool state changes (the qualitative claims hold deterministically).
 
@@ -525,25 +607,12 @@ For any economically meaningful CL position, $\bar{s} > 0$, $w > 0$ and $\delta 
 \begin{equation}
 \frac{d\,\Delta R}{d\delta} \;>\; 0 \quad\text{on}\quad (0, w/2],
 \end{equation}
-and $\Delta R$ is strictly increasing on $[0, w/2]$. At the endpoints, $\Delta R(0) = L(w/2) - L(w/2)(\bar{s} + w/2)/(\bar{s} + w/2) = 0$, consistent with Theorem~1 of \citet{ryan2026a}; and $\Delta R(w/2) = L \cdot w$, the full token1 balance at range exit.
+and $\Delta R$ is strictly increasing on $[0, w/2]$. At the endpoints, $\Delta R(0) = L(w/2) - L(w/2)(\bar{s} + w/2)/(\bar{s} + w/2) = 0$, consistent with Theorem~1 of Ryan\cite{ryan2026a}; and $\Delta R(w/2) = L \cdot w$, the full token1 balance at range exit.
 
 The downward case $\delta \in [-w/2, 0]$ proceeds analogously with token1 as the binding constraint: $L_{\text{new}}$ is set by $y_w$ rather than $x_w$, $g(\delta)$ takes the symmetric form, and the same calculation gives $d\,\Delta R/d\delta < 0$ on $[-w/2, 0)$. Combining the two cases, $|\Delta R(\delta)|$ is strictly increasing in $|\delta|$ on $(0, w/2]$, as claimed in Theorem~4.
 
-\section{Data and reproduction}
+\section{Data and reproduction}\label{app:reproduction}
 
-\begin{table}[H]
-\centering
-\begin{tabular}{@{}ll@{}}
-\toprule
-Resource & Location \\
-\midrule
-Foundry verification suite & \texttt{foundry/} directory \\
-Captured \texttt{forge test} output & \texttt{foundry/PROOF\_OUTPUT.md} \\
-Phase 3 diffusion log & Available on request \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\noindent The repository is at \url{https://github.com/g4nc0r/the-geometric-siphon}; the Zenodo DOI \url{https://doi.org/10.5281/zenodo.19526374} resolves to an immutable archival snapshot of the repository at the time of deposit, whilst the GitHub URL tracks the latest commit. The Foundry suite reproduces all theorem verifications from a clean checkout (see Appendix~A). The Phase~3 diffusion-event log of 36{,}337 rebalance events across 58 positions used for the empirical confirmations in \S2 is available on request.
+The repository is at \url{https://github.com/g4nc0r/the-geometric-siphon}; the Zenodo Code DOI \url{https://doi.org/10.5281/zenodo.19905208} resolves to an immutable archival snapshot, whilst the GitHub URL tracks the latest commit. The current Foundry suite and reproduction harness in the repository align with the consolidated manuscript referenced in the supersession note. The qualitative theorem verifications described in \S\ref{sec:foundry} (residual monotonicity in displacement, directional asymmetry of USD-denominated position value under symmetric in-range moves, and exit asymmetry between above-range and below-range exits) reproduce on the current harness; specific numerical values may differ from the figures reported here, which reflect the harness used at the time of this preprint. The Phase~3 diffusion-event log of 36{,}337 rebalance events across 58 positions used for the empirical confirmations is also deposited on Zenodo (Data DOI \url{https://doi.org/10.5281/zenodo.19904832}).
 
 \end{document}

@@ -1,19 +1,30 @@
 \documentclass[11pt,a4paper]{article}
 
-% Fonts: TeX Gyre Pagella with matching math (Palatino-style, conventional academic look)
-% Loaded by file name because the TeX Live OpenType files are not registered
-% with the OS font database on most Linux distributions.
+% Fonts: TeX Gyre Termes (Times equivalent) with matching math
 \usepackage{fontspec}
 \usepackage{unicode-math}
-\setmainfont{texgyrepagella}[
+\setmainfont{texgyretermes}[
   Extension      = .otf,
   UprightFont    = *-regular,
   BoldFont       = *-bold,
   ItalicFont     = *-italic,
   BoldItalicFont = *-bolditalic,
 ]
-\setmathfont{texgyrepagella-math.otf}
+\setmathfont{texgyretermes-math.otf}
 \frenchspacing
+
+% Body size / leading: 11.5pt / 13.5pt
+\makeatletter
+\renewcommand{\@xpt}{11.5}
+\renewcommand{\@xiipt}{13.5}
+\renewcommand\normalsize{%
+  \@setfontsize\normalsize\@xpt\@xiipt
+  \abovedisplayskip 10\p@ \@plus2\p@ \@minus5\p@
+  \abovedisplayshortskip \z@ \@plus3\p@
+  \belowdisplayshortskip 6\p@ \@plus3\p@ \@minus3\p@
+  \belowdisplayskip \abovedisplayskip
+  \let\@listi\@listI}
+\makeatother
 
 % Page layout
 \usepackage[margin=1in]{geometry}
@@ -22,61 +33,125 @@
 \usepackage{amsmath,amsthm}
 
 % Tables
-\usepackage{booktabs}
 \usepackage{array}
+\usepackage{booktabs}
+\setlength{\extrarowheight}{2pt}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 
-% Figures
-\usepackage{graphicx}
+% Float placement
 \usepackage{float}
 \usepackage[section]{placeins}
 
-% Captions: small, bold-labelled
+% Captions: "Fig. N." / "Table N." period separator, label smaller
 \usepackage{caption}
-\captionsetup{font=small,labelfont=bf}
+\captionsetup{figurename=Fig.,labelsep=period,margin=1.2cm,labelfont=footnotesize}
 
 % Lists
 \usepackage{enumitem}
 
-% Prevent orphaned headings
+% Section heading style (lighter than article default)
+\usepackage{titlesec}
+\titleformat{\section}[block]{\fontsize{13pt}{15pt}\bfseries}{\thesection.}{0.6em}{}
+\titlespacing*{\section}{0pt}{18pt}{8pt}
+\titleformat{\subsection}[block]{\fontsize{11.5pt}{13.5pt}\bfseries\itshape}{\thesubsection.}{0.6em}{}
+\titlespacing*{\subsection}{0pt}{14pt}{6pt}
+
+% Graphics + TikZ + pgfplots (in-document figures)
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows,calc}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+% Paragraph rules (indented first line, no gap, indentfirst on)
+\usepackage{indentfirst}
+\emergencystretch=1em
+\widowpenalty=10000
+\clubpenalty=10000
 \usepackage{needspace}
 
-% Paragraph formatting
-\usepackage{parskip}
-\emergencystretch=1em
-\hyphenpenalty=200
+% Float / display-math spacing
+\setlength{\intextsep}{8pt plus 2pt minus 2pt}
+\setlength{\floatsep}{8pt plus 2pt minus 2pt}
+\setlength{\textfloatsep}{10pt plus 2pt minus 2pt}
+\AtBeginDocument{%
+  \setlength{\abovedisplayskip}{18pt plus 3pt minus 2pt}%
+  \setlength{\belowdisplayskip}{18pt plus 3pt minus 2pt}%
+  \setlength{\abovedisplayshortskip}{14pt plus 2pt minus 1pt}%
+  \setlength{\belowdisplayshortskip}{14pt plus 2pt minus 1pt}%
+}
 
-% Typographic refinement (better letter spacing, hyphenation, line breaks)
+% Tables: tight row stretch, content at \footnotesize
+\renewcommand{\arraystretch}{1.05}
+\AtBeginEnvironment{tabular}{\footnotesize}
+
+% Microtype
 \usepackage{microtype}
 
-% Author-date citations (Harvard style, finance/economics convention)
-\usepackage[authoryear,round]{natbib}
-\bibpunct{(}{)}{;}{a}{,}{,}
+% Footnotes pinned to page bottom
+\usepackage[bottom]{footmisc}
 
-% Tighter bibliography spacing
+% Citations: superscript numeric, with superscript labels in bibliography
+\usepackage[superscript,biblabel]{cite}
+
+% Bibliography: hanging indent with the label sitting in its own column
+\makeatletter
+\renewenvironment{thebibliography}[1]
+  {\section*{\refname}%
+   \fontsize{10pt}{12pt}\selectfont
+   \list{\@biblabel{\@arabic\c@enumiv}}%
+        {\settowidth\labelwidth{\@biblabel{#1}}%
+         \leftmargin\labelwidth
+         \advance\leftmargin-0.8em
+         \advance\leftmargin\labelsep
+         \setlength\itemindent{1em}%
+         \setlength\itemsep{6pt plus 1pt minus 1pt}%
+         \setlength\parsep{0pt}%
+         \usecounter{enumiv}%
+         \let\p@enumiv\@empty
+         \renewcommand\theenumiv{\@arabic\c@enumiv}}%
+   \sloppy\clubpenalty4000\widowpenalty4000\sfcode`\.\@m}
+  {\def\@noitemerr{\@latex@warning{Empty `thebibliography' environment}}%
+   \endlist}
+\makeatother
+
 \usepackage{etoolbox}
-\AtBeginEnvironment{thebibliography}{\setlength{\itemsep}{4pt plus 0.5pt}\setlength{\parsep}{0pt}}
 
-% Colour expressions for hyperref
+% Abstract: 10pt/13pt, run-in "Abstract." lead, inset 0.5in each side
+\renewenvironment{abstract}{%
+  \fontsize{10pt}{13pt}\selectfont
+  \begin{list}{}{%
+    \setlength{\leftmargin}{0.5in}%
+    \setlength{\rightmargin}{0.5in}%
+    \setlength{\listparindent}{0pt}%
+    \setlength{\parsep}{6pt plus 2pt minus 1pt}%
+    \setlength{\topsep}{0pt}%
+    \setlength{\partopsep}{0pt}%
+  }\item[]\noindent\textbf{Abstract.}\hspace{0.5em}\ignorespaces
+}{\end{list}}
+
+% Colours
 \usepackage{xcolor}
 
-% Hyperlinks (subtle dark-blue, all-clickable)
+% Hyperlinks + PDF metadata
 \usepackage{hyperref}
 \hypersetup{
   colorlinks=true,
   allcolors=blue!50!black,
   pdfauthor={K.R. Ryan},
-  pdftitle={The Geometric Siphon: Emergent Capital Reallocation in Concentrated Liquidity Portfolios}
+  pdftitle={The Geometric Siphon: Emergent Capital Reallocation in Concentrated Liquidity Portfolios},
+  pdfsubject={Concentrated liquidity, geometric residual},
+  pdfkeywords={concentrated liquidity, geometric residual, automated market maker, portfolio rebalancing, Uniswap V3, Aerodrome}
 }
 
-% Running header on pages 2+
+% Running header (author left, page number centred footer)
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\small\itshape K.R.\ Ryan}
-\fancyhead[R]{\small\itshape The Geometric Siphon}
+\fancyhead[R]{}
 \fancyfoot[C]{\thepage}
-\renewcommand{\headrulewidth}{0.4pt}
-% Title page (page 1) suppresses the running header
+\renewcommand{\headrulewidth}{0pt}
 \fancypagestyle{plain}{%
   \fancyhf{}%
   \fancyfoot[C]{\thepage}%
@@ -86,77 +161,94 @@
 % Theorem environments
 \newtheorem{theorem}{Theorem}
 \newtheorem*{corollary}{Corollary}
+\renewcommand\qedsymbol{\ensuremath{\mdlgblksquare}}
 
-% No paragraph indent, space between paragraphs (match Paper II)
-\setlength{\parindent}{0pt}
-\setlength{\parskip}{6pt plus 2pt minus 1pt}
+% Code-block environment (cream-tinted, footnotesize)
+\usepackage{mdframed}
+\newenvironment{codeblock}{%
+  \begin{mdframed}[%
+    backgroundcolor=brown!3!white,%
+    linewidth=0pt,%
+    innertopmargin=6pt,%
+    innerbottommargin=6pt,%
+    innerleftmargin=12pt,%
+    innerrightmargin=12pt,%
+    leftmargin=0.075\linewidth,%
+    rightmargin=0.075\linewidth,%
+    skipabove=6pt,%
+    skipbelow=6pt%
+  ]\footnotesize%
+}{%
+  \end{mdframed}%
+}
+
+% Paragraph spacing: indented first line, no gap between paragraphs
+\setlength{\parindent}{18pt}
+\setlength{\parskip}{0pt}
 
 \title{The Geometric Siphon: Emergent Capital Reallocation in Concentrated Liquidity Portfolios}
 
 \begin{document}
+\sloppy
 \thispagestyle{plain}
 
 \begin{center}
-{\LARGE\bfseries The Geometric Siphon:\\[4pt]
-Emergent Capital Reallocation in\\Concentrated Liquidity Portfolios}
+{\huge The Geometric Siphon:\\[6pt]
+Emergent Capital Reallocation in\\[4pt]
+Concentrated Liquidity Portfolios}
+
+\vspace{14pt}
+{\large K.R.\ Ryan}\\[4pt]
+{\fontsize{9pt}{11pt}\selectfont Independent Researcher \quad|\quad ORCID - 0009-0004-6295-7040 \quad|\quad \href{mailto:gancor@gancor.xyz}{gancor@gancor.xyz}}\\[4pt]
+{\fontsize{9pt}{11pt}\selectfont March 2026}
 
 \vspace{12pt}
-{\large K.R.\ Ryan}\\[4pt]
-{\small Independent Researcher}\\[2pt]
-{\small \href{mailto:gancor@gancor.xyz}{gancor@gancor.xyz} \quad|\quad ORCID: 0009-0004-6295-7040}
-
-\vspace{8pt}
-March 2026
-
-\vspace{6pt}
-{\small\textbf{Keywords:} concentrated liquidity, geometric residual, automated market maker,\\
-portfolio rebalancing, Uniswap V3, Aerodrome, DeFi mechanism design}
-
-\vspace{4pt}
-{\small\textbf{JEL classification:} G12, G14, G19, G23}
+{\fontsize{9pt}{11pt}\selectfont
+\begin{minipage}{0.82\linewidth}\centering
+\textbf{Keywords}\hspace{0.6em}geometric residual \textperiodcentered\ automated market maker \textperiodcentered\ portfolio rebalancing \textperiodcentered\ Uniswap V3 \textperiodcentered\ Aerodrome \textperiodcentered\ DeFi mechanism design\\[4pt]
+\textbf{JEL:} G12, G14, G19, G23
+\end{minipage}}
 \end{center}
 
-\vspace{8pt}
-\hrule
-\vspace{12pt}
+\vspace{-1pt}
+\centerline{\scalebox{1.5}{$\therefore$}}
+\vspace{14pt}
 
 \begin{abstract}
-This paper identifies and formalises the \textbf{Geometric Siphon}, a previously undocumented mechanism in concentrated liquidity (CL) portfolio management. When multiple CL positions share a depositor-level token balance and are autonomously rebalanced, the token-ratio mismatch between old and new tick ranges produces residuals that flow through the shared balance, creating capital transfers between positions in independent pools.
-
-I derive a closed-form expression for the geometric residual $\Delta R$ from the Uniswap V3 amount equations and prove that $\Delta R = 0$ if and only if the old and new ranges demand the same token ratio at the current price (Theorem~\ref{thm:residual}). The theorem is verified with a Foundry test suite running against unmodified Uniswap V3 contracts on Base mainnet: the residual is measurable on range changes (2{,}061 USDC in the reference scenario), below $10^{-6}$ USD on same-range rebalances, and scales linearly with position size ($4\times$ position $\to$ $4\times$ residual).
-
-Empirical analysis of 1{,}380 rebalance events across 39 positions, five depositor groups, two contract versions and seven days on Aerodrome (Base) reveals a two-mechanism structure: \textbf{Stage~1} (geometric creation, ${\sim}5\%$ of events) produces residuals via range changes that feed a shared dust pool; \textbf{Stage~2} (dust redistribution, ${\sim}95\%$ of events) redistributes accumulated dust through same-range rebalances, governed by the position-to-pool liquidity ratio. The decomposition of observed net flow $D$ into gross residual $\Delta R$ and swap slippage $S$ holds at Spearman $\rho(\Delta R, D) = 0.976$, with median swap price impact $0.35\%$.
-
-I prove that single-pool positions sharing a contract balance converge to equal value (Theorem~\ref{thm:convergence}). A controlled sweep confirms this empirically: three positions deployed at size ratio $1{:}3{:}9$ collapsed to $1.37{:}1{:}1.20$ within 33 events, with the original size ordering reversed. Multi-pool portfolios settle at position-specific equilibria determined by pool depth. Token-level decomposition across ten pools and five depositor groups identifies the \textbf{Connector Rule}: the per-pool flow driver is the token shared with more portfolio positions, and the same pool exhibits different driver tokens under different portfolio topologies.
-
-I prove that a position rebalancing repeatedly without swap correction ($S = 0$) decays geometrically: $V_K \leq V_0(1 - \alpha_{\min})^K$ where $\alpha_{\min}$ is the minimum residual fraction across $K$ consecutive donation events (Theorem~\ref{thm:extinction}). The bound follows from the CL amount equations, the $\min$ constraint in the liquidity-from-amounts function, and the finiteness of the shared dust pool. The theorem is verified with four additional Foundry tests and validated against the complete lifecycle of a USDC/ZARP position that lost $99.8\%$ of its capital ($\text{\$942} \to \text{\$1.59}$) in 14 zero-swap rebalances over 65 hours; the extinction bound predicted 11 rebalances at the observed average leak rate, against 10 donation events observed.
+This paper identifies and formalises the \emph{Geometric Siphon}, a previously undocumented mechanism in concentrated-liquidity portfolio management. When multiple CL positions share a depositor-level token balance and are autonomously rebalanced, token-ratio mismatches between old and new tick ranges produce residuals that flow through the shared balance, transferring capital between positions in independent pools. Three theorems characterise the mechanism. I derive the geometric residual from the Uniswap V3 amount equations. Theorem~1 establishes that the residual is zero if and only if the old and new ranges demand the same token ratio at the current price. Theorem~2 proves that single-pool positions sharing a contract balance converge to equal value under repeated rebalancing. Theorem~3 proves that positions rebalancing without swap correction decay geometrically. A graph-theoretic \emph{Connector Rule} ties per-pool flow direction to portfolio topology, supported by a token-level decomposition across ten pools and five depositor groups. A Foundry suite verifies all three theorems against unmodified V3 contracts on Base mainnet, returning a 2{,}061 USDC residual on range changes against an analytical zero on same-range rebalances. A 1{,}380-event dataset across 39 positions and seven days on Aerodrome (Base) decomposes observed flow into residual and slippage at Spearman correlation 0.976, revealing a ${\sim}5\%/{\sim}95\%$ split between geometric creation and dust redistribution. A controlled value-to-pool-liquidity sweep collapses a $1{:}3{:}9$ size ratio to $1.37{:}1{:}1.20$ within 33 events. A USDC/ZARP position loses $99.8\%$ of its capital, falling from \$942 to \$1.59 across 14 zero-swap rebalances over 65 hours, matching the 11-rebalance extinction bound.
 \end{abstract}
+
+\vspace{24pt}
+
+\begin{list}{}{%
+  \setlength{\leftmargin}{0.5in}%
+  \setlength{\rightmargin}{0.5in}%
+  \setlength{\listparindent}{0pt}%
+  \setlength{\topsep}{0pt}%
+  \setlength{\partopsep}{0pt}%
+}\item[]\fontsize{10pt}{13pt}\selectfont\noindent\textbf{Note on supersession.} This preprint and its companion \emph{The Geometric Siphon II: Directional Properties} have been consolidated into a single revised manuscript (\emph{The Geometric Siphon: Existence, Equilibrium, and Directional Properties of the Residual in Concentrated Liquidity Portfolios}). The Foundry verification suite and the public dataset now align with the consolidated manuscript.\footnote{Consolidated manuscript: \url{https://github.com/g4nc0r/the-geometric-siphon}. Foundry suite (Code DOI): \url{https://doi.org/10.5281/zenodo.19905208}. Public dataset (Data DOI): \url{https://doi.org/10.5281/zenodo.19904832}.} The empirical findings reported in this preprint remain the citable record for this version of the analysis.\end{list}
+
+\clearpage
 
 \section{Introduction}\label{sec:introduction}
 
-\subsection{The problem}\label{sec:problem}
+Concentrated liquidity, introduced by Uniswap V3 \cite{adams2021}, requires active management. Every major CL automation platform (Gamma Strategies, Arrakis Finance, Beefy CLM) uses a \emph{vault-per-pool architecture} in which one vault manages one token pair and leftover tokens from rebalances are reinvested into the same position.
 
-Concentrated liquidity, introduced by Uniswap V3 \citep{adams2021}, requires active management. Every major CL automation platform (Gamma Strategies, Arrakis Finance, Beefy CLM) uses a \textbf{vault-per-pool architecture} in which one vault manages one token pair and leftover tokens from rebalances are reinvested into the same position.
-
-\begin{verbatim}
+\begin{codeblock}\begin{verbatim}
 Vault-per-pool:    dustBalance[vault]              -> per-pool isolation
 Position Manager:  dustBalance[depositor][token]   -> cross-pool sharing
-\end{verbatim}
+\end{verbatim}\end{codeblock}
 
 Position Manager V6 (PM V6), a CL management contract on Aerodrome (Base), takes a different approach. Leftover tokens sit in \texttt{dustBalance[depositor][token]}, keyed by depositor and token with no pool dimension. Every position under one depositor draws from the same balance. A capital efficiency decision that unintentionally created cross-position capital flow.
 
-\subsection{Discovery}\label{sec:discovery}
-
 On 2 March 2026, routine monitoring revealed a USDC/CHECK position had grown ${\sim}65\%$ whilst a USDC/ODOS position in the same depositor group had shrunk ${\sim}60\%$. They shared no tokens except USDC. CHECK was consuming USDC residuals left behind by ODOS rebalances through the shared dust pool.
 
-The initial assumption was slippage, but on-chain decomposition of 92 rebalance transactions showed that the transfers are driven almost entirely by the geometric mismatch between consecutive tick ranges. I term this the \textbf{Geometric Siphon}.
-
-\subsection{Scope}\label{sec:scope}
+The initial assumption was slippage, but on-chain decomposition of 92 rebalance transactions showed that the transfers are driven almost entirely by the geometric mismatch between consecutive tick ranges. I term this the \emph{Geometric Siphon}.
 
 \begin{table}[H]
 \centering
-\small
-\begin{tabular}{@{}llrrll@{}}
+\caption{Phase overview.}\label{tab:phase-overview}
+\begin{tabular}{@{}llrrlL{4.8cm}@{}}
 \toprule
 Phase & Period & Positions & Events & Contract & Focus \\
 \midrule
@@ -165,52 +257,31 @@ Phase & Period & Positions & Events & Contract & Focus \\
 \textbf{Total} & \textbf{7 days} & \textbf{39} & \textbf{1{,}380} & --- & --- \\
 \bottomrule
 \end{tabular}
-\normalsize
 \end{table}
 
-\subsection{Contributions}\label{sec:contributions}
+Theorem~\ref{thm:residual} derives a closed-form residual fraction $\Delta R/V$ from the Uniswap V3 amount equations, with the residual vanishing if and only if the old and new ranges demand the same token ratio at the current price; Foundry tests against unmodified V3 contracts confirm that range changes create residuals, same-range rebalances do not, and residuals scale linearly with position size (\S\ref{sec:foundry}). Theorem~\ref{thm:convergence} proves that single-pool positions sharing a contract balance converge to equal value under repeated rebalancing (\S\ref{sec:equilibrium}), confirmed empirically by a $V/L_p$ sweep in which a $1{:}3{:}9$ size ratio collapses to $1.37{:}1{:}1.20$ within 33 events (\S\ref{sec:vl-sweep}). Theorem~\ref{thm:extinction} proves that positions rebalancing without swaps decay geometrically, confirmed by a complete USDC/ZARP lifecycle from $\$942$ to $\$1.59$ in 14 zero-swap rebalances (\S\ref{sec:zarp}) and four additional Foundry tests.
 
-\begin{enumerate}[leftmargin=*]
-    \item \textbf{Closed-form geometric residual.} $\Delta R/V$ is derived as a function of old range, new range and current price from the Uniswap V3 amount equations (\S\ref{sec:residual}). The residual is zero if and only if the old and new ranges demand the same token ratio at current price (Theorem~\ref{thm:residual}).
-
-    \item \textbf{Independent proof.} Foundry tests against unmodified Uniswap V3 contracts confirm the theorem: range changes create residuals, same-range rebalances do not, and residuals scale linearly with position size (\S\ref{sec:foundry}).
-
-    \item \textbf{Two-mechanism structure.} Stage~1 (geometric creation, ${\sim}5\%$ of events) and Stage~2 (dust pool redistribution, ${\sim}95\%$) are identified as distinct processes with different governing variables (\S\ref{sec:two-mechanism}).
-
-    \item \textbf{Equilibrium proof.} Single-pool positions converge to equal value under repeated rebalancing (Theorem~\ref{thm:convergence}, \S\ref{sec:equilibrium}), confirmed empirically with a controlled $V/\mathcal{L}$ sweep experiment (\S\ref{sec:vl-sweep}).
-
-    \item \textbf{Connector Rule.} The siphon driver per pool is determined by the token's connectivity in the portfolio graph, not by relative volatility (\S\ref{sec:connector}, \S\ref{sec:predictive}).
-
-    \item \textbf{Simpson's paradox in CL analysis.} $V/\mathcal{L}$ and volatility $\sigma$ are complementary predictors that reverse sign when data are aggregated (\S\ref{sec:predictive}).
-
-    \item \textbf{Zero-swap extinction.} Positions that rebalance without swaps decay geometrically (Theorem~\ref{thm:extinction}, \S\ref{sec:extinction}). A USDC/ZARP position provides a complete empirical lifecycle: $\text{\$942} \to \text{\$1.59}$ in 14 zero-swap rebalances (\S\ref{sec:zarp}). Four additional Foundry tests confirm the theorem (\S\ref{sec:foundry}, 7/7 total).
-
-    \item \textbf{Companion paper.} Three directional properties of the residual (monotonicity in displacement, directional asymmetry in USD terms, and exit-side asymmetry) are derived and verified as Theorems~4--6 in \citet{ryan2026b}, sharing the same Foundry verification suite.
-\end{enumerate}
-
-\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+Three further results characterise structure. The Stage~1/Stage~2 split distinguishes geometric creation (${\sim}5\%$ of events) from dust-pool redistribution (${\sim}95\%$ of events), governed by different variables (\S\ref{sec:two-mechanism}). A graph-theoretic \emph{Connector Rule} identifies the per-pool driver as the token with higher portfolio connectivity rather than the more volatile token (\S\ref{sec:connector}, \S\ref{sec:predictive}). A Simpson's paradox in CL analysis emerges from $V/L_p$ and volatility $\sigma$ being complementary predictors that reverse sign on aggregation (\S\ref{sec:predictive}). Three directional properties of the residual (monotonicity in displacement, directional asymmetry in USD terms, exit-side asymmetry) are derived and verified as Theorems~4--6 in the companion paper Ryan\cite{ryan2026b}, sharing the same Foundry verification suite.
 
 \section{Related work}\label{sec:related}
 
-\citet{adams2021} introduced concentrated liquidity in Uniswap V3. \citet{fan2023} formulated the strategic LP problem of choosing tick ranges to maximise fees net of repositioning costs, treating each position in isolation. This paper studies what happens when positions share depositor-level balances.
+Adams \emph{et al.}\cite{adams2021} introduced concentrated liquidity in Uniswap V3. Fan \emph{et al.}\cite{fan2023} formulated the strategic LP problem of choosing tick ranges to maximise fees net of repositioning costs, treating each position in isolation. This paper studies what happens when positions share depositor-level balances.
 
-\citet{heimbach2022} model and empirically analyse V3 LP risks and returns, finding wide cross-strategy variation that rewards active management. This paper isolates the residual from fee accrual and impermanent loss by taking the rebalancing decision as given.
+Heimbach \emph{et al.}\cite{heimbach2022} model and empirically analyse V3 LP risks and returns, finding wide cross-strategy variation that rewards active management. This paper isolates the residual from fee accrual and impermanent loss by taking the rebalancing decision as given.
 
-\citet{hasbrouck2025} model V3 CL provision as a covered call sold at intrinsic rather than market value, so LPs forgo the option's time premium in exchange for fees, and equilibrium liquidity provision decreases in that time premium. The geometric residual is a separate loss arising at the rebalance itself, determined by the geometry of $R(s, s_a, s_b)$ rather than by option-theoretic exposure between rebalances.
+Hasbrouck \emph{et al.}\cite{hasbrouck2025} model V3 CL provision as a covered call sold at intrinsic rather than market value, so LPs forgo the option's time premium in exchange for fees, and equilibrium liquidity provision decreases in that time premium. The geometric residual is a separate loss arising at the rebalance itself, determined by the geometry of $R(s, s_a, s_b)$ rather than by option-theoretic exposure between rebalances.
 
-\citet{milionis2022b} introduced LVR (Loss-Versus-Rebalancing), the return gap between an AMM LP and a continuously rebalancing benchmark, driven by arbitrageurs trading against stale AMM prices. \citet{milionis2024} extend the framework with trading fees and discrete block timing. LVR is a continuous holding cost; the geometric residual is a discrete event cost at rebalance, determined by the V3 amount equations rather than by arbitrage. The decomposition in \S\ref{sec:decomposition} attributes over $97\%$ of observed flow to the residual rather than to swap-side friction.
+Milionis \emph{et al.}\cite{milionis2022b} introduced LVR (Loss-Versus-Rebalancing), the return gap between an AMM LP and a continuously rebalancing benchmark, driven by arbitrageurs trading against stale AMM prices. Milionis \emph{et al.}\cite{milionis2024} extend the framework with trading fees and discrete block timing. LVR is a continuous holding cost; the geometric residual is a discrete event cost at rebalance, determined by the V3 amount equations rather than by arbitrage. The decomposition in \S\ref{sec:decomposition} attributes over $97\%$ of observed flow to the residual rather than to swap-side friction.
 
-\citet{cartea2024} introduce \emph{predictable loss}, a closed-form measure of the unhedgeable losses an LP incurs from holding assets in a CL pool, comprising convexity loss from informed trading and opportunity cost on locked capital. Predictable loss accrues between rebalances; the geometric residual arises at the rebalance itself, depends on range geometry rather than price trajectory, and is zero on same-range rebalances regardless of price travel (Theorem~\ref{thm:residual}).
+Cartea \emph{et al.}\cite{cartea2024} introduce \emph{predictable loss}, a closed-form measure of the unhedgeable losses an LP incurs from holding assets in a CL pool, comprising convexity loss from informed trading and opportunity cost on locked capital. Predictable loss accrues between rebalances; the geometric residual arises at the rebalance itself, depends on range geometry rather than price trajectory, and is zero on same-range rebalances regardless of price travel (Theorem~\ref{thm:residual}).
 
-\citet{willetts2026} measure arbitrage efficiency and rebalancing costs in dynamic weight AMM pools on Ethereum and Base using LVR benchmarks, the closest empirical context for per-rebalance costs on Base L2.
+Willetts and Harrington\cite{willetts2026} measure arbitrage efficiency and rebalancing costs in dynamic weight AMM pools on Ethereum and Base using LVR benchmarks, the closest empirical context for per-rebalance costs on Base L2.
 
-\textbf{Balancer} \citep{martinelli2019} rebalances via its AMM invariant within a single pool, \textbf{Set Protocol} uses oracle-triggered swaps, and \textbf{Yearn} deploys capital across strategist-managed strategies. All require a shared pool invariant, external price feeds, or manual intervention; the siphon arises from CL geometry alone.
+Balancer \cite{martinelli2019} rebalances via its AMM invariant within a single pool, Set Protocol uses oracle-triggered swaps, and Yearn deploys capital across strategist-managed strategies. All require a shared pool invariant, external price feeds, or manual intervention; the siphon arises from CL geometry alone.
 
-\textbf{Maverick Protocol} \citep{baxley2023} introduced directional liquidity modes where bins follow price automatically. Its `Mode Both' is the closest analogue to siphon-driven repositioning, being continuous, automatic, and oracle-free. Maverick operates within a single position; the siphon operates \emph{across} positions in different pools.
+Maverick Protocol \cite{baxley2023} introduced directional liquidity modes where bins follow price automatically. Its `Mode Both' is the closest analogue to siphon-driven repositioning, being continuous, automatic, and oracle-free. Maverick operates within a single position; the siphon operates \emph{across} positions in different pools.
 
 To my knowledge, geometric residual flows between CL positions sharing depositor-level balances have not been previously described.
-
-\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
 \section{Theoretical framework}\label{sec:theory}
 
@@ -234,18 +305,18 @@ V = x \cdot s^2 + y = L \cdot \phi(s, s_a, s_b)
 \end{equation}
 where $\phi(s, s_a, s_b) = 2s - s^2/s_b - s_a$ is the value factor.
 
-Flow notation. $\mathcal{L}$ denotes the total liquidity of the pool containing the position, distinguished from the position's own $L$. For a rebalance, $\Delta R$ denotes the gross geometric residual predicted by~\eqref{eq:amounts} under an isolated withdraw-and-mint sequence (characterised in Theorem~\ref{thm:residual} below); $S$ denotes the swap slippage absorbed by an internal rebalance swap; and $D = \Delta R - S$ denotes the observed net dust flow. Theorem~\ref{thm:residual} characterises $\Delta R$; \S\ref{sec:results} reports $D$ and $S$ empirically.
+Flow notation. $L_p$ denotes the total liquidity of the pool containing the position, distinguished from the position's own $L$. For a rebalance, $\Delta R$ denotes the gross geometric residual predicted by~\eqref{eq:amounts} under an isolated withdraw-and-mint sequence, characterised in Theorem~\ref{thm:residual} below. $S$ denotes the swap slippage absorbed by an internal rebalance swap. $D = \Delta R - S$ denotes the observed net dust flow. Theorem~\ref{thm:residual} characterises $\Delta R$, and \S\ref{sec:results} reports $D$ and $S$ empirically.
 
 \subsection{The geometric residual}\label{sec:residual}
 
-\textbf{Definition.} A rebalance withdraws liquidity from range $[s_a, s_b]$ and mints into range $[s_{a'}, s_{b'}]$, both at the same current price $s$.
+\emph{Definition.} A rebalance withdraws liquidity from range $[s_a, s_b]$ and mints into range $[s_{a'}, s_{b'}]$, both at the same current price $s$.
 
 Withdrawn amounts:
 \begin{equation}\label{eq:withdrawn}
 x_w = L \cdot (1/s - 1/s_b), \quad y_w = L \cdot (s - s_a)
 \end{equation}
 
-The new range demands ratio $R_{\text{new}} = R(s, s_{a'}, s_{b'})$. If $R_{\text{old}} \neq R_{\text{new}}$, the withdrawn tokens cannot be fully deposited: one is the \textbf{binding constraint}, the other has a surplus. The new liquidity is the minimum of the per-token capacities,
+The new range demands ratio $R_{\text{new}} = R(s, s_{a'}, s_{b'})$. If $R_{\text{old}} \neq R_{\text{new}}$, the withdrawn tokens cannot be fully deposited: one is the \emph{binding constraint}, the other has a surplus. The new liquidity is the minimum of the per-token capacities,
 \begin{equation}\label{eq:cases}
 L_{\text{new}} = \min\!\left(\frac{x_w}{1/s - 1/s_{b'}}, \; \frac{y_w}{s - s_{a'}}\right),
 \end{equation}
@@ -283,8 +354,8 @@ The ratio-preserving locus $\{(s_{a'}, s_{b'}) : R(s, s_{a'}, s_{b'}) = R_{\text
 \begin{corollary}[Width and displacement effects]
 Write $w = s_b - s_a$ for the full range width. The required token ratio $R$ depends on the range centre and width but not on $L$, and is strictly decreasing in $w$. Consequently:
 \begin{enumerate}[label=(\roman*),leftmargin=*]
-    \item \textbf{Width change.} Widening ($w_{\text{new}} > w$) gives $R_{\text{new}} < R_{\text{old}}$ (position produces token0 excess); narrowing gives $R_{\text{new}} > R_{\text{old}}$ (token1 excess). In a shared-balance context the widening case tends towards net absorption ($D/V > 0$), narrowing towards net donation ($D/V < 0$).
-    \item \textbf{Displacement.} For a rebalance recentred on the current price after the tick moves by $\delta$ from the old range midpoint, $|\Delta R/V|$ is strictly increasing in $|\delta|$ for $|\delta| \leq w/2$. A detailed proof is given as Theorem~4 in \citet{ryan2026b}.
+    \item \emph{Width change.} Widening ($w_{\text{new}} > w$) gives $R_{\text{new}} < R_{\text{old}}$ (position produces token0 excess); narrowing gives $R_{\text{new}} > R_{\text{old}}$ (token1 excess). In a shared-balance context the widening case tends towards net absorption ($D/V > 0$), narrowing towards net donation ($D/V < 0$).
+    \item \emph{Displacement.} For a rebalance recentred on the current price after the tick moves by $\delta$ from the old range midpoint, $|\Delta R/V|$ is strictly increasing in $|\delta|$ for $|\delta| \leq w/2$. A detailed proof is given as Theorem~4 in Ryan\cite{ryan2026b}.
 \end{enumerate}
 \end{corollary}
 
@@ -294,22 +365,21 @@ Of 642 Phase 2 events (\S\ref{sec:two-mechanism-split}), 95\% of rebalances do n
 
 Two distinct mechanisms are at work:
 
-\textbf{Stage~1, Geometric Creation (the source).} Range-change rebalances (${\sim}5\%$ of events) produce geometric residuals via equation~\eqref{eq:cases}. The position manager's internal swap absorbs ${\sim}94\%$ of the token ratio mismatch; the remaining ${\sim}6\%$ enters the shared dust pool as unmatched tokens. Without range changes, the dust pool drains to zero.
+\emph{Stage~1, Geometric Creation (the source).} Range-change rebalances (${\sim}5\%$ of events) produce geometric residuals via equation~\eqref{eq:cases}. The position manager's internal swap absorbs ${\sim}94\%$ of the token ratio mismatch; the remaining ${\sim}6\%$ enters the shared dust pool as unmatched tokens. Without range changes, the dust pool drains to zero.
 
-\textbf{Stage~2, Dust Pool Redistribution (the transport).} Same-range rebalances (${\sim}95\%$ of events) interact with accumulated contract dust. The CL mint function uses all available tokens (withdrawn amounts plus contract dust):
+\emph{Stage~2, Dust Pool Redistribution (the transport).} Same-range rebalances (${\sim}95\%$ of events) interact with accumulated contract dust. The CL mint function uses all available tokens (withdrawn amounts plus contract dust):
 \begin{equation}\label{eq:mint}
 L_{\text{new}} = \min\!\left(\frac{x_w + x_{\text{dust}}}{1/s - 1/s_{b'}}, \; \frac{y_w + y_{\text{dust}}}{s - s_{a'}}\right).
 \end{equation}
 If contract dust provides extra of the non-binding token, the position absorbs beyond its withdrawal ($D > 0$). If the position's withdrawal slightly over-supplies one token (from accrued fees changing the ratio), the excess stays as dust ($D < 0$).
 
-$V/\mathcal{L}$ governs Stage~2. Low-$V/\mathcal{L}$ positions withdraw small amounts relative to the dust pool, so contract dust represents a large proportional gain. High-$V/\mathcal{L}$ positions withdraw large amounts, so the dust pool is a rounding error relative to their size. The relationship is non-linear. Absorption peaks at $V/\mathcal{L} \approx 0.05$--$0.10$, crosses zero near $V/\mathcal{L}^* \approx 0.13$, and donation intensifies monotonically above that threshold (\S\ref{sec:vl-sweep}). Most events ($73\%$) cluster at $V/\mathcal{L} < 0.01$ where effects are negligible, making the aggregate linear correlation weak ($r \approx -0.1$) despite a clear directional relationship across the full $V/\mathcal{L}$ range.
+$V/L_p$ governs Stage~2. Low-$V/L_p$ positions withdraw small amounts relative to the dust pool, so contract dust represents a large proportional gain. High-$V/L_p$ positions withdraw large amounts, so the dust pool is a rounding error relative to their size. The relationship is non-linear. Absorption peaks at $V/L_p \approx 0.05$--$0.10$, crosses zero near $V/L_p^* \approx 0.13$, and donation intensifies monotonically above that threshold (\S\ref{sec:vl-sweep}). Most events ($73\%$) cluster at $V/L_p < 0.01$ where effects are negligible, making the aggregate linear correlation weak ($r \approx -0.1$) despite a clear directional relationship across the full $V/L_p$ range.
 
-\needspace{9\baselineskip}
 The siphon requires all three components:
 
 \begin{table}[H]
 \centering
-\small
+\caption{Necessary components of the siphon mechanism.}\label{tab:siphon-components}
 \begin{tabular}{@{}lll@{}}
 \toprule
 Remove\ldots & Effect & Siphon? \\
@@ -319,7 +389,6 @@ Stage~2 (no same-range rebals) & Dust accumulates, never absorbed & Stops: stran
 Shared balances & Each position's dust isolated & Stops: no transfer medium \\
 \bottomrule
 \end{tabular}
-\normalsize
 \end{table}
 
 In steady state, geometric residuals from range changes feed the pool at the same rate that same-range rebalances drain it.
@@ -331,11 +400,11 @@ $N$ positions in the same pool and range, sharing a contract balance, converge t
 \end{theorem}
 
 \begin{proof}
-\textbf{Setup.} Positions $V_1, \ldots, V_N$ in a single CL pool. All share the same tick range, so $L_i \propto V_i$. They share a contract token balance (the dust pool).
+\emph{Setup.} Positions $V_1, \ldots, V_N$ in a single CL pool. All share the same tick range, so $L_i \propto V_i$. They share a contract token balance (the dust pool).
 
-\textbf{Fact 1, Donation scales with size.} When position $i$ produces a geometric residual, $|\Delta R_i| \propto L_i \propto V_i$. As a fraction of value, $D_i/V_i = c$ is approximately constant across positions. Larger positions donate more in absolute terms, the same in proportional terms.
+\emph{Fact 1, Donation scales with size.} When position $i$ produces a geometric residual, $|\Delta R_i| \propto L_i \propto V_i$. As a fraction of value, $D_i/V_i = c$ is approximately constant across positions. Larger positions donate more in absolute terms, the same in proportional terms.
 
-\textbf{Fact 2, Absorption is size-independent.} When position $i$ rebalances, the CL mint function~\eqref{eq:mint} uses all available tokens. The dust absorbed is $D_{\text{pool}}$, regardless of $V_i$. The proportional gain is $D_{\text{pool}}/V_i$, inversely proportional to size.
+\emph{Fact 2, Absorption is size-independent.} When position $i$ rebalances, the CL mint function~\eqref{eq:mint} uses all available tokens. The dust absorbed is $D_{\text{pool}}$, regardless of $V_i$. The proportional gain is $D_{\text{pool}}/V_i$, inversely proportional to size.
 
 \textbf{Growth equation.} If each position has equal rebalance probability $\pi = 1/N$ (distinct from the price $p$ of \S\ref{sec:preliminaries}):
 \begin{equation}\label{eq:growth}
@@ -354,29 +423,30 @@ Convergence rate. The growth rate gap between the smallest and largest position:
 \begin{equation}\label{eq:convergence-rate}
 \frac{\dot{V}_s}{V_s} - \frac{\dot{V}_l}{V_l} = \pi \cdot D_{\text{pool}} \cdot \left(\frac{1}{V_s} - \frac{1}{V_l}\right)
 \end{equation}
-This is positive whenever $V_s < V_l$ and shrinks as the gap closes, giving exponential convergence that decelerates near equilibrium.
+The gap is positive whenever $V_s < V_l$ and shrinks as the gap closes, giving exponential convergence that decelerates near equilibrium.
 
 Multi-pool extension. For positions across pools with total liquidities $L_{\text{pool},k}$, the equilibrium condition generalises:
 \begin{equation}\label{eq:multipool}
 \frac{V_i}{L_{\text{pool},k(i)}} = \frac{V_j}{L_{\text{pool},k(j)}} \quad \forall \; i, j
 \end{equation}
-Different pools have different $L_{\text{pool}}$, so equal $V/\mathcal{L}$ means different equilibrium sizes. Positions in deeper pools settle at larger values, and hub-spoke topologies are stable because the deep hub sustains a large position whilst volatile spokes sustain smaller ones.
+Different pools have different $L_{\text{pool}}$, so equal $V/L_p$ means different equilibrium sizes. Positions in deeper pools settle at larger values, and hub-spoke topologies are stable because the deep hub sustains a large position whilst volatile spokes sustain smaller ones.
 
 \subsection{The Connector Rule}\label{sec:connector}
 
-Token-level decomposition (\S\ref{sec:predictive}) shows that the siphon driver per pool is determined by \textbf{token connectivity} in the portfolio graph.
+Token-level decomposition (\S\ref{sec:predictive}) shows that the siphon driver per pool is determined by \emph{token connectivity} in the portfolio graph.
 
-\textbf{Definition.} For a portfolio with positions in pools $\{P_k\}$, the \textbf{connectivity} of token $T$ is the number of pools containing $T$:
+\emph{Definition.} For a portfolio with positions in pools $\{P_k\}$, the \emph{connectivity} of token $T$ is the number of pools containing $T$:
 \begin{equation}\label{eq:connectivity}
 \text{conn}(T) = \left|\{k : T \in P_k\}\right|
 \end{equation}
 
-\textbf{The Connector Rule.} In pool $P_k = (T_a, T_b)$, the siphon driver is the token with higher connectivity: $\arg\max_{T \in \{T_a, T_b\}} \text{conn}(T)$.
+\emph{The Connector Rule.} In pool $P_k = (T_a, T_b)$, the siphon driver is the token with higher connectivity: $\arg\max_{T \in \{T_a, T_b\}} \text{conn}(T)$.
 
 Empirical demonstration. The pool WETH/USDC appears in three different depositor groups with different portfolio topologies:
 
 \begin{table}[H]
 \centering
+\caption{Connector rule across groups.}\label{tab:connector-rule}
 \begin{tabular}{@{}llrrlr@{}}
 \toprule
 Group & Portfolio structure & WETH conn & USDC conn & Driver & $r$ \\
@@ -401,12 +471,23 @@ Let $P$ be a CL position with value $V_0 > 0$. If the current price exits the po
 \begin{enumerate}[label=(\roman*),leftmargin=*]
     \item $V_1 < V_0$ (single-step value loss).
     \item The residual fraction $\alpha = (V_0 - V_1)/V_0 > 0$ increases monotonically with displacement $|\delta|$ relative to range width $w$.
-    \item After $K$ consecutive zero-swap rebalances, $V_K \leq V_0 \cdot (1 - \alpha_{\min})^K$ where $\alpha_{\min} = \min_k \alpha_k > 0$.
+    \item After $K$ consecutive zero-swap rebalances,
+        \[
+        V_K = V_0 \prod_{k=1}^{K}(1 - \alpha_k),
+        \]
+        with bounds
+        \[
+        V_K \leq V_0(1 - \bar\alpha_K)^K,
+        \qquad
+        V_K \leq V_0(1 - \alpha_{\min})^K,
+        \]
+        where $\bar\alpha_K = \frac{1}{K}\sum_{k=1}^K \alpha_k$ is the mean residual fraction and $\alpha_{\min} = \min_k \alpha_k > 0$.
     \item The position reaches any $\varepsilon > 0$ in at most
         \[
-        K^* = \left\lceil \frac{\ln(V_0/\varepsilon)}{\ln(1/(1 - \alpha_{\min}))} \right\rceil
+        K^* = \left\lceil \frac{\ln(V_0/\varepsilon)}{\ln(1/(1 - \bar\alpha))} \right\rceil,
+        \qquad
+        K^*_{\text{loose}} = \left\lceil \frac{\ln(V_0/\varepsilon)}{\ln(1/(1 - \alpha_{\min}))} \right\rceil.
         \]
-        rebalances.
 \end{enumerate}
 \end{theorem}
 
@@ -417,25 +498,28 @@ The proof uses the CL amount equations~\eqref{eq:amounts}, the mint constraint~\
 \begin{equation}\label{eq:newliq}
 L_{\text{new}} = \min\!\left(\frac{0}{1/s - 1/s_{b'}}, \; \frac{y_w}{s - s_{a'}}\right) = 0,
 \end{equation}
-so the entire withdrawn value becomes residual ($\alpha = 1$). In a shared-balance context, contract dust $x_{\text{dust}} > 0$ from other positions may partially compensate the missing token, yielding $L_{\text{new}} > 0$ via~\eqref{eq:mint}. Since $x_w = 0$ strictly whilst the new range requires $x > 0$ for $L_{\text{new}} > 0$, and the shared dust pool is finite, the compensation is always partial: $V_1 < V_0$ with $0 < \alpha \leq 1$. The $s < s_a$ case is symmetric at the residual-fraction level; USD-denominated values for above-exits versus below-exits on volatile/stablecoin pairs are asymmetric, characterised as Theorem~6 in \citet{ryan2026b}.
+so the entire withdrawn value becomes residual ($\alpha = 1$). In a shared-balance context, contract dust $x_{\text{dust}} > 0$ from other positions may partially compensate the missing token, yielding $L_{\text{new}} > 0$ via~\eqref{eq:mint}. Since $x_w = 0$ strictly whilst the new range requires $x > 0$ for $L_{\text{new}} > 0$, and the shared dust pool is finite, the compensation is always partial: $V_1 < V_0$ with $0 < \alpha \leq 1$. The $s < s_a$ case is symmetric at the residual-fraction level; USD-denominated values for above-exits versus below-exits on volatile/stablecoin pairs are asymmetric, characterised as Theorem~6 in Ryan\cite{ryan2026b}.
 
-\emph{Part (ii).} Let $\delta$ denote the displacement of $s$ from the old range midpoint, so the premise of Part~(i) requires $|\delta| \geq w/2$. As $|\delta|$ increases, the withdrawn amount of the binding token (opposite to the direction of exit) stays at zero whilst the new recentred range's required token fraction on that side grows with the gap, so $\alpha$ increases monotonically in $|\delta|/w$ for fixed dust supply. A detailed proof of the in-range analogue ($|\delta| \leq w/2$) is given as Theorem~4 in \citet{ryan2026b}.
+\emph{Part (ii).} Let $\delta$ denote the displacement of $s$ from the old range midpoint, so the premise of Part~(i) requires $|\delta| \geq w/2$. As $|\delta|$ increases, the withdrawn amount of the binding token (opposite to the direction of exit) stays at zero whilst the new recentred range's required token fraction on that side grows with the gap, so $\alpha$ increases monotonically in $|\delta|/w$ for fixed dust supply. A detailed proof of the in-range analogue ($|\delta| \leq w/2$) is given as Theorem~4 in Ryan\cite{ryan2026b}.
 
-\emph{Part (iii).} At each rebalance $k$, Part~(i) gives $V_{k+1} = V_k(1 - \alpha_k)$ with $\alpha_k > 0$. By induction:
+\emph{Part (iii).} At each rebalance $k$, Part~(i) gives $V_{k+1} = V_k(1 - \alpha_k)$ with $\alpha_k > 0$. By induction,
 \[
-V_K \leq V_0 \prod_{k=1}^{K}(1 - \alpha_k) \leq V_0(1 - \alpha_{\min})^K.
+V_K = V_0 \prod_{k=1}^{K}(1 - \alpha_k).
 \]
+Applying AM--GM to the positive terms $\{1 - \alpha_k\}$ yields the tight bound,
+\[
+\prod_{k=1}^{K}(1 - \alpha_k) \leq \left(\frac{1}{K}\sum_{k=1}^{K}(1 - \alpha_k)\right)^{K} = (1 - \bar\alpha_K)^K.
+\]
+The loose bound follows from $1 - \alpha_k \leq 1 - \alpha_{\min}$ for every $k$.
 
-\emph{Part (iv).} Solving $V_0(1 - \alpha_{\min})^{K^*} \leq \varepsilon$ and taking the ceiling.
+\emph{Part (iv).} Solving $V_0(1 - \bar\alpha)^{K^*} \leq \varepsilon$ for $K^*$ and taking the ceiling gives the tight extinction time; the same with $\alpha_{\min}$ in place of $\bar\alpha$ gives the loose bound.
 \end{proof}
 
 \begin{corollary}[Irreversibility]\label{cor:irreversibility}
-Under sustained $S = 0$ conditions with stable or declining pool liquidity $\mathcal{L}$, the value sequence $V_0, V_1, \ldots$ is monotonically decreasing. Recovery requires a change in $\mathcal{L}$ sufficient to reduce $V/\mathcal{L}$ below the absorption crossover ($V/\mathcal{L}^* \approx 0.13$, \S\ref{sec:predictive}).
+Under sustained $S = 0$ conditions with stable or declining pool liquidity $L_p$, the value sequence $V_0, V_1, \ldots$ is monotonically decreasing. Recovery requires a change in $L_p$ sufficient to reduce $V/L_p$ below the absorption crossover ($V/L_p^* \approx 0.13$, \S\ref{sec:predictive}).
 \end{corollary}
 
-\textbf{Relationship to Theorem~\ref{thm:convergence}.} Theorem~\ref{thm:convergence} describes the attractor; Theorem~\ref{thm:extinction} describes the trajectory outside it when the self-correcting mechanism (swaps) is absent. In pools with swap routing, the position manager's internal swap absorbs ${\sim}94\%$ of $\Delta R$, leaving only ${\sim}6\%$ as net dust, which keeps positions within Theorem~\ref{thm:convergence}'s convergence basin. When $S = 0$, this damping is absent. The full geometric residual flows into dust on every event, and the position decays at the rate predicted by Theorem~\ref{thm:extinction}.
-
-\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+\emph{Relationship to Theorem~\ref{thm:convergence}.} Theorem~\ref{thm:convergence} describes the attractor; Theorem~\ref{thm:extinction} describes the trajectory outside it when the self-correcting mechanism (swaps) is absent. In pools with swap routing, the position manager's internal swap absorbs ${\sim}94\%$ of $\Delta R$, leaving only ${\sim}6\%$ as net dust, which keeps positions within Theorem~\ref{thm:convergence}'s convergence basin. When $S = 0$, this damping is absent. The full geometric residual flows into dust on every event, and the position decays at the rate predicted by Theorem~\ref{thm:extinction}.
 
 \section{Experimental design}\label{sec:experimental}
 
@@ -443,11 +527,11 @@ Under sustained $S = 0$ conditions with stable or declining pool liquidity $\mat
 
 Both phases used the same adaptive rebalancing engine (\texttt{cl-manager}). The engine monitors pool swap events via WebSocket, computes rolling volatility $\sigma$ at 1h/4h/24h windows, and triggers a rebalance when the current tick exits the position's range. New range width is $w = C \cdot \sigma \cdot \sqrt{t}$ (configurable multiplier $C = 2$--$4$, centred on current tick). Each rebalance is an atomic \texttt{rebalanceCL} call: withdraw $\to$ optional swap $\to$ mint $\to$ stake. All rebalances are autonomous with no human intervention between deployment and data collection.
 
-\needspace{22\baselineskip}
 \subsection{Phase 1: Mechanism discovery}\label{sec:phase1}
 
 \begin{table}[H]
 \centering
+\caption{Phase 1 overview.}\label{tab:phase1-overview}
 \begin{tabular}{@{}ll@{}}
 \toprule
 Parameter & Value \\
@@ -461,15 +545,14 @@ Termination     & Contract exploit (5 Mar) corrupted depositor state \\
 \end{tabular}
 \end{table}
 
-\textbf{Groups:}\nopagebreak
-
 \begin{table}[H]
-\centering\small
-\begin{tabular}{@{}clp{6cm}l@{}}
+\centering
+\caption{Phase 1 group design.}\label{tab:phase1-groups}
+\begin{tabular}{@{}clL{8cm}l@{}}
 \toprule
 Group & Positions & Design & Key variable \\
 \midrule
-A & 3 & Similar $V/\mathcal{L}$, different volatility & $\sigma$ isolation \\
+A & 3 & Similar $V/L_p$, different volatility & $\sigma$ isolation \\
 B & 7 & Pre-existing, CL1/CL10/CL100 mix, 5 shared tokens & Diversity \\
 C & 2 & Same pool (EURC/USDC CL1), isolated address & Same-pool control \\
 D & 5 & \$500 each, identical policy, $30\times$ TVL spread & Pool TVL \\
@@ -478,11 +561,11 @@ E & 5 & Matched TVL (${\sim}\$190$--$323$K), $183\times$ emission spread & Emiss
 \end{tabular}
 \end{table}
 
-\needspace{24\baselineskip}
 \subsection{Phase 2: Formalisation and verification}\label{sec:phase2}
 
 \begin{table}[H]
 \centering
+\caption{Phase 2 overview.}\label{tab:phase2-overview}
 \begin{tabular}{@{}ll@{}}
 \toprule
 Parameter & Value \\
@@ -495,11 +578,10 @@ Events logged   & 642 diffusion events \\
 \end{tabular}
 \end{table}
 
-\textbf{Groups:}\nopagebreak
-
 \begin{table}[H]
-\centering\small
-\begin{tabular}{@{}clp{6cm}l@{}}
+\centering
+\caption{Phase 2 group design.}\label{tab:phase2-groups}
+\begin{tabular}{@{}clL{8cm}l@{}}
 \toprule
 Group & Positions & Design & Key variable \\
 \midrule
@@ -512,35 +594,28 @@ E & 3 & Same pool (KellyClaude/USDC), ratio 1:3:9 & Single-pool equilibrium \\
 \end{tabular}
 \end{table}
 
-\textbf{Key Phase 2 innovations:}
-
-\begin{itemize}[leftmargin=*]
-    \item \textbf{Deliberate hub-spoke topology.} WETH/USDC CL50 as central hub, every spoke sharing WETH or USDC.
-    \item \textbf{$V/\mathcal{L}$ sweep experiment.} Three positions at $1{:}3{:}9$ size ratio in the same pool, isolating position size as the sole variable.
-    \item \textbf{Fiat FX weekend experiment.} Five stablecoin FX pairs deployed on a Sunday (markets closed), providing $\sigma \approx 0$ conditions that isolate the $V/\mathcal{L}$~effect from volatility.
-\end{itemize}
+Three Phase 2 design choices are central. A deliberate hub-spoke topology places WETH/USDC CL50 as the central hub, with every spoke sharing WETH or USDC. A $V/L_p$ sweep experiment deploys three positions at $1{:}3{:}9$ size ratio in the same pool, isolating position size as the sole variable. A fiat-FX weekend experiment deploys five stablecoin FX pairs on a Sunday with markets closed, providing $\sigma \approx 0$ conditions that isolate the $V/L_p$~effect from volatility.
 
 \subsection{Hypotheses}\label{sec:hypotheses}
 
 \begin{table}[H]
-\centering\small
-\begin{tabular}{@{}lp{6.4cm}lp{4cm}@{}}
+\centering
+\caption{Hypotheses for the controlled phases.}\label{tab:hypotheses}
+\begin{tabular}{@{}lL{5.5cm}lL{5cm}@{}}
 \toprule
 ID & Hypothesis & Source & Result \\
 \midrule
 H1 & Flow is geometric, not frictional       & Phase 1            & Yes, $\rho(\Delta R, D) = 0.976$ \\
-H2 & $V/\mathcal{L}$ and $\sigma$ are complementary    & Phase 1            & Yes, Simpson's paradox confirmed \\
+H2 & $V/L_p$ and $\sigma$ are complementary    & Phase 1            & Yes, Simpson's paradox confirmed \\
 H3 & Same-pool positions converge            & Theory (Thm~\ref{thm:convergence}) & Yes, $1{:}3{:}9 \to 1.37{:}1{:}1.20$ \\
-H4 & Multi-pool positions settle at equal $V/\mathcal{L}$ & Theory~\eqref{eq:multipool} & Yes, hub-spoke stable \\
+H4 & Multi-pool positions settle at equal $V/L_p$ & Theory~\eqref{eq:multipool} & Yes, hub-spoke stable \\
 H5 & Siphon driver is the connector token    & Theory (\S\ref{sec:connector}) & Yes, 10-pool cross-group \\
 H6 & Same-range rebalances yield $\Delta R = 0$ & Theory (Thm~\ref{thm:residual}) & Yes, 611/611 confirmed \\
 H7 & Emission rate correlates with role      & Phase 1            & Partially supported \\
-H8 & $\sigma = 0$ isolates $V/\mathcal{L}$ as sole predictor & Phase 2 design & Yes, fiat FX confirms \\
+H8 & $\sigma = 0$ isolates $V/L_p$ as sole predictor & Phase 2 design & Yes, fiat FX confirms \\
 \bottomrule
 \end{tabular}
 \end{table}
-
-\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
 \section{Results}\label{sec:results}
 
@@ -550,16 +625,17 @@ Swap event logs from 92 on-chain rebalance transactions (Phase 1) were decoded t
 
 \begin{table}[H]
 \centering
+\caption{Core decomposition of observed dust flow.}\label{tab:decomposition}
 \begin{tabular}{@{}lrr@{}}
 \toprule
 Metric & Value & $N$ \\
 \midrule
-Spearman $\rho(\Delta R, D)$                 & \textbf{0.976} & 72 \\
-Spearman $\rho(|\Delta R|, |D|)$             & \textbf{0.949} & 72 \\
+Spearman $\rho(\Delta R, D)$                 & 0.976 & 72 \\
+Spearman $\rho(|\Delta R|, |D|)$             & 0.949 & 72 \\
 Events with swap                              & 72             & --- \\
 Events without swap                           & 20             & --- \\
 Mean slippage $S$                             & \$1.49         & 72 \\
-Median swap price impact                      & \textbf{0.35\%} & 72 \\
+Median swap price impact                      & 0.35\% & 72 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -570,42 +646,44 @@ The geometric residual $\Delta R$ accounts for over $97\%$ of observed flow. Med
 
 \subsubsection*{Aggregate vs stratified correlations}
 
-Pooling all 545 events (with $|D| > \$0.50$) gives $\rho = 0.329$ for $V/\mathcal{L}$ and $\rho = -0.367$ for $\sigma$, suggesting volatility \emph{reduces} flow size. This is a Simpson's paradox.
+Pooling all 545 events (with $|D| > \$0.50$) gives $\rho = 0.329$ for $V/L_p$ and $\rho = -0.367$ for $\sigma$, suggesting volatility \emph{reduces} flow size. This is a Simpson's paradox.
 
-Stratified by portfolio group:\nopagebreak
+Stratified by portfolio group:
 
 \begin{table}[H]
 \centering
+\caption{Stratified correlations of $|D|$ with $V/L_p$ and $\sigma_{1h}$, by group.}\label{tab:stratified}
 \begin{tabular}{@{}lrrr@{}}
 \toprule
-Group & $N$ & $V/\mathcal{L} \to |D|$ & $\sigma_{1h} \to |D|$ \\
+Group & $N$ & $V/L_p \to |D|$ & $\sigma_{1h} \to |D|$ \\
 \midrule
-A & 75  & 0.054           & \textbf{0.575} \\
-B & 114 & \textbf{0.562}  & $-0.362$ \\
+A & 75  & 0.054           & 0.575 \\
+B & 114 & 0.562  & $-0.362$ \\
 C & 55  & 0.210           & $-0.082$ \\
 D & 178 & 0.171           & $0.086$ \\
-E & 123 & \textbf{0.370}  & $-0.321$ \\
+E & 123 & 0.370  & $-0.321$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-$V/\mathcal{L}$ and $\sigma$ are complementary: each dominates exactly when the other lacks cross-position variance. B mixes CL1/CL10/CL100 ($25\times$ $V/\mathcal{L}$ spread), so $V/\mathcal{L}$ captures the signal. A has near-identical $V/\mathcal{L}$ across positions, so $\sigma$ takes over.
+$V/L_p$ and $\sigma$ are complementary: each dominates exactly when the other lacks cross-position variance. B mixes CL1/CL10/CL100 ($25\times$ $V/L_p$ spread), so $V/L_p$ captures the signal. A has near-identical $V/L_p$ across positions, so $\sigma$ takes over.
 
 The aggregate sign reversal occurs because high-$\sigma$ pools tend to be thin (small TVL), producing smaller absolute dollar flows despite larger relative mismatches. The confound is pool size.
 
-\subsubsection*{Nonlinear $V/\mathcal{L}$ transfer function (Phase 2, $N = 606$)}
+\subsubsection*{Nonlinear $V/L_p$ transfer function (Phase 2, $N = 606$)}
 
-The relationship between $V/\mathcal{L}$ and $D/V$ is non-linear. Bucketed analysis across all Phase 2 events with $V/\mathcal{L}$ data:
+The relationship between $V/L_p$ and $D/V$ is non-linear. Bucketed analysis across all Phase 2 events with $V/L_p$ data:
 
 \begin{table}[H]
 \centering
+\caption{$V/L_p$ transfer function (Phase 2 cross-position scatter).}\label{tab:vl-buckets}
 \begin{tabular}{@{}lrrl@{}}
 \toprule
-$V/\mathcal{L}$ range & $N$ & Mean $D/V$ & Behaviour \\
+$V/L_p$ range & $N$ & Mean $D/V$ & Behaviour \\
 \midrule
 $< 0.01$       & 445 (73\%) & $+0.002$ & Near-zero (position negligible vs pool) \\
 $0.01$--$0.05$ & 98         & $+0.008$ & Mild absorption \\
-$0.05$--$0.10$ & 29         & $+0.065$ & \textbf{Peak absorption} \\
+$0.05$--$0.10$ & 29         & $+0.065$ & Peak absorption \\
 $0.10$--$0.20$ & 20         & $-0.006$ & Crossover zone \\
 $0.20$--$0.50$ & 9          & $-0.034$ & Consistent donation \\
 $0.50$--$1.00$ & 5          & $-0.069$ & Massive donation \\
@@ -616,13 +694,13 @@ $0.50$--$1.00$ & 5          & $-0.069$ & Massive donation \\
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.8\linewidth,keepaspectratio]{figures/fig1-vl-transfer.png}
-\caption{$V/\mathcal{L}$ transfer function: absorption peaks at $V/\mathcal{L} \approx 0.05$--$0.10$, crosses zero near $V/\mathcal{L}^* \approx 0.13$, and donation intensifies above. Crypto pools (circles) and stablecoin FX pools (squares) shown; marker size proportional to $N$.}
+\caption{$V/L_p$ transfer function: absorption peaks at $V/L_p \approx 0.05$--$0.10$, crosses zero near $V/L_p^* \approx 0.13$, and donation intensifies above. Crypto pools (circles) and stablecoin FX pools (squares) shown; marker size proportional to $N$.}
 \label{fig:vl-transfer}
 \end{figure}
 
-The non-monotonic shape follows from the two-mechanism structure. At very low $V/\mathcal{L}$, positions are too small for contract dust to materially affect them; at moderate $V/\mathcal{L}$ ($0.05$--$0.10$), dust absorption is proportionally large; above the crossover $V/\mathcal{L}^* \approx 0.13$, positions donate more than they absorb. The $73\%$ of events at $V/\mathcal{L} < 0.01$ make linear regression misleading ($r \approx -0.1$), but the directional relationship is clear across the full range.
+The non-monotonic shape follows from the two-mechanism structure. At very low $V/L_p$, positions are too small for contract dust to materially affect them; at moderate $V/L_p$ ($0.05$--$0.10$), dust absorption is proportionally large; above the crossover $V/L_p^* \approx 0.13$, positions donate more than they absorb. The $73\%$ of events at $V/L_p < 0.01$ make linear regression misleading ($r \approx -0.1$), but the directional relationship is clear across the full range.
 
-$\sigma$ amplifies magnitude ($\rho = +0.26$ for $\sigma_{1h}$ vs $|D/V|$, $N = 536$) but does not determine direction. High $\sigma$ + high $V/\mathcal{L}$ compounds donation; high $\sigma$ + low $V/\mathcal{L}$ compounds absorption.
+$\sigma$ amplifies magnitude ($\rho = +0.26$ for $\sigma_{1h}$ vs $|D/V|$, $N = 536$) but does not determine direction. High $\sigma$ + high $V/L_p$ compounds donation; high $\sigma$ + low $V/L_p$ compounds absorption.
 
 \subsubsection*{Cross-group token decomposition}
 
@@ -630,38 +708,40 @@ Token-level decomposition of 395 transaction receipts across 10 pools and 5 depo
 
 \begin{table}[H]
 \centering
+\caption{Cross-group token decomposition.}\label{tab:cross-group}
 \begin{tabular}{@{}llcrrr@{}}
 \toprule
 Pool & Group & Driver token & Driver $r$ & Other $r$ & $N$ \\
 \midrule
-CLAWD/USDC          & A & CLAWD       & \textbf{$-0.98$} & $-0.42$ & 62 \\
-WETH/USDC           & A & WETH        & \textbf{$-0.98$} & $-0.31$ & 38 \\
-WETH/AERO           & A & AERO        & \textbf{$-0.94$} & $-0.28$ & 31 \\
-WETH/VVV            & B & WETH        & \textbf{$-0.89$} & $-0.15$ & 47 \\
-WETH/AERO           & B & WETH        & \textbf{$-0.97$} & $-0.27$ & 73 \\
+CLAWD/USDC          & A & CLAWD       & $-0.98$ & $-0.42$ & 62 \\
+WETH/USDC           & A & WETH        & $-0.98$ & $-0.31$ & 38 \\
+WETH/AERO           & A & AERO        & $-0.94$ & $-0.28$ & 31 \\
+WETH/VVV            & B & WETH        & $-0.89$ & $-0.15$ & 47 \\
+WETH/AERO           & B & WETH        & $-0.97$ & $-0.27$ & 73 \\
 WETH/USDC           & B & USDC        & $-0.56$           & $-0.40$ & 25 \\
 EURC/USDC           & C & USDC        & $-0.55$           & ---     & 9  \\
-WETH/USDC           & D & USDC        & \textbf{$-0.68$} & $-0.56$ & 17 \\
-KellyClaude/USDC    & E & KellyClaude & \textbf{$-0.68$} & $-0.60$ & 20 \\
+WETH/USDC           & D & USDC        & $-0.68$ & $-0.56$ & 17 \\
+KellyClaude/USDC    & E & KellyClaude & $-0.68$ & $-0.60$ & 20 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 The WETH/USDC pool appears with three different depositor groups. In A (WETH is the connector), WETH drives at $r = -0.98$. In B (USDC is the connector), USDC drives at $r = -0.56$. The driver changes depending on what other pools share the depositor group.
 
-\subsection{Single-pool equilibrium: the $V/\mathcal{L}$ sweep}\label{sec:vl-sweep}
+\subsection{Single-pool equilibrium: the $V/L_p$ sweep}\label{sec:vl-sweep}
 
 Three positions deployed in KellyClaude/USDC CL200 (${\sim}\$9{,}500$ TVL) at ratio $1{:}3{:}9$:
 
 \begin{table}[H]
 \centering
+\caption{$V/L_p$ sweep results after 33 rebalance events.}\label{tab:vl-sweep}
 \begin{tabular}{@{}llrrl@{}}
 \toprule
 Position & Deployment & After 33 events & Dust PnL & Role \\
 \midrule
-Small  & \$199 ($V/\mathcal{L} = 0.021$)   & ${\sim}\$900$ & \textbf{$+\$737$} & Absorber \\
-Medium & \$597 ($V/\mathcal{L} = 0.063$)   & ${\sim}\$656$ & $+\$84$           & Neutral (flipped) \\
-Large  & \$1{,}799 ($V/\mathcal{L} = 0.189$) & ${\sim}\$784$ & \textbf{$-\$933$} & Donor \\
+Small  & \$199 ($V/L_p = 0.021$)   & ${\sim}\$900$ & $+\$737$ & Absorber \\
+Medium & \$597 ($V/L_p = 0.063$)   & ${\sim}\$656$ & $+\$84$           & Neutral (flipped) \\
+Large  & \$1{,}799 ($V/L_p = 0.189$) & ${\sim}\$784$ & $-\$933$ & Donor \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -677,26 +757,27 @@ Deployment ratio $1{:}3{:}9 \to$ ratio at event 33: $1.37{:}1{:}1.20$. The origi
 
 Medium role-flipped from initial donor to net absorber after 8 events.
 
-\textbf{First-rebalance absorption.} The first automated rebalance absorbed all contract dust (\$217 from initial tightening) into the Small position, a $114\%$ value increase in one event. The CL mint function uses all available tokens~\eqref{eq:mint}, creating winner-take-all dynamics on a per-event basis. Over many events, the probabilistic argument of Theorem~\ref{thm:convergence} prevails, and all positions converge.
+\emph{First-rebalance absorption.} The first automated rebalance absorbed all contract dust (\$217 from initial tightening) into the Small position, a $114\%$ value increase in one event. The CL mint function uses all available tokens~\eqref{eq:mint}, creating winner-take-all dynamics on a per-event basis. Over many events, the probabilistic argument of Theorem~\ref{thm:convergence} prevails, and all positions converge.
 
-\textbf{Transfer function.} Cross-validated with 33 fiat FX events ($N = 55$ total, $r = -0.528$):
+\emph{Transfer function.} Cross-validated with 33 fiat FX events ($N = 55$ total, $r = -0.528$):
 
 \begin{table}[H]
 \centering
+\caption{Cross-validated $V/L_p$ transfer function from the fiat-FX sample.}\label{tab:vl-cross}
 \begin{tabular}{@{}llp{8cm}@{}}
 \toprule
-$V/\mathcal{L}$ range & Mean $D/V$ & Behaviour \\
+$V/L_p$ range & Mean $D/V$ & Behaviour \\
 \midrule
 $< 0.01$       & Weak positive    & Position too small to absorb meaningfully \\
-$0.05$--$0.10$ & \textbf{$+0.267$} & Peak absorption (sweet spot) \\
+$0.05$--$0.10$ & $+0.267$ & Peak absorption (sweet spot) \\
 $0.10$--$0.15$ & ${\sim}0$        & Crossover zone \\
 $0.15$--$0.50$ & Negative          & Consistent donation \\
-$0.50$--$1.0$  & \textbf{$-0.337$} & Massive donation (position dominates pool) \\
+$0.50$--$1.0$  & $-0.337$ & Massive donation (position dominates pool) \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-The crossover $V/\mathcal{L}^* \approx 0.13$--$0.15$ in liquidity ratio terms. CADC/USDC confirms this independently: pool TVL fluctuated around a fixed-size position, causing $V/\mathcal{L}$ to traverse $0.003$ to $0.32$ and the position to role-flip multiple times at the crossover boundary.
+The crossover $V/L_p^* \approx 0.13$--$0.15$ in liquidity ratio terms. CADC/USDC confirms this independently: pool TVL fluctuated around a fixed-size position, causing $V/L_p$ to traverse $0.003$ to $0.32$ and the position to role-flip multiple times at the crossover boundary.
 
 \subsection{Multi-pool dynamics: hub-spoke topology}\label{sec:hub-spoke}
 
@@ -713,11 +794,12 @@ Phase 2's deliberate hub-spoke design with WETH/USDC CL50 as central hub:
 
 \begin{table}[H]
 \centering
+\caption{Hub-spoke cumulative dust flows in Group B.}\label{tab:hubspoke}
 \begin{tabular}{@{}llrr@{}}
 \toprule
 Position & Role & Cumulative dust & Events \\
 \midrule
-WETH/USDC CL50 (hub) & Donor    & \textbf{$-\$1{,}794$} & 26 \\
+WETH/USDC CL50 (hub) & Donor    & $-\$1{,}794$ & 26 \\
 USDC/CHECK CL100     & Absorber & $+\$858$              & 153 \\
 WETH/AERO CL200      & Absorber & $+\$285$              & 73 \\
 WETH/VVV CL100       & Absorber & $+\$319$              & 49 \\
@@ -729,15 +811,15 @@ The hub donated \$1{,}794 and the three spokes collectively absorbed \$1{,}462. 
 
 Temporal causation. Every major hub donation has a matching spoke absorption within 2 hours. The hub leaves WETH residuals in the shared balance, and WETH-paired spokes pick them up on their next rebalance.
 
-\textbf{Multi-pool stability.} Unlike single-pool positions (which equalise), multi-pool positions do not converge to equal value. The hub maintains a larger position because WETH/USDC CL50 has deeper TVL (lower $V/\mathcal{L}$ at the same capital). Equation~\eqref{eq:multipool} predicts this: equal $V/\mathcal{L}$ across pools means position sizes proportional to pool depth.
+\emph{Multi-pool stability.} Unlike single-pool positions (which equalise), multi-pool positions do not converge to equal value. The hub maintains a larger position because WETH/USDC CL50 has deeper TVL (lower $V/L_p$ at the same capital). Equation~\eqref{eq:multipool} predicts this: equal $V/L_p$ across pools means position sizes proportional to pool depth.
 
-\needspace{11\baselineskip}
 \subsection{Regime analysis}\label{sec:regime}
 
 The 41.9-hour Phase 1 observation spans five distinct market phases:
 
 \begin{table}[H]
 \centering
+\caption{Phase 1 regime partitioning by market state.}\label{tab:regime}
 \begin{tabular}{@{}llrrl@{}}
 \toprule
 Phase & Period (UTC) & Events & Net \$ & Character \\
@@ -755,15 +837,16 @@ Regime-dependent roles. During stress (P1), volatile positions shed capital as g
 
 \subsection{Stablecoin FX isolation}\label{sec:fx-isolation}
 
-Five stablecoin FX pairs deployed on a Sunday (markets closed, $\sigma \approx 0$) provide a natural control experiment isolating $V/\mathcal{L}$ from volatility:
+Five stablecoin FX pairs deployed on a Sunday (markets closed, $\sigma \approx 0$) provide a natural control experiment isolating $V/L_p$ from volatility:
 
 \begin{table}[H]
 \centering
+\caption{Stablecoin FX isolation: five positions deployed at $\sigma \approx 0$.}\label{tab:fx}
 \begin{tabular}{@{}lrrrr@{}}
 \toprule
-Position & $V/\mathcal{L}$ & $\sigma_{24h}$ & Cumulative dust & Swaps \\
+Position & $V/L_p$ & $\sigma_{24h}$ & Cumulative dust & Swaps \\
 \midrule
-ZARP & 0.958 & 98.8 & \textbf{$-\$601$} & 0 \\
+ZARP & 0.958 & 98.8 & $-\$601$ & 0 \\
 VCHF & 0.034 & 1.4  & $+\$72$            & 0 \\
 CADC & 0.003 & 5.0  & $+\$131$           & 0 \\
 KRWQ & 0.025 & 1.5  & $+\$432$           & 0 \\
@@ -772,11 +855,11 @@ EURC & 0.001 & 0.1  & $+\$216$           & 0 \\
 \end{tabular}
 \end{table}
 
-\textbf{Zero swaps} across all fiat rebalances (\texttt{amountIn = 0} in every \texttt{rebalanceCL} call). All dust flow is pure geometric residual $\Delta R$ with no swap friction component.
+\emph{Zero swaps} across all fiat rebalances (\texttt{amountIn = 0} in every \texttt{rebalanceCL} call). All dust flow is pure geometric residual $\Delta R$ with no swap friction component.
 
-ZARP ($V/\mathcal{L} \approx 0.96$, meaning the position accounts for nearly all the pool's liquidity) donated a mean $27\%$ of its value per donation event. All five FX pairs were deployed with equal capital. ZARP shrank steadily ($V/\mathcal{L}$: $0.958 \to 0.974 \to 0.992$) whilst KRWQ and CADC grew. Capital was conserved at portfolio level.
+ZARP ($V/L_p \approx 0.96$, meaning the position accounts for nearly all the pool's liquidity) donated a mean $27\%$ of its value per donation event. All five FX pairs were deployed with equal capital. ZARP shrank steadily ($V/L_p$: $0.958 \to 0.974 \to 0.992$) whilst KRWQ and CADC grew. Capital was conserved at portfolio level.
 
-FX markets were closed and no swaps occurred in any fiat rebalance. Every observed capital flow is therefore attributable to CL geometry alone, confirming $V/\mathcal{L}$ as the sole predictor when $\sigma$ is eliminated.
+FX markets were closed and no swaps occurred in any fiat rebalance. Every observed capital flow is therefore attributable to CL geometry alone, confirming $V/L_p$ as the sole predictor when $\sigma$ is eliminated.
 
 \subsection{Formula verification: the two-mechanism split}\label{sec:two-mechanism-split}
 
@@ -791,6 +874,7 @@ Verification of the closed-form $D/V$ against 642 Phase 2 events:
 
 \begin{table}[H]
 \centering
+\caption{Two-mechanism split: 642 Phase 2 events.}\label{tab:two-mech}
 \begin{tabular}{@{}lrlll@{}}
 \toprule
 Category     & Events     & Range changes? & $\Delta R = 0$? & Mean $|D|$ \\
@@ -801,9 +885,9 @@ Range-change & 31 (5\%)   & Yes            & No (all 31)      & \$35 \\
 \end{tabular}
 \end{table}
 
-\textbf{Same-range confirmation.} All 611 same-range events have $\Delta R = 0$ as predicted by Theorem~\ref{thm:residual}. Their non-zero dust flows ($\overline{|D|} = \$20$) are entirely Stage~2 (dust pool redistribution).
+\emph{Same-range confirmation.} All 611 same-range events have $\Delta R = 0$ as predicted by Theorem~\ref{thm:residual}. Their non-zero dust flows ($\overline{|D|} = \$20$) are entirely Stage~2 (dust pool redistribution).
 
-\textbf{Range-change confirmation.} All 31 range-change events have $\Delta R \neq 0$. Of the 28 events where the current tick was within the old range (permitting unambiguous case assignment), the formula predicts the direction correctly in 19 cases ($70\%$). Magnitude comparison: predicted $|\overline{\Delta R/V}| = 44\%$, actual $|\overline{D/V}| = 2.7\%$. The internal swap absorbs ${\sim}94\%$ of the gross geometric mismatch, leaving ${\sim}6\%$ as net dust. The formula describes the gross geometric residual $\Delta R$; the swap partially offsets it but does not eliminate it, so observed $|D/V|$ is smaller than predicted $|\Delta R/V|$.
+\emph{Range-change confirmation.} All 31 range-change events have $\Delta R \neq 0$. Of the 28 events where the current tick was within the old range (permitting unambiguous case assignment), the formula predicts the direction correctly in 19 cases ($70\%$). Magnitude comparison: predicted $|\overline{\Delta R/V}| = 44\%$, actual $|\overline{D/V}| = 2.7\%$. The internal swap absorbs ${\sim}94\%$ of the gross geometric mismatch, leaving ${\sim}6\%$ as net dust. The formula describes the gross geometric residual $\Delta R$; the swap partially offsets it but does not eliminate it, so observed $|D/V|$ is smaller than predicted $|\Delta R/V|$.
 
 \subsection{Position extinction: the ZARP case study}\label{sec:zarp}
 
@@ -812,56 +896,52 @@ The USDC/ZARP CL10 position provides a complete empirical lifecycle of Theorem~\
 ZARP (South African Rand stablecoin) had no DEX swap routing. The Odos aggregator returned no path. Every rebalance was a pure withdraw $\to$ mint with no token ratio correction, so $D = \Delta R$ exactly. This isolates the geometric residual with no swap confounders.
 
 \begin{table}[H]
-\centering\small
+\centering
+\caption{USDC/ZARP CL10 extinction trajectory over 14 rebalance events.}\label{tab:zarp}
 \begin{tabular}{@{}rlrrrrrr@{}}
 \toprule
-Event & Time (UTC) & Pre (\$) & Post (\$) & Dust $D$ & $V/\mathcal{L}$ & $\alpha$ & Pool $\mathcal{L}$ \\
+Event & Time (UTC) & Pre (\$) & Post (\$) & Dust $D$ & $V/L_p$ & $\alpha$ & Pool $L_p$ \\
 \midrule
 1  & 07 Mar 17:05 & 942 & 791  & $-151$              & 0.958          & 0.16            & 135M \\
 2  & 07 Mar 19:30 & 791 & 532  & $-259$              & 0.974          & 0.33            & 223M \\
 3  & 08 Mar 05:02 & 532 & 338  & $-194$              & 0.992          & 0.36            & 693M \\
 4  & 08 Mar 13:27 & 338 & 170  & $-168$              & 0.960          & 0.50            & 144M \\
-5  & 08 Mar 22:31 & 170 & 342  & \textbf{$+172$}     & 0.790          & ---             & 352M \\
+5  & 08 Mar 22:31 & 170 & 342  & $+172$     & 0.790          & ---             & 352M \\
 6  & 09 Mar 00:24 & 342 & 171  & $-171$              & 0.598          & 0.50            & 232M \\
 7  & 09 Mar 04:37 & 170 & 51   & $-119$              & 0.448          & 0.70            & 93M \\
-8  & 09 Mar 04:46 & 51  & 281  & \textbf{$+230$}     & 0.976          & ---             & 235M \\
+8  & 09 Mar 04:46 & 51  & 281  & $+230$     & 0.976          & ---             & 235M \\
 9  & 09 Mar 10:18 & 280 & 235  & $-45$               & 0.971          & 0.16            & 197M \\
 10 & 09 Mar 11:08 & 235 & 188  & $-47$               & 0.966          & 0.20            & 158M \\
 11 & 09 Mar 13:47 & 187 & 77   & $-110$              & 0.917          & 0.59            & 68M \\
-12 & 09 Mar 16:40 & 77  & 248  & \textbf{$+171$}     & 0.152          & ---             & 1{,}341M \\
+12 & 09 Mar 16:40 & 77  & 248  & $+171$     & 0.152          & ---             & 1{,}341M \\
 13 & 09 Mar 21:28 & 249 & 264  & $+15$               & 0.159          & ---             & 1{,}353M \\
-14 & 10 Mar 09:52 & 264 & \textbf{1.59} & $-262$     & \textbf{0.001} & \textbf{0.99}   & 1{,}137M \\
+14 & 10 Mar 09:52 & 264 & 1.59 & $-262$     & 0.001 & 0.99   & 1{,}137M \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Swaps executed: \textbf{0 of 14}. Total donated: \$1{,}526. Total absorbed: \$588 (4 events). Net: $-\$938$ ($99.8\%$ of capital).
+Swaps executed: 0 of 14. Total donated: \$1{,}526. Total absorbed: \$588 (4 events). Net: $-\$938$ ($99.8\%$ of capital).
 
-\textbf{Three phases.} Events 1--4: the position dominated the pool ($V/\mathcal{L} > 0.95$) and donated on every rebalance. Events 5--8: $\mathcal{L}$ fluctuated by $4\times$, producing alternating donation and absorption. Events 9--14: $\mathcal{L}$ increased $20\times$ between events 11 and 12, reducing $V/\mathcal{L}$ to $0.001$. The final rebalance produced $\alpha = 0.99$.
+\emph{Three phases.} Events 1--4: the position dominated the pool ($V/L_p > 0.95$) and donated on every rebalance. Events 5--8: $L_p$ fluctuated by $4\times$, producing alternating donation and absorption. Events 9--14: $L_p$ increased $20\times$ between events 11 and 12, reducing $V/L_p$ to $0.001$. The final rebalance produced $\alpha = 0.99$.
 
-\textbf{Extinction bound.} Using Theorem~\ref{thm:extinction}'s formula with $\alpha_{\min} = 0.16$ (Event 1, smallest donation):
-\[
-K^* = \left\lceil \frac{\ln(942/1.59)}{\ln(1/0.84)} \right\rceil = \lceil 36.7 \rceil = 37 \text{ rebalances}.
-\]
-Using $\alpha_{\text{avg}} = 0.45$ across the 10 donation events:
+\textbf{Extinction bound.} Theorem~\ref{thm:extinction}(iv) gives both a tight bound based on $\bar\alpha$ and a loose bound based on $\alpha_{\min}$. With $\bar\alpha = 0.45$ across the 10 donation events,
 \[
 K^* = \left\lceil \frac{\ln(942/1.59)}{\ln(1/0.55)} \right\rceil = \lceil 10.7 \rceil = 11 \text{ rebalances}.
 \]
+Using $\alpha_{\min} = 0.16$ (Event 1, smallest donation), the loose bound gives
+\[
+K^*_{\text{loose}} = \left\lceil \frac{\ln(942/1.59)}{\ln(1/0.84)} \right\rceil = \lceil 36.7 \rceil = 37 \text{ rebalances}.
+\]
 
-Theorem predicts 11 rebalances at average leak rate; 10 donation events were observed (the remaining 4 were absorptions from exogenous liquidity changes). The bound matches the observed trajectory closely.
+The tight bound predicts 11 rebalances, against 10 donation events observed; the remaining 4 events were absorptions from exogenous liquidity changes and lie outside Theorem~\ref{thm:extinction}'s pure-decay regime.
 
-\textbf{Corollary validation.} The three largest absorption events (5, 8, 12) each coincided with a substantial increase in pool liquidity $\mathcal{L}$. After each absorption, the position returned to donation on the subsequent rebalance, consistent with the irreversibility corollary.
-
-\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+\emph{Corollary validation.} The three largest absorption events (5, 8, 12) each coincided with a substantial increase in pool liquidity $L_p$. After each absorption, the position returned to donation on the subsequent rebalance, consistent with the irreversibility corollary.
 
 \section{Independent verification: Foundry proof}\label{sec:foundry}
 
 The closed-form derivation is verified with a Foundry test suite covering both Theorem~\ref{thm:residual} (geometric residual existence and scaling, \S\ref{sec:foundry-mock-residual}) and Theorem~\ref{thm:extinction} (zero-swap extinction, \S\ref{sec:foundry-mock-extinction}). Two complementary verification surfaces are used:
 
-\begin{itemize}[leftmargin=*]
-    \item \textbf{Mock-pool tests} (\texttt{MockCLPool}), which implement the Uniswap V3 amount equations against a self-contained pool with a linearised tick-to-sqrt-price approximation. These exercise the residual geometry in isolation, with no fees, no slippage, and no dependence on a live RPC endpoint, but are not Uniswap-accurate in the last significant figure.
-    \item \textbf{Fork tests} against unmodified Aerodrome Slipstream contracts on Base mainnet via Foundry's \texttt{vm.create\-Select\-Fork}, exercising the same scenarios on real on-chain V3 geometry. These give the canonical demonstration that the residual is a property of unmodified V3 contracts, with the trade-off that the numerical residuals are non-deterministic between runs as the live pool state shifts.
-\end{itemize}
+Mock-pool tests (\texttt{MockCLPool}) implement the Uniswap V3 amount equations against a self-contained pool with a linearised tick-to-sqrt-price approximation. They exercise the residual geometry in isolation, with no fees, no slippage, and no dependence on a live RPC endpoint, but are not Uniswap-accurate in the last significant figure. Fork tests against unmodified Aerodrome Slipstream contracts on Base mainnet, run via Foundry's \texttt{vm.createSelectFork}, exercise the same scenarios on real on-chain V3 geometry. They give the canonical demonstration that the residual is a property of unmodified V3 contracts, at the cost of numerical residuals being non-deterministic between runs as the live pool state shifts.
 
 The mock-pool and fork-pool surfaces verify the same theorem at different displacement magnitudes; their qualitative agreement (residual exists, control case is dust-only, residual scales with size) is the central reproducibility claim. \S\ref{sec:foundry-mock-residual}--\S\ref{sec:foundry-mock-extinction} report the mock-pool numbers because they are deterministic and small enough to quote directly; \S\ref{sec:foundry-fork} reports the fork-pool verification.
 
@@ -869,6 +949,7 @@ The mock-pool and fork-pool surfaces verify the same theorem at different displa
 
 \begin{table}[H]
 \centering
+\caption{Foundry Test 1: range change creates residual.}\label{tab:foundry-test1}
 \begin{tabular}{@{}ll@{}}
 \toprule
 Step & Value \\
@@ -878,18 +959,18 @@ Price movement   & $+200$ ticks \\
 New range        & $\pm 1{,}000$ ticks (wider) \\
 Withdrawn        & 0.076 WETH $+$ 3{,}434 USDC \\
 Minted           & 6{,}681M liquidity (from 23{,}525M) \\
-\textbf{Residual} & \textbf{2{,}061 USDC} returned to depositor balance \\
+Residual & 2{,}061 USDC returned to depositor balance \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Assertion: \texttt{assertTrue(residual0 > 0 || residual1 > 0)} . \textbf{PASSED}.
+Assertion: \texttt{assertTrue(residual0 > 0 || residual1 > 0)} . PASSED.
 
 \subsection{Test 2: Same range = zero residual (control)}\label{sec:foundry-mock-control}
 
-Same setup, same price movement, but re-mint into the \textbf{identical range}. Residual: \textbf{29~wei}\linebreak ($<\!10^{-6}$ USD). Pure integer rounding from Solidity's floor division.
+Same setup, same price movement, but re-mint into the \emph{identical range}. Residual: 29~wei\linebreak ($<\!10^{-6}$ USD). Pure integer rounding from Solidity's floor division.
 
-Assertion: \texttt{assertLt(residual1, 1e3)} . \textbf{PASSED}.
+Assertion: \texttt{assertLt(residual1, 1e3)} . PASSED.
 
 \noindent This confirms the theorem's converse: $R_{\text{old}} = R_{\text{new}} \Rightarrow \Delta R = 0$.
 
@@ -897,27 +978,24 @@ Assertion: \texttt{assertLt(residual1, 1e3)} . \textbf{PASSED}.
 
 \begin{table}[H]
 \centering
+\caption{Foundry Test 3: linear scaling with position size.}\label{tab:foundry-scaling}
 \begin{tabular}{@{}lrl@{}}
 \toprule
 Position size & Residual (raw) & Ratio \\
 \midrule
 0.5 WETH & 1{,}030 & $1.0\times$ \\
-2.0 WETH & 4{,}122 & \textbf{$4.00\times$} \\
+2.0 WETH & 4{,}122 & $4.00\times$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 $4\times$ position $\to$ $4\times$ residual. The $\Delta R/V$ ratio depends on tick displacement and range width but not on $L$, so the absolute residual scales linearly with position size. Consistent with equation~\eqref{eq:cases-value} where $V_{\text{new}}/V_{\text{old}}$ is independent of $L$.
 
-Assertion: \texttt{assertGt(largeResidual, smallResidual)} . \textbf{PASSED}.
+Assertion: \texttt{assertGt(largeResidual, smallResidual)} . PASSED.
 
 \subsection{What tests 1--3 establish}\label{sec:foundry-mock-summary}
 
-\begin{enumerate}[leftmargin=*]
-    \item The residual appears against an isolated implementation of the Uniswap V3 amount equations with no additional infrastructure, confirming it originates in the CL curve geometry rather than in any contract-level logic.
-    \item Same-range rebalances produce zero residual ($611/611$ events in the empirical dataset, see \S\ref{sec:two-mechanism-split}), confirming the converse of Theorem~\ref{thm:residual}.
-    \item A $4\times$ position produces a $4\times$ residual (ratio $4.00$), so the $\Delta R/V$ formulation is well-defined and independent of $L$ in the range where $\phi$ is approximately linear.
-\end{enumerate}
+Three things follow from these tests. The residual appears against an isolated implementation of the Uniswap V3 amount equations with no additional infrastructure, confirming it originates in the CL curve geometry rather than in any contract-level logic. Same-range rebalances produce zero residual ($611/611$ events in the empirical dataset, see \S\ref{sec:two-mechanism-split}), confirming the converse of Theorem~\ref{thm:residual}. A $4\times$ position produces a $4\times$ residual (ratio $4.00$), so the $\Delta R/V$ formulation is well-defined and independent of $L$ in the range where $\phi$ is approximately linear.
 
 The mock pool used by tests 1--3 implements a linearised \texttt{getSqrtRatioAtTick} approximation around tick 73{,}135. This is sufficient to demonstrate the existence and scaling of the residual at the order of magnitude reported above, but introduces small rounding artefacts (the $0.5$~WETH residual in Test~3 rounds down from a true value of $\sim 1{,}030.5$). For Uniswap-accurate quantitative verification of the same theorem, see the fork-pool results in \S\ref{sec:foundry-fork}.
 
@@ -925,6 +1003,7 @@ The mock pool used by tests 1--3 implements a linearised \texttt{getSqrtRatioAtT
 
 \begin{table}[H]
 \centering
+\caption{Foundry Test 4: single-sided exit with no swap.}\label{tab:foundry-test4}
 \begin{tabular}{@{}ll@{}}
 \toprule
 Step & Value \\
@@ -933,13 +1012,13 @@ Initial position & 1 WETH $+$ 2{,}500 USDC, range $[72800, 73000]$ \\
 Price movement   & $+200$ ticks (above upper bound) \\
 Withdrawal       & 0 WETH, 2{,}499{,}999{,}999 USDC ($100\%$ token1) \\
 New range        & $[73000, 73400]$ (requires both tokens) \\
-New liquidity    & \textbf{0} (token0 $= 0 \Rightarrow \min()$ constraint binds at zero) \\
-\textbf{Residual} & \textbf{$100\%$ of position value} \\
+New liquidity    & 0 (token0 $= 0 \Rightarrow \min()$ constraint binds at zero) \\
+Residual & $100\%$ of position value \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Assertion: \texttt{assertTrue(finalValue < initialValue)} . \textbf{PASSED}. $\alpha = 1.0$: a fully single-sided withdrawal with no swap mints zero liquidity. The entire position becomes dust.
+Assertion: \texttt{assertTrue(finalValue < initialValue)} . PASSED. $\alpha = 1.0$: a fully single-sided withdrawal with no swap mints zero liquidity. The entire position becomes dust.
 
 \subsection{Test 5: Residual scales with displacement (Theorem~\ref{thm:extinction}, part ii)}\label{sec:foundry-displacement}
 
@@ -947,6 +1026,7 @@ Position deployed with $1{,}000$-tick range. Price displaced past the upper boun
 
 \begin{table}[H]
 \centering
+\caption{Foundry Test 5: residual fraction by displacement.}\label{tab:foundry-displacement}
 \begin{tabular}{@{}lr@{}}
 \toprule
 Displacement & $\alpha$ \\
@@ -958,7 +1038,7 @@ Displacement & $\alpha$ \\
 \end{tabular}
 \end{table}
 
-Assertion: \texttt{assertTrue(alpha\_300 > alpha\_100 \&\& alpha\_600 > alpha\_300)} . \textbf{PASSED}. Monotonic increase confirmed. The $\alpha = 0\%$ at 100 ticks reflects the mock pool's linear sqrt-price approximation; on real V3 tick math (and on the live fork test in \S\ref{sec:foundry-fork}), this would be small but strictly positive.
+Assertion: \texttt{assertTrue(alpha\_300 > alpha\_100 \&\& alpha\_600 > alpha\_300)} . PASSED. Monotonic increase confirmed. The $\alpha = 0\%$ at 100 ticks reflects the mock pool's linear sqrt-price approximation; on real V3 tick math (and on the live fork test in \S\ref{sec:foundry-fork}), this would be small but strictly positive.
 
 \subsection{Test 6: Geometric decay over repeated rebalances (Theorem~\ref{thm:extinction}, part iii)}\label{sec:foundry-decay}
 
@@ -966,6 +1046,7 @@ Five sequential rebalance cycles with 150-tick price drift and no swap:
 
 \begin{table}[H]
 \centering
+\caption{Foundry Test 6: geometric decay over five cycles.}\label{tab:foundry-decay}
 \begin{tabular}{@{}rrr@{}}
 \toprule
 Cycle & Value (USD) & Decay factor \\
@@ -980,25 +1061,26 @@ Cycle & Value (USD) & Decay factor \\
 \end{tabular}
 \end{table}
 
-Assertion: \texttt{assertTrue(V[k+1] < V[k])} for all $k$ . \textbf{PASSED}. Total decay: $92\%$ in 5 cycles. The alternating factor ($0.76 / 0.40$) reflects the token-ratio flip at each step. The two-step product $0.76 \times 0.40 = 0.30$ is the effective decay constant.
+Assertion: \texttt{assertTrue(V[k+1] < V[k])} for all $k$ . PASSED. Total decay: $92\%$ in 5 cycles. The alternating factor ($0.76 / 0.40$) reflects the token-ratio flip at each step. The two-step product $0.76 \times 0.40 = 0.30$ is the effective decay constant.
 
 \subsection{Test 7: Deep out-of-range terminal event (Theorem~\ref{thm:extinction}, part ii extreme)}\label{sec:foundry-terminal}
 
 \begin{table}[H]
 \centering
+\caption{Foundry Test 7: deep out-of-range terminal event.}\label{tab:foundry-test7}
 \begin{tabular}{@{}ll@{}}
 \toprule
 Step & Value \\
 \midrule
 Initial position & $\pm 200$ ticks around tick 73{,}135 \\
 Price movement   & $+2{,}000$ ticks past upper bound \\
-New liquidity    & \textbf{0} \\
-\textbf{$\alpha$} & \textbf{$100\%$} \\
+New liquidity    & 0 \\
+$\alpha$ & $100\%$ \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Assertion: \texttt{assertTrue(alpha > 95)} . \textbf{PASSED}. At 2{,}000-tick displacement, the position is entirely single-sided. This mirrors the ZARP terminal event (Event 14, \S\ref{sec:zarp}: $\alpha = 0.99$).
+Assertion: \texttt{assertTrue(alpha > 95)} . PASSED. At 2{,}000-tick displacement, the position is entirely single-sided. This mirrors the ZARP terminal event (Event 14, \S\ref{sec:zarp}: $\alpha = 0.99$).
 
 \subsection{Live fork verification}\label{sec:foundry-fork}
 
@@ -1012,15 +1094,13 @@ The fork tests do not pin a block number; numerical residuals shift between runs
 
 Tests 1--3 prove Theorem~\ref{thm:residual} (geometric residual existence and scaling). Tests 4--7 prove Theorem~\ref{thm:extinction} (zero-swap extinction: single-step loss, monotonic displacement scaling, geometric decay, terminal events). The five fork tests in \S\ref{sec:foundry-fork} reproduce Tests 1, 2, 3 and the architectural precondition against unmodified live Slipstream contracts. The full suite runs in well under a second:
 
-\begin{verbatim}
+\begin{codeblock}\begin{verbatim}
 forge test -vv
 Suite result: ok. 7 passed; 0 failed; 0 skipped  (mock-pool)
 Suite result: ok. 5 passed; 0 failed; 0 skipped  (fork, Base RPC)
-\end{verbatim}
+\end{verbatim}\end{codeblock}
 
 The mock-pool environment has no swaps, zero fees, a single position, and no adaptive engine. The only mechanism present is the CL amount calculation itself, which isolates the residual from all confounding factors. The fork environment adds the real protocol contracts but otherwise exercises the same withdraw/mint sequence. Source is in the project's GitHub repository (see Appendix~\ref{app:reproduction}).
-
-\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
 \section{Discussion}\label{sec:discussion}
 
@@ -1036,96 +1116,93 @@ The fork-mode test in \S\ref{sec:foundry-fork} verifies this precondition direct
 
 \subsection{Boundary cases}\label{sec:boundary}
 
-\textbf{Same-pool oscillation.} Two EURC/USDC CL1 positions (Phase 1) produced oscillating flows with consecutive events showing opposite signs $62\%$ of the time, producing pure dissipation with no useful cross-pool reallocation.
+\emph{Same-pool oscillation.} Two EURC/USDC CL1 positions (Phase 1) produced oscillating flows with consecutive events showing opposite signs $62\%$ of the time, producing pure dissipation with no useful cross-pool reallocation.
 
-\textbf{Isolated tokens.} cbETH/cbBTC (Phase 1) donated $-\$2{,}413.49$, but no other position held cbETH. The residual accumulated as unusable contract dust with no destination. For siphon flow to function, every token in the portfolio should appear in at least two positions.
+\emph{Isolated tokens.} cbETH/cbBTC (Phase 1) donated $-\$2{,}413.49$, but no other position held cbETH. The residual accumulated as unusable contract dust with no destination. For siphon flow to function, every token in the portfolio should appear in at least two positions.
 
-\textbf{Fat tails.} Two of 23 FLOCK rebalances produced $96\%$ of its lifetime donation. The distribution of per-event dust flows is heavy-tailed, consistent with the dependence on tick displacement relative to range width.
+\emph{Fat tails.} Two of 23 FLOCK rebalances produced $96\%$ of its lifetime donation. The distribution of per-event dust flows is heavy-tailed, consistent with the dependence on tick displacement relative to range width.
 
 \subsection{Limitations}\label{sec:limitations}
 
-\begin{enumerate}[leftmargin=*]
-    \item \textbf{Single operator, single DEX, single chain.} All data come from one operator's positions on Aerodrome (Base). Theorem~\ref{thm:residual} guarantees the residual exists on all V3-style implementations, but the empirical dynamics (two-mechanism split, $V/\mathcal{L}$ transfer function, equilibrium convergence rate) may differ on other protocols with different fee structures or rebalancing engines.
+Six limitations should be flagged. All data come from one operator's positions on Aerodrome (Base); Theorem~\ref{thm:residual} guarantees the residual exists on all V3-style implementations, but the empirical dynamics, the two-mechanism split, the $V/L_p$ transfer function, and the equilibrium convergence rate, may differ on other protocols with different fee structures or rebalancing engines.
 
-    \item \textbf{Short observation window.} Seven days spanning stress, recovery, rally, and calm. No data on behaviour across full market cycles.
+The observation window is short, seven days spanning stress, recovery, rally, and calm, with no data on behaviour across full market cycles.
 
-    \item \textbf{Adaptive engine feedback.} The rebalancing engine creates a circular dependency. $\sigma$ determines range width, which determines the geometric residual, which determines dust flow. The measured variables also influence the inputs.
+The adaptive rebalancing engine creates a circular dependency: $\sigma$ determines range width, which determines the geometric residual, which determines dust flow, and the measured variables also influence the inputs.
 
-    \item \textbf{No isolated-dust control.} A true counterfactual would be identical positions with per-position dust accounting running simultaneously. The vault-per-pool comparison is a post-hoc reconstruction.
+There is no isolated-dust control; a true counterfactual would be identical positions with per-position dust accounting running simultaneously, and the vault-per-pool comparison is a post-hoc reconstruction.
 
-    \item \textbf{Extinction generality.} Theorem~\ref{thm:extinction} is proven for the $S = 0$ case. The general case ($0 < S_{\text{eff}} < 1$, where $S_{\text{eff}}$ is the fraction of $\Delta R$ recovered by the swap) interpolates between Theorem~\ref{thm:convergence} (convergence) and Theorem~\ref{thm:extinction} (extinction). The value of $S_{\text{eff}}$ below which extinction dominates convergence is not yet characterised.
+Theorem~\ref{thm:extinction} is proven for the $S = 0$ case; the general case ($0 < S_{\text{eff}} < 1$, where $S_{\text{eff}}$ is the fraction of $\Delta R$ recovered by the swap) interpolates between Theorem~\ref{thm:convergence} (convergence) and Theorem~\ref{thm:extinction} (extinction), and the value of $S_{\text{eff}}$ below which extinction dominates convergence is not yet characterised.
 
-    \item \textbf{Equilibrium timescale.} Theorem~\ref{thm:convergence} proves convergence but does not bound the rate. The $V/\mathcal{L}$ sweep shows rapid initial convergence but the long-run steady state is unobserved.
-\end{enumerate}
+Theorem~\ref{thm:convergence} proves convergence but does not bound the rate; the $V/L_p$ sweep shows rapid initial convergence but the long-run steady state is unobserved.
 
 \subsection{Future work}\label{sec:future}
 
-\begin{itemize}[leftmargin=*]
-    \item \textbf{Economic analysis.} Quantifying the net cost or benefit of the siphon relative to vault-per-pool (ALM) and static LP strategies requires controlled long-duration comparisons.
-    \item \textbf{Emission governance interaction.} Preliminary evidence (33 post-flip events) suggests ve(3,3) emission rates correlate with siphon role assignment, but separating emission effects from concurrent market regime changes requires observation across multiple epoch cycles.
-    \item \textbf{Adversarial analysis.} An attacker who controls rebalance timing across multiple positions may be able to extract value from the siphon. The feasibility and cost of such an attack are unknown.
-    \item \textbf{Quantitative magnitude prediction.} The closed-form formula predicts gross residuals; precise net prediction requires modelling the swap's absorption fraction (${\sim}94\%$ in the present data).
-    \item \textbf{Unified growth equation.} Theorems~\ref{thm:convergence} and~\ref{thm:extinction} describe opposite regimes (convergence with swaps, extinction without). A general growth equation $\dot{V}/V = g(V/\mathcal{L}, \sigma, S_{\text{eff}})$ that continuously interpolates between these regimes as a function of swap efficiency $S_{\text{eff}}$ would unify both results and characterise the transition boundary.
-\end{itemize}
+Five extensions follow naturally. An economic analysis quantifying the net cost or benefit of the siphon relative to vault-per-pool (ALM) and static LP strategies requires controlled long-duration comparisons.
 
-\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+On emission-governance interaction, preliminary evidence from 33 post-flip events suggests ve(3,3) emission rates correlate with siphon role assignment, but separating emission effects from concurrent market regime changes requires observation across multiple epoch cycles.
+
+An adversarial analysis is also open: an attacker who controls rebalance timing across multiple positions may be able to extract value from the siphon, and the feasibility and cost of such an attack are unknown.
+
+Quantitative magnitude prediction is a further open question; the closed-form formula predicts gross residuals, but precise net prediction requires modelling the swap's absorption fraction (${\sim}94\%$ in the present data).
+
+Finally, Theorems~\ref{thm:convergence} and~\ref{thm:extinction} describe opposite regimes (convergence with swaps, extinction without), and a unified growth equation $\dot{V}/V = g(V/L_p, \sigma, S_{\text{eff}})$ that continuously interpolates between these regimes as a function of swap efficiency $S_{\text{eff}}$ would unify both results and characterise the transition boundary.
 
 \section{Conclusion}\label{sec:conclusion}
 
 When concentrated liquidity positions share depositor-level token balances, autonomous rebalancing produces systematic inter-position capital transfers. This paper has formalised the underlying mechanism and validated it across $1{,}380$ rebalance events, 39 positions and two independent contract deployments.
 
-The geometric residual follows from the Uniswap V3 amount equations. Any CL range change that alters the required token ratio at current price produces a non-zero token surplus or deficit (Theorem~\ref{thm:residual}), verified against unmodified Slipstream contracts on Base via a Foundry fork test. Empirically, this residual accounts for over $97\%$ of inter-position flow ($\rho = 0.976$), with swap friction contributing $0.35\%$ median price impact. Range changes (${\sim}5\%$ of events) create the residual and feed it into a shared dust pool. Same-range rebalances (${\sim}95\%$) redistribute it, governed by $V/\mathcal{L}$. Single-pool portfolios converge towards equal value (Theorem~\ref{thm:convergence}). Multi-pool portfolios form stable hub-spoke topologies where token connectivity determines the flow direction.
-
-When the swap mechanism is absent ($S = 0$), the full geometric residual leaks on every rebalance and positions decay geometrically (Theorem~\ref{thm:extinction}). A USDC/ZARP position lost $99.8\%$ of its capital ($\text{\$942} \to \text{\$1.59}$) in 14 zero-swap rebalances over 65 hours. The theorem's extinction bound predicted 11 rebalances at the average leak rate; 10 donation events were observed. The three theorems together describe residual creation (Theorem~\ref{thm:residual}), equilibrium convergence (Theorem~\ref{thm:convergence}) and boundary extinction (Theorem~\ref{thm:extinction}).
+The geometric residual follows from the Uniswap V3 amount equations. Any CL range change that alters the required token ratio at current price produces a non-zero token surplus or deficit (Theorem~\ref{thm:residual}), verified against unmodified Slipstream contracts on Base via a Foundry fork test. Empirically, this residual accounts for over $97\%$ of inter-position flow ($\rho = 0.976$), with swap friction contributing $0.35\%$ median price impact. Range changes (${\sim}5\%$ of events) create the residual and feed it into a shared dust pool; same-range rebalances (${\sim}95\%$) redistribute it, governed by $V/L_p$. Single-pool portfolios converge towards equal value (Theorem~\ref{thm:convergence}); multi-pool portfolios form stable hub-spoke topologies where token connectivity determines the flow direction. When the swap mechanism is absent ($S = 0$), the full residual leaks on every rebalance and positions decay geometrically (Theorem~\ref{thm:extinction}); a USDC/ZARP position lost $99.8\%$ of its capital ($\text{\$942} \to \text{\$1.59}$) in 14 zero-swap rebalances over 65 hours, against a tight extinction bound of 11 rebalances at the average leak rate.
 
 The residual has arisen on every CL rebalance that shifts the required token ratio at the current price, since Uniswap V3 launched in May 2021, but vault-per-pool architecture confines it within individual positions. Cross-position flow requires depositor-level shared balances without pool isolation. Any protocol moving towards multi-pool position management will encounter this mechanism.
 
 \addcontentsline{toc}{section}{References}
 \begin{thebibliography}{9}
 
-\bibitem[Adams et~al.(2021)]{adams2021}
-Adams, H., Zinsmeister, N., Salem, M., Keefer, R. and Robinson, D. (2021) `Uniswap v3 Core', \emph{Uniswap Labs Technical Whitepaper}. \url{https://uniswap.org/whitepaper-v3.pdf}.
+\bibitem{adams2021}
+Adams, H., Zinsmeister, N., Salem, M., Keefer, R., Robinson, D. ``Uniswap v3 Core.'' \emph{Uniswap Labs Technical Whitepaper} (2021) \url{https://uniswap.org/whitepaper-v3.pdf}.
 
-\bibitem[Baxley(2023)]{baxley2023}
-Baxley, B. (2023) `Maverick Protocol: Dynamic Distribution AMM', \emph{Maverick Protocol Documentation}. \url{https://docs.mav.xyz/}.
+\bibitem{ryan2026b}
+Ryan, K.R. ``The Geometric Siphon II: Directional Properties.'' \emph{SSRN preprint 6481498} (2026) \url{https://doi.org/10.2139/ssrn.6481498}.
 
-\bibitem[Cartea et~al.(2024)]{cartea2024}
-Cartea, \'A., Drissi, F. and Monga, M. (2024) `Decentralised Finance and Automated Market Making: Predictable Loss and Optimal Liquidity Provision', \emph{SIAM Journal on Financial Mathematics}, forthcoming. \url{https://doi.org/10.1137/23M1602103}. Preprint: arXiv:2309.08431.
+\bibitem{fan2023}
+Fan, Z., Marmolejo-Cossío, F.J., Moroz, D., Neuder, M., Rao, R., Parkes, D.C. ``Strategic Liquidity Provision in Uniswap v3.'' \emph{Proceedings of the 5th Conference on Advances in Financial Technologies (AFT 2023), LIPIcs vol.~282, Article 25} (2023) \url{https://doi.org/10.4230/LIPIcs.AFT.2023.25}.
 
-\bibitem[Fan et~al.(2023)]{fan2023}
-Fan, Z., Marmolejo-Cossío, F.J., Moroz, D., Neuder, M., Rao, R. and Parkes, D.C. (2023) `Strategic Liquidity Provision in Uniswap v3', in \emph{Proceedings of the 5th Conference on Advances in Financial Technologies (AFT 2023)}, LIPIcs vol.~282, Article 25. \url{https://doi.org/10.4230/LIPIcs.AFT.2023.25}. Preprint: arXiv:2106.12033.
+\bibitem{heimbach2022}
+Heimbach, L., Schertenleib, E., Wattenhofer, R. ``Risks and Returns of Uniswap V3 Liquidity Providers.'' \emph{Proceedings of the 4th ACM Conference on Advances in Financial Technologies (AFT 2022)} (2022) \url{https://doi.org/10.1145/3558535.3559772}.
 
-\bibitem[Hasbrouck et~al.(2025)]{hasbrouck2025}
-Hasbrouck, J., Rivera, T.J. and Saleh, F. (2025) `An Economic Model of a Decentralized Exchange with Concentrated Liquidity', \emph{Management Science}, forthcoming. \url{https://doi.org/10.1287/mnsc.2024.04510}. SSRN: 4529513.
+\bibitem{hasbrouck2025}
+Hasbrouck, J., Rivera, T.J., Saleh, F. ``An Economic Model of a Decentralized Exchange with Concentrated Liquidity.'' \emph{Management Science (forthcoming)} (2025) \url{https://doi.org/10.1287/mnsc.2024.04510}.
 
-\bibitem[Heimbach et~al.(2022)]{heimbach2022}
-Heimbach, L., Schertenleib, E. and Wattenhofer, R. (2022) `Risks and Returns of Uniswap V3 Liquidity Providers', in \emph{Proceedings of the 4th ACM Conference on Advances in Financial Technologies (AFT 2022)}. \url{https://doi.org/10.1145/3558535.3559772}. Preprint: arXiv:2205.08904.
+\bibitem{milionis2022b}
+Milionis, J., Moallemi, C.C., Roughgarden, T., Zhang, A.L. ``Automated Market Making and Loss-Versus-Rebalancing.'' \emph{arXiv preprint 2208.06046} (2022) \url{https://arxiv.org/abs/2208.06046}.
 
-\bibitem[Martinelli and Mushegian(2019)]{martinelli2019}
-Martinelli, F. and Mushegian, N. (2019) `A non-custodial portfolio manager, liquidity provider, and price sensor', \emph{Balancer Labs Whitepaper}. \url{https://docs.balancer.fi/whitepaper.pdf}.
+\bibitem{milionis2024}
+Milionis, J., Moallemi, C.C., Roughgarden, T. ``Automated Market Making and Arbitrage Profits in the Presence of Fees.'' \emph{Financial Cryptography and Data Security 2024} (2024) \url{https://arxiv.org/abs/2305.14604}.
 
-\bibitem[Milionis et~al.(2022)]{milionis2022b}
-Milionis, J., Moallemi, C.C., Roughgarden, T. and Zhang, A.L. (2022) `Automated Market Making and Loss-Versus-Rebalancing', \emph{arXiv preprint}, arXiv:2208.06046.
+\bibitem{cartea2024}
+Cartea, \'A., Drissi, F., Monga, M. ``Decentralised Finance and Automated Market Making: Predictable Loss and Optimal Liquidity Provision.'' \emph{SIAM Journal on Financial Mathematics (forthcoming)} (2024) \url{https://doi.org/10.1137/23M1602103}.
 
-\bibitem[Milionis et~al.(2024)]{milionis2024}
-Milionis, J., Moallemi, C.C. and Roughgarden, T. (2024) `Automated Market Making and Arbitrage Profits in the Presence of Fees', in \emph{Financial Cryptography and Data Security 2024}. Preprint: arXiv:2305.14604.
+\bibitem{willetts2026}
+Willetts, M., Harrington, C. ``Pools as Portfolios: Observed Arbitrage Efficiency and LVR Analysis of Dynamic Weight AMMs.'' \emph{arXiv preprint 2602.22069} (2026) \url{https://arxiv.org/abs/2602.22069}.
 
-\bibitem[Ryan(2026b)]{ryan2026b}
-Ryan, K.R.\ (2026b) `The Geometric Siphon II: Directional Properties'. \url{https://doi.org/10.2139/ssrn.6481498}.
+\bibitem{martinelli2019}
+Martinelli, F., Mushegian, N. ``A Non-Custodial Portfolio Manager, Liquidity Provider, and Price Sensor.'' \emph{Balancer Labs Whitepaper} (2019) \url{https://docs.balancer.fi/whitepaper.pdf}.
 
-\bibitem[Willetts and Harrington(2026)]{willetts2026}
-Willetts, M. and Harrington, C. (2026) `Pools as Portfolios: Observed arbitrage efficiency \& LVR analysis of dynamic weight AMMs', \emph{arXiv preprint}, arXiv:2602.22069.
+\bibitem{baxley2023}
+Baxley, B. ``Maverick Protocol: Dynamic Distribution AMM.'' \emph{Maverick Protocol Documentation} (2023) \url{https://docs.mav.xyz/}.
 
 \end{thebibliography}
 
 \appendix
-\newpage
+\titleformat{\section}[block]{\fontsize{13pt}{15pt}\bfseries}{Appendix \thesection:}{0.6em}{}
+\titlespacing*{\section}{0pt}{18pt}{8pt}
 
 \section{Contract architecture}\label{app:contract}
 
 Both phases used a Position Manager contract on Aerodrome (Base) with the following key design:
 
-\begin{verbatim}
+\begin{codeblock}\begin{verbatim}
 // Dust balance keyed by depositor and token, no pool dimension
 mapping(address => mapping(address => uint256)) public dustBalance;
 
@@ -1137,43 +1214,30 @@ function rebalanceCL(
     uint256 deadline,
     SwapParams swapParams
 ) external returns (uint256 newTokenId);
-\end{verbatim}
+\end{verbatim}\end{codeblock}
 
-The critical storage layout is \texttt{dustBalance[depositor][token]}: leftover tokens from any pool's rebalance are accessible to any subsequent mint under the same depositor. This creates the cross-position channel described in \S\ref{sec:problem}. A vault-per-pool architecture would use \texttt{dustBalance\allowbreak{}[pool][token]} or equivalent, isolating residuals per pair.
+The critical storage layout is \texttt{dustBalance[depositor][token]}: leftover tokens from any pool's rebalance are accessible to any subsequent mint under the same depositor. This creates the cross-position channel described in \S\ref{sec:introduction}. A vault-per-pool architecture would use \texttt{dustBalance\allowbreak{}[pool][token]} or equivalent, isolating residuals per pair.
 
 \section{Foundry test suite (reproduction)}\label{app:foundry}
 
 The full suite is 15 tests across 4 contracts: 3 mock-pool tests for Theorem~\ref{thm:residual}, 4 mock-pool tests for Theorem~\ref{thm:extinction}, 3 mock-pool tests for the directional theorems in the companion paper (Ryan, 2026b), and 5 live fork tests against Aerodrome Slipstream on Base. Requirements: Foundry \texttt{forge} (installation instructions at \url{https://book.getfoundry.sh}) and, for the fork tests, any working Base RPC URL. The \texttt{forge-std} library is included as a git submodule; the \texttt{git submodule update} command below fetches it into \texttt{foundry/lib/forge-std}.
 
-\begin{verbatim}
+\begin{codeblock}\begin{verbatim}
 cd foundry
 git submodule update --init --recursive
 
 # Mock-pool tests only, no network access required (10 tests)
-forge test -vv --no-match-contract 'GeometricResidualProof$'
+forge test -vv \
+  --no-match-contract '(GeometricResidualProof|DirectionalExitForkProof)$'
 
 # Full suite, including the 5 live fork tests (15 tests)
 RPC_BASE_ALCHEMY=https://mainnet.base.org forge test -vv
-\end{verbatim}
+\end{verbatim}\end{codeblock}
 
-The official public endpoint above is sufficient for all five fork tests; any Alchemy, Infura, QuickNode or other Base RPC URL is equally acceptable in \texttt{RPC\_BASE\_ALCHEMY}. Forge caches RPC responses under \texttt{\textasciitilde/.foundry/cache}, so repeat runs are fast; mock-pool tests complete in under a second. The captured \texttt{forge test -vv} output mapped to each subsection of \S\ref{sec:foundry} lives in \texttt{foundry/PROOF\_OUTPUT.md} and is the deterministic regression target for the mock-pool tests; fork-test residuals vary between runs as live pool state changes, but the qualitative claims (residual existence, same-range control, linear scaling, stock-NFPM non-absorption) hold deterministically.
+The official public endpoint above is sufficient for all five fork tests, and any Alchemy, Infura, QuickNode or other Base RPC URL is equally acceptable in \texttt{RPC\_BASE\_ALCHEMY}. Forge caches RPC responses under \texttt{\textasciitilde/.foundry/cache}, so repeat runs are fast and mock-pool tests complete in under a second. The captured \texttt{forge test -vv} output mapped to each subsection of \S\ref{sec:foundry} lives in \texttt{foundry/PROOF\_OUTPUT.md} and is the deterministic regression target for the mock-pool tests. Fork-test residuals vary between runs as live pool state changes, but the qualitative claims (residual existence, same-range control, linear scaling, stock-NFPM non-absorption) hold deterministically.
 
-\enlargethispage{2\baselineskip}
 \section{Data and reproduction}\label{app:reproduction}
 
-\begin{table}[H]
-\centering
-\begin{tabular}{@{}ll@{}}
-\toprule
-Resource & Location \\
-\midrule
-Foundry verification suite & \texttt{foundry/} directory \\
-Captured \texttt{forge test} output & \texttt{foundry/PROOF\_OUTPUT.md} \\
-Diffusion log & Available on request \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The repository is at \url{https://github.com/g4nc0r/the-geometric-siphon}; the Zenodo DOI \url{https://doi.org/10.5281/zenodo.19526374} resolves to an immutable archival snapshot of the repository at the time of deposit, whilst the GitHub URL tracks the latest commit. The Foundry suite reproduces all theorem verifications described in \S\ref{sec:foundry} from a clean checkout (see Appendix~\ref{app:foundry}). The diffusion-event log of 1{,}380 rebalance events across 39 positions used for the empirical analyses in \S\ref{sec:results} is available on request.
+The repository is at \url{https://github.com/g4nc0r/the-geometric-siphon}; the Zenodo Code DOI \url{https://doi.org/10.5281/zenodo.19905208} resolves to an immutable archival snapshot, whilst the GitHub URL tracks the latest commit. The current Foundry suite and reproduction harness in the repository align with the consolidated manuscript referenced in the supersession note. The qualitative theorem verifications described in \S\ref{sec:foundry} (residual existence on range changes, analytical zero on same-range rebalances, linear scaling with position size, geometric extinction without swap correction) reproduce on the current harness; specific numerical values may differ from the figures reported here, which reflect the harness used at the time of this preprint. The diffusion-event log of 1{,}380 rebalance events across 39 positions used for the empirical analyses in \S\ref{sec:results} is also deposited on Zenodo (Data DOI \url{https://doi.org/10.5281/zenodo.19904832}).
 
 \end{document}
