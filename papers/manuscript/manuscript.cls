@@ -384,7 +384,7 @@
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{corollary}{Corollary}[theorem]
 \newtheorem{lemma}[theorem]{Lemma}
-\newtheorem*{conjecture}{Conjecture}
+\newtheorem{conjecture}{Conjecture}
 \renewcommand\qedsymbol{\hfill$\blacksquare$}
 \newtheorem*{remark}{Remark}
 

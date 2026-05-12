@@ -35,7 +35,9 @@
 
 % Tables
 \usepackage{array}
+\usepackage{tabularx}
 \newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
 \usepackage{booktabs}
 \setlength{\extrarowheight}{2pt}
 
@@ -49,6 +51,7 @@
 
 % Lists
 \usepackage{enumitem}
+\setlist[enumerate]{label=(\arabic*)}
 
 % Section heading style
 \usepackage{titlesec}
@@ -86,6 +89,7 @@
 % Tables: 1.05 row stretch, content at \footnotesize
 \renewcommand{\arraystretch}{1.05}
 \AtBeginEnvironment{tabular}{\footnotesize}
+\AtBeginEnvironment{tabularx}{\footnotesize}
 
 % Microtype
 \usepackage{microtype}
@@ -165,7 +169,7 @@
 % Theorem environments
 \theoremstyle{plain}
 \newtheorem{theorem}{Theorem}
-\newtheorem{corollary}{Corollary}
+\newtheorem{corollary}{Corollary}[theorem]
 \newtheorem{conjecture}{Conjecture}
 \renewcommand{\thetheorem}{\arabic{theorem}}
 
@@ -199,24 +203,23 @@
 \sloppy
 \thispagestyle{plain}
 
+\noindent\parbox[t][8.05cm][t]{\linewidth}{%
 \begin{center}
-{\huge The Geometric Siphon:\\[6pt]
-Existence, Equilibrium, and Directional\\[6pt]
-Properties of the Residual in Concentrated\\[8pt]
-Liquidity Portfolios\strut}
+{\fontsize{25pt}{29pt}\selectfont The Geometric Siphon}\\[16pt]
+{\fontsize{17pt}{18pt}\selectfont Existence, Equilibrium, and Directional Properties\\[10pt]
+of the Residual in Concentrated Liquidity Portfolios\strut}
 
-\vspace{14pt}
+\vspace{24pt}
 {\large K.R.\ Ryan}\\[4pt]
 {\fontsize{9pt}{11pt}\selectfont Independent Researcher \quad|\quad ORCID - 0009-0004-6295-7040 \quad|\quad \href{mailto:gancor@gancor.xyz}{gancor@gancor.xyz}}\\[4pt]
 {\fontsize{9pt}{11pt}\selectfont April 2026}
 
-\vspace{12pt}
+\vspace{8pt}
 {\fontsize{9pt}{11pt}\selectfont
-\begin{minipage}{0.82\linewidth}\centering
-\textbf{Keywords}\hspace{0.6em}geometric residual \textperiodcentered\ directional asymmetry \textperiodcentered\ automated market maker \textperiodcentered\ Uniswap V3 \textperiodcentered\ Aerodrome \textperiodcentered\ DeFi mechanism design\\[4pt]
-\textbf{JEL:} G12, G14, G19, G23
-\end{minipage}}
-\end{center}
+\textbf{Keywords}\hspace{0.6em}geometric residual \textperiodcentered\ directional asymmetry \textperiodcentered\ automated market maker \\
+Uniswap V3 \textperiodcentered\ Aerodrome \textperiodcentered\ DeFi mechanism design\\[4pt]
+\textbf{JEL:} G12, G14, G19, G23}
+\end{center}}
 
 \vspace{-1pt}
 \centerline{\scalebox{1.5}{$\therefore$}}
@@ -228,7 +231,7 @@ This paper identifies and formalises the \emph{Geometric Siphon}, a previously u
 
 \section{Introduction}\label{sec:introduction}
 
-Concentrated liquidity, introduced in Uniswap V3,\cite{adams2021} requires active management. Every major CL automation platform (Gamma Strategies, Arrakis Finance, Beefy CLM) uses a \emph{vault-per-pool} architecture in which one vault manages one token pair and leftover tokens from rebalances are reinvested into the same position. Residuals stay in the pool that produced them and appear, if at all, as a small capital-efficiency loss difficult to separate from slippage.
+Concentrated liquidity, introduced in Uniswap V3,\cite{adams2021} requires active management. Every major CL automation platform (Gamma Strategies, Arrakis Finance, Beefy CLM) uses a \emph{vault-per-pool} architecture in which one vault manages one token pair and leftover tokens from rebalances are reinvested into the same position. Residuals stay in the pool that produced them and appear, if at all, as a small capital efficiency loss difficult to separate from slippage.
 
 Position Manager V6 (PMV6), a CL management contract on Base, accounts for residuals differently. Leftover tokens have no pool dimension and are held in \texttt{dustBalance[depositor][token]}, keyed by depositor and token only, so every position under one depositor draws from the same balance. That accounting choice opens a channel through which residuals from one pool can be consumed by positions in another. This paper characterises that channel and the residual that drives it.
 
@@ -543,7 +546,7 @@ The empirical work spans three phases on Aerodrome (Base): a 41.9-hour mechanism
 \centering
 \caption{The three experimental phases.}
 \label{tab:phases-overview}
-\begin{tabular}{@{}lL{3.5cm}L{3.5cm}L{3.5cm}@{}}
+\begin{tabularx}{\linewidth}{@{}lYYY@{}}
 \toprule
  & Phase 1 & Phase 2 & Phase 3 \\
 \midrule
@@ -554,7 +557,7 @@ Positions & 22, in 5 groups & 17, in 5 groups & 36, in 5 portfolios \\
 Events    & 738 diffusion, 1{,}192 rebalances & 642 diffusion & 35{,}910 rebalances \\
 Design    & Controlled & Controlled & Operational \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 \subsection{Infrastructure}\label{sec:infrastructure}
@@ -704,7 +707,7 @@ Because $73\%$ of events lie at $V/L_p < 0.01$, a linear regression is misleadin
 \definecolor{donatetint}{HTML}{FBEEEC}
 \begin{tikzpicture}
 \begin{axis}[
-  width=0.9\linewidth, height=9cm,
+  width=0.85\linewidth, height=7.2cm,
   xlabel={$V/L_p$ (log scale)},
   ylabel={Mean $D/V$},
   xmode=log,
@@ -1105,7 +1108,7 @@ The six theorems above characterise the geometric residual through the V3 amount
 
 \subsection{The architectural precondition}\label{sec:precondition}
 
-The geometric residual arises on any CL rebalance that changes the required token ratio at the current price, and in that sense it has existed since Uniswap V3 launched in May 2021. In vault-per-pool architectures, it remains trapped within the position that produced it and usually appears only as a small capital-efficiency loss, hard to distinguish from slippage in standard PnL tracking. Depositor-level shared balances change that. By allowing residuals from one pool to be consumed by positions in another, they make the same residual visible as inter-position flow.
+The geometric residual arises on any CL rebalance that changes the required token ratio at the current price, and in that sense it has existed since Uniswap V3 launched in May 2021. In vault-per-pool architectures, it remains trapped within the position that produced it and usually appears only as a small capital efficiency loss, hard to distinguish from slippage in standard PnL tracking. Depositor-level shared balances change that. By allowing residuals from one pool to be consumed by positions in another, they make the same residual visible as inter-position flow.
 
 Theorem~\ref{thm:residual} applies to all Uniswap V3-style concentrated liquidity implementations. Cross-position flow further requires shared token balances across positions in different pools. When that condition holds, the Connector Rule (\S\ref{sec:connector}) can operate. Depositor-level multi-pool accounting is still uncommon in production CL management, but it is not unique to the PMV6--PMV9 family studied here; any protocol that adopts it becomes exposed to the same mechanism.
 
@@ -1176,6 +1179,7 @@ The author operates the off-chain concentrated liquidity rebalancing system from
 The Foundry verification suite is publicly available on GitHub at \url{https://github.com/g4nc0r/the-geometric-siphon}, with an immutable archival snapshot on Zenodo at \url{https://doi.org/10.5281/zenodo.19905208}. A clean checkout reproduces every theorem verification described in \S\ref{sec:foundry}. The diffusion-event logs supporting the empirical analyses in \S\S\ref{sec:decomposition}--\ref{sec:exit-empirical}, together with a Python reproduction harness that regenerates the empirical tables and the V3 ordering classification used for the segmented Phase~3 analysis, are deposited on Zenodo at \url{https://doi.org/10.5281/zenodo.19904832}.
 
 \addcontentsline{toc}{section}{References}
+\pagestyle{plain}
 \begin{thebibliography}{99}
 
 \bibitem{adams2021}
@@ -1200,7 +1204,7 @@ Heimbach, L., Schertenleib, E., Wattenhofer, R. ``Risks and Returns of Uniswap V
 Willetts, M., Harrington, C. ``Pools as Portfolios: Observed arbitrage efficiency and LVR analysis of dynamic weight AMMs.'' \emph{arXiv:2602.22069} (2026) \url{https://arxiv.org/abs/2602.22069}.
 
 \bibitem{fan2023}
-Fan, Z., Marmolejo-Coss\'io, F.J., Altschuler, B., Sun, H., Wang, X., Parkes, D.C. ``Strategic Liquidity Provision in Uniswap v3.'' \emph{Proceedings of the 5th Conference on Advances in Financial Technologies (AFT 2023), LIPIcs vol.~282, Article 25} (2023) \url{https://doi.org/10.4230/LIPIcs.AFT.2023.25}.
+Fan, Z., Marmolejo-Coss\'io, F., Moroz, D., Neuder, M., Rao, R., Parkes, D.C. ``Strategic Liquidity Provision in Uniswap v3.'' \emph{Proceedings of the 5th Conference on Advances in Financial Technologies (AFT 2023), LIPIcs vol.~282, Article 25} (2023) \url{https://doi.org/10.4230/LIPIcs.AFT.2023.25}.
 
 \bibitem{martinelli2019}
 Martinelli, F., Mushegian, N. ``A non-custodial portfolio manager, liquidity provider, and price sensor.'' \emph{Balancer Labs Whitepaper} (2019) \url{https://docs.balancer.fi/whitepaper.pdf}.
@@ -1216,6 +1220,8 @@ P., I. ``Convexity and Topology in Cross-Pool Dust Redistribution: Structural Ed
 \appendix
 \titleformat{\section}[block]{\fontsize{13pt}{15pt}\bfseries}{Appendix \thesection:}{0.6em}{}
 \titlespacing*{\section}{0pt}{18pt}{8pt}
+\renewcommand{\thecorollary}{\thesection.\arabic{corollary}}
+\setcounter{corollary}{0}
 
 \titleformat{\subsubsection}[runin]{\fontshape{it}\selectfont\bfseries}{}{0pt}{}[.]
 \titlespacing*{\subsubsection}{0pt}{6pt}{0.5em}
@@ -1567,6 +1573,7 @@ Displacement & $\alpha$ \\
 
 \noindent The residual fraction rose strictly with displacement. The $\alpha = 0\%$ value at 100 ticks is the mock-pool integer-floor artefact noted above; on real V3 \texttt{TickMath} it is small but strictly positive.
 
+\needspace{8\baselineskip}
 \subsection{Test 6: Geometric decay over repeated rebalances (Theorem~\ref{thm:extinction}, part iii)}\label{sec:foundry-decay}
 
 Five sequential rebalance cycles with 150-tick price drift and no swap:

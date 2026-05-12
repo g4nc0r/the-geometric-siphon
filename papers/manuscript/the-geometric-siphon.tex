@@ -77,7 +77,7 @@ This paper identifies and formalises the \emph{Geometric Siphon}, a previously u
 
 \section{Introduction}\label{sec:introduction}
 
-Concentrated liquidity, introduced in Uniswap V3,\cite{adams2021} requires active management. Every major CL automation platform (Gamma Strategies, Arrakis Finance, Beefy CLM) uses a \emph{vault-per-pool} architecture in which one vault manages one token pair and leftover tokens from rebalances are reinvested into the same position. Residuals stay in the pool that produced them and appear, if at all, as a small capital-efficiency loss difficult to separate from slippage.
+Concentrated liquidity, introduced in Uniswap V3,\cite{adams2021} requires active management. Every major CL automation platform (Gamma Strategies, Arrakis Finance, Beefy CLM) uses a \emph{vault-per-pool} architecture in which one vault manages one token pair and leftover tokens from rebalances are reinvested into the same position. Residuals stay in the pool that produced them and appear, if at all, as a small capital efficiency loss difficult to separate from slippage.
 
 Position Manager V6 (PMV6), a CL management contract on Base, accounts for residuals differently. Leftover tokens have no pool dimension and are held in \texttt{dustBalance[depositor]}\allowbreak\texttt{[token]}, keyed by depositor and token only, so every position under one depositor draws from the same balance. That accounting choice opens a channel through which residuals from one pool can be consumed by positions in another. This paper characterises that channel and the residual that drives it.
 
@@ -114,7 +114,7 @@ A concurrent SSRN preprint by I.\,P.\cite{secondoperator2026} develops a graph-t
 
 Taken together, the results in this section proceed from existence to dynamics to asymmetry. Theorem~\ref{thm:residual} identifies when a rebalance does and does not generate a geometric residual, separating geometry-driven flow from slippage and motivating the decomposition tested in \S\ref{sec:decomposition}. Theorems~\ref{thm:convergence} and~\ref{thm:extinction} then characterise opposite dynamical regimes of the same mechanism, with Theorem~\ref{thm:convergence} giving expected same-pool convergence under shared balances and Theorem~\ref{thm:extinction} giving geometric extinction under repeated zero-swap rebalancing. Theorems~\ref{thm:monotonicity}--\ref{thm:exit} turn to displacement, direction, and exit type, showing how residual magnitude and retained USD value vary once a stablecoin num\'eraire is fixed. These results provide the formal link between the V3 amount equations and the production-scale directional patterns examined in \S\S\ref{sec:directional-empirical}--\ref{sec:exit-empirical}. Readers primarily interested in the empirical results may treat this section as a guide to the formal claims; full derivations are in Appendix~\ref{app:dr-derivation}.
 
-\subsection{Concentrated-liquidity preliminaries}\label{sec:preliminaries}
+\subsection{Concentrated liquidity preliminaries}\label{sec:preliminaries}
 
 The results below rely on the standard Uniswap V3 amount equations, the token ratio implied by a range at the current price, and the corresponding position value in token1 units.
 
@@ -172,7 +172,7 @@ Theorem~\ref{thm:residual} partitions rebalances into ratio-changing events ($\D
 
 \textbf{Stage~1: Geometric creation.} Range-change rebalances produce geometric residuals via~\eqref{eq:lnew-min}. PMV6's internal swap absorbs about 94\% of the ratio mismatch; the remainder enters the shared dust pool as unmatched tokens. Without range changes, the pool is no longer replenished and drains towards zero.
 
-\textbf{Stage~2: Dust-pool redistribution.} Same-range rebalances draw from accumulated contract dust. The CL mint function uses all available tokens,
+\textbf{Stage~2: Dust-pool redistribution.} Same range rebalances draw from accumulated contract dust. The CL mint function uses all available tokens,
 \begin{equation}\label{eq:mint}
 L_{\text{new}} = \min\!\left(\frac{x_w + x_{\text{dust}}}{1/s - 1/s_b'}, \; \frac{y_w + y_{\text{dust}}}{s - s_a'}\right),
 \end{equation}
@@ -955,7 +955,7 @@ The six theorems above characterise the geometric residual through the V3 amount
 
 \subsection{The architectural precondition}\label{sec:precondition}
 
-The geometric residual arises on any CL rebalance that changes the required token ratio at the current price, and in that sense it has existed since Uniswap V3 launched in May 2021. In vault-per-pool architectures, it remains trapped within the position that produced it and usually appears only as a small capital-efficiency loss, hard to distinguish from slippage in standard PnL tracking. Depositor-level shared balances change that. By allowing residuals from one pool to be consumed by positions in another, they make the same residual visible as inter-position flow.
+The geometric residual arises on any CL rebalance that changes the required token ratio at the current price, and in that sense it has existed since Uniswap V3 launched in May 2021. In vault-per-pool architectures, it remains trapped within the position that produced it and usually appears only as a small capital efficiency loss, hard to distinguish from slippage in standard PnL tracking. Depositor-level shared balances change that. By allowing residuals from one pool to be consumed by positions in another, they make the same residual visible as inter-position flow.
 
 Theorem~\ref{thm:residual} applies to all Uniswap V3-style concentrated liquidity implementations. Cross-position flow further requires shared token balances across positions in different pools. When that condition holds, the Connector Rule (\S\ref{sec:connector}) can operate. Depositor-level multi-pool accounting is still uncommon in production CL management, but it is not unique to the PMV6--PMV9 family studied here; any protocol that adopts it becomes exposed to the same mechanism.
 
@@ -1034,6 +1034,8 @@ The Foundry verification suite is publicly available on GitHub at \url{https://g
 \setcounter{section}{0}
 \renewcommand{\thesection}{\Alph{section}}
 \setcounter{secnumdepth}{2}
+\renewcommand{\thecorollary}{\thesection.\arabic{corollary}}
+\setcounter{corollary}{0}
 
 \titleformat{\subsection}{\fontshape{it}\selectfont\bfseries}{\thesubsection.}{0.5em}{}
 \titlespacing*{\subsection}{0pt}{10pt}{4pt}
