@@ -12,6 +12,17 @@ repository-code: "https://github.com/g4nc0r/the-geometric-siphon"
 license: MIT
 references:
   - type: report
+    title: "The Geometric Siphon: Existence, Equilibrium, and Directional Properties of the Residual in Concentrated Liquidity Portfolios"
+    authors:
+      - family-names: Ryan
+        given-names: K. R.
+        orcid: "https://orcid.org/0009-0004-6295-7040"
+    year: 2026
+    institution:
+      name: "Social Science Research Network"
+    number: "6686798"
+    url: "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6686798"
+  - type: report
     title: "The Geometric Siphon: Emergent Capital Reallocation in Concentrated Liquidity Portfolios"
     authors:
       - family-names: Ryan
@@ -40,6 +51,6 @@ references:
         given-names: K. R.
         orcid: "https://orcid.org/0009-0004-6295-7040"
     year: 2026
-    version: "1.1"
+    version: "1.2"
     doi: "10.5281/zenodo.19904832"
     url: "https://doi.org/10.5281/zenodo.19904832"

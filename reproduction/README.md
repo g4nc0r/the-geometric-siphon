@@ -6,7 +6,7 @@ Each script regenerates one or more paper tables from the bundled JSONLs. Python
 
 ```bash
 python3 table9_directional.py    # one table
-python3 run_all.py               # all 11 scripts
+python3 run_all.py               # all 12 scripts
 ```
 
 ## Coverage
@@ -16,6 +16,7 @@ python3 run_all.py               # all 11 scripts
 | `table6_decomposition.py` | Table 6 (§5.1): Spearman ρ(ΔR, D), mean S, swap impact | `supplementary/slippage-decomposition.json`, `swap-verification.json` |
 | `table7_stratified.py` | Table 7 (§5.2): stratified V/L and σ correlations by group | `events-phase1.jsonl` |
 | `table8_vl_sweep.py` | Table 8 (§5.3): KellyClaude V/L sweep | `phase2-controlled-superset.jsonl` |
+| `table8_vl_sweep_bootstrap.py` | Table 8 supplement (§5.3): per-position bootstrap CIs and permutation test on ρ(preValue, dustPnl) | `phase2-controlled-superset.jsonl` |
 | `table9_directional.py` | Table 9 (§5.9): per-portfolio directional asymmetry | `phase3-events.jsonl` |
 | `table10_exit.py` | Tables 10 and 11 (§5.10): per-portfolio exit asymmetry + P1 reversed-ordering negative control | `phase3-events.jsonl` |
 | `table14_vl_buckets.py` | Table 14 (§5.2): V/Lₚ transfer function | `phase2-controlled-superset.jsonl` |

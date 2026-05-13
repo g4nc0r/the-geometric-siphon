@@ -13,6 +13,7 @@ SCRIPTS = [
     "table6_decomposition.py",
     "table7_stratified.py",
     "table8_vl_sweep.py",
+    "table8_vl_sweep_bootstrap.py",
     "table9_directional.py",
     "table10_exit.py",
     "table14_vl_buckets.py",
