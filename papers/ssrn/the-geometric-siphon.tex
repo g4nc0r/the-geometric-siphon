@@ -257,7 +257,7 @@ Empirical work on V3 LPs has focused on per-position risk and return distributio
 
 Fan \emph{et al.}\cite{fan2023} formulate the LP's strategic problem as choosing tick ranges to maximise fees net of repositioning costs, treating each position in isolation. Theorems~\ref{thm:monotonicity}--\ref{thm:exit} characterise the asymmetries that any such strategy faces under directional price moves and at range exits.
 
-Several alternative rebalancing architectures exist at the protocol level. Balancer\cite{martinelli2019} rebalances via its AMM invariant within a single pool; Set Protocol uses oracle-triggered swaps; Yearn deploys capital across strategist-managed strategies. All require a shared pool invariant, external price feeds, or manual intervention. Maverick Protocol's directional liquidity modes\cite{baxley2023} have bins follow price automatically; `Mode Both' is the closest analogue to siphon-driven repositioning, being continuous, automatic, and oracle-free, but operates within a single position. The Geometric Siphon arises from CL geometry alone and operates \emph{across} positions in different pools, requiring only a depositor-level shared dust balance.
+Several alternative rebalancing architectures exist at the protocol level. Balancer\cite{martinelli2019} rebalances via its AMM invariant within a single pool; Set Protocol uses oracle-triggered swaps; Yearn deploys capital across strategist-managed strategies. All require a shared pool invariant, external price feeds, or manual intervention. Maverick Protocol's directional liquidity modes\cite{maverick2023} have bins follow price automatically; `Mode Both' is the closest analogue to siphon-driven repositioning, being continuous, automatic, and oracle-free, but operates within a single position. The Geometric Siphon arises from CL geometry alone and operates \emph{across} positions in different pools, requiring only a depositor-level shared dust balance.
 
 Geometric residual flows between CL positions sharing depositor-level balances do not appear in the literature surveyed here. Nor do the directional and exit asymmetries of those residuals (Theorems~\ref{thm:directional}, \ref{thm:exit}), which follow from the same V3 amount equations.
 
@@ -1188,31 +1188,31 @@ The Foundry verification suite is publicly available on GitHub at \url{https://g
 Adams, H., Zinsmeister, N., Salem, M., Keefer, R., Robinson, D. ``Uniswap v3 Core.'' \emph{Uniswap Labs Technical Whitepaper} (2021) \url{https://uniswap.org/whitepaper-v3.pdf}.
 
 \bibitem{hasbrouck2025}
-Hasbrouck, J., Rivera, T.J., Saleh, F. ``An Economic Model of a Decentralized Exchange with Concentrated Liquidity.'' \emph{Management Science (forthcoming)} (2025) \url{https://doi.org/10.1287/mnsc.2024.04510}.
+Hasbrouck, J., Rivera, T.J., Saleh, F. ``An Economic Model of a Decentralized Exchange with Concentrated Liquidity.'' \emph{Management Science} \textbf{72.5} 3666--3683 (2025) \url{https://doi.org/10.1287/mnsc.2024.04510}.
 
 \bibitem{cartea2024}
-Cartea, \'A., Drissi, F., Monga, M. ``Decentralized Finance and Automated Market Making: Predictable Loss and Optimal Liquidity Provision.'' \emph{SIAM Journal on Financial Mathematics (forthcoming)} (2024) \url{https://doi.org/10.1137/23M1602103}.
+Cartea, \'A., Drissi, F., Monga, M. ``Decentralized Finance and Automated Market Making: Predictable Loss and Optimal Liquidity Provision.'' \emph{SIAM Journal on Financial Mathematics} \textbf{15.3} 931--959 (2024) \url{https://doi.org/10.1137/23M1602103}.
 
 \bibitem{milionis2022b}
-Milionis, J., Moallemi, C.C., Roughgarden, T., Zhang, A.L. ``Automated Market Making and Loss-Versus-Rebalancing.'' \emph{arXiv:2208.06046} (2022) \url{https://arxiv.org/abs/2208.06046}.
+Milionis, J., Moallemi, C.C., Roughgarden, T., Zhang, A.L. ``Automated Market Making and Loss-Versus-Rebalancing.'' \emph{arXiv:2208.06046} (2024) \url{https://doi.org/10.48550/arXiv.2208.06046}.
 
 \bibitem{milionis2024}
-Milionis, J., Moallemi, C.C., Roughgarden, T. ``Automated Market Making and Arbitrage Profits in the Presence of Fees.'' \emph{Financial Cryptography and Data Security} (2024) \url{https://arxiv.org/abs/2305.14604}.
+Milionis, J., Moallemi, C.C., Roughgarden, T. ``Automated Market Making and Arbitrage Profits in the Presence of Fees.'' In Clark, J., Shi, E. (eds.), \emph{Financial Cryptography and Data Security (FC 2024)}, Lecture Notes in Computer Science vol.~14744, Springer, Cham (2025) \url{https://doi.org/10.1007/978-3-031-78676-1_9}.
 
 \bibitem{heimbach2022}
 Heimbach, L., Schertenleib, E., Wattenhofer, R. ``Risks and Returns of Uniswap V3 Liquidity Providers.'' \emph{Proceedings of the 4th ACM Conference on Advances in Financial Technologies (AFT 2022)} (2022) \url{https://doi.org/10.1145/3558535.3559772}.
 
 \bibitem{willetts2026}
-Willetts, M., Harrington, C. ``Pools as Portfolios: Observed arbitrage efficiency and LVR analysis of dynamic weight AMMs.'' \emph{arXiv:2602.22069} (2026) \url{https://arxiv.org/abs/2602.22069}.
+Willetts, M., Harrington, C. ``Pools as Portfolios: Observed arbitrage efficiency \& LVR analysis of dynamic weight AMMs.'' \emph{arXiv:2602.22069} (2026) \url{https://doi.org/10.48550/arXiv.2602.22069}.
 
 \bibitem{fan2023}
-Fan, Z., Marmolejo-Coss\'io, F., Moroz, D., Neuder, M., Rao, R., Parkes, D.C. ``Strategic Liquidity Provision in Uniswap v3.'' \emph{Proceedings of the 5th Conference on Advances in Financial Technologies (AFT 2023), LIPIcs vol.~282, Article 25} (2023) \url{https://doi.org/10.4230/LIPIcs.AFT.2023.25}.
+Fan, Z., Marmolejo-Cossio, F., Moroz, D., Neuder, M., Rao, R., Parkes, D.C. ``Strategic Liquidity Provision in Uniswap V3.'' \emph{5th Conference on Advances in Financial Technologies (AFT 2023), LIPIcs vol.~282, pp.~25:1--25:22} (2023) \url{https://doi.org/10.4230/LIPIcs.AFT.2023.25}.
 
 \bibitem{martinelli2019}
 Martinelli, F., Mushegian, N. ``A non-custodial portfolio manager, liquidity provider, and price sensor.'' \emph{Balancer Labs Whitepaper} (2019) \url{https://docs.balancer.fi/whitepaper.pdf}.
 
-\bibitem{baxley2023}
-Baxley, B. ``Maverick Protocol: Dynamic Distribution AMM.'' \emph{Maverick Protocol Documentation} (2023) \url{https://docs.mav.xyz/}.
+\bibitem{maverick2023}
+Maverick Research Team. ``Maverick AMM.'' \emph{Maverick Protocol whitepaper, v1.0} (March 2023) \url{https://docs.mav.xyz/}.
 
 \bibitem{secondoperator2026}
 P., I. ``Convexity and Topology in Cross-Pool Dust Redistribution: Structural Edge in Active CL Management.'' \emph{SSRN preprint 6509938} (2026) \url{https://doi.org/10.2139/ssrn.6509938}.
