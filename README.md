@@ -30,9 +30,21 @@ The *Geometric Siphon* is a mechanism arising from concentrated liquidity rebala
 
 ## Citation
 
-Cite the SSRN preprints. Paper I covers Theorems 1–3 and the §5 empirical work; Paper II covers Theorems 4–6.
+Cite the consolidated preprint; it revises and unifies Papers I and II. The original preprints remain citable where the split matters: Paper I covers Theorems 1–3 and the §5 empirical work; Paper II covers Theorems 4–6.
 
 ```bibtex
+@techreport{ryan2026siphon,
+  author      = {Ryan, K. R.},
+  title       = {The Geometric Siphon: Existence, Equilibrium, and Directional
+                 Properties of the Residual in Concentrated Liquidity
+                 Portfolios},
+  institution = {SSRN},
+  number      = {6686798},
+  year        = {2026},
+  doi         = {10.2139/ssrn.6686798},
+  url         = {https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6686798}
+}
+
 @techreport{ryan2026siphon1,
   author      = {Ryan, K. R.},
   title       = {The Geometric Siphon: Emergent Capital Reallocation in
@@ -40,6 +52,7 @@ Cite the SSRN preprints. Paper I covers Theorems 1–3 and the §5 empirical wor
   institution = {SSRN},
   number      = {6374838},
   year        = {2026},
+  doi         = {10.2139/ssrn.6374838},
   url         = {https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6374838}
 }
 
@@ -49,6 +62,7 @@ Cite the SSRN preprints. Paper I covers Theorems 1–3 and the §5 empirical wor
   institution = {SSRN},
   number      = {6481498},
   year        = {2026},
+  doi         = {10.2139/ssrn.6481498},
   url         = {https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6481498}
 }
 ```

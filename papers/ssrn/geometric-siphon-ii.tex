@@ -132,6 +132,10 @@
 
 % Hyperlinks + PDF metadata
 \usepackage{hyperref}
+% Forbid mid-URL line breaks (split URLs extract as broken references on SSRN;
+% see programme tracker C26). Applied 2026-07-22.
+\def\UrlBreakPenalty{10000}
+\def\UrlBigBreakPenalty{10000}
 \hypersetup{
   colorlinks=true,
   allcolors=blue!50!black,

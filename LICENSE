@@ -19,3 +19,21 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+-------------------------------------------------------------------------------
+SCOPE
+
+The MIT terms above cover the code in this repository: foundry/ and
+reproduction/.
+
+They do not cover the papers, which ship under their own terms:
+
+  Paper PDFs and LaTeX sources (papers/)
+    (c) 2026 K. R. Ryan. All rights reserved. Matches the terms of the
+    SSRN deposits (abstract 6686798 and the Paper I / Paper II renderings).
+
+  The Zenodo data deposits referenced in README.md are CC BY 4.0 as
+  deposited; that licence is stated at the deposit, not here.
+
+Copyright (c) 2026 K. R. Ryan. See the Licence entry in README.md.
+-------------------------------------------------------------------------------

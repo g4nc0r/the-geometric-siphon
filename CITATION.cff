@@ -9,6 +9,9 @@ authors:
 type: software
 doi: "10.5281/zenodo.19905208"
 repository-code: "https://github.com/g4nc0r/the-geometric-siphon"
+# license covers the code in this repository; the paper PDFs and LaTeX sources
+# are (c) K. R. Ryan, all rights reserved, and the Zenodo data deposits are
+# CC BY 4.0 as deposited. See the Licence entry in README.md.
 license: MIT
 references:
   - type: report
@@ -21,6 +24,7 @@ references:
     institution:
       name: "Social Science Research Network"
     number: "6686798"
+    doi: "10.2139/ssrn.6686798"
     url: "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6686798"
   - type: report
     title: "The Geometric Siphon: Emergent Capital Reallocation in Concentrated Liquidity Portfolios"
@@ -32,6 +36,7 @@ references:
     institution:
       name: "Social Science Research Network"
     number: "6374838"
+    doi: "10.2139/ssrn.6374838"
     url: "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6374838"
   - type: report
     title: "The Geometric Siphon II: Directional Properties"
@@ -43,6 +48,7 @@ references:
     institution:
       name: "Social Science Research Network"
     number: "6481498"
+    doi: "10.2139/ssrn.6481498"
     url: "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=6481498"
   - type: data
     title: "Diffusion event log for The Geometric Siphon (K. R. Ryan, 2026)"
