@@ -6,7 +6,7 @@
 
 Paper sources, Foundry verification code, and reproduction scripts for the *Geometric Siphon* papers (K. R. Ryan, 2026).
 
-The *Geometric Siphon* is a mechanism arising from concentrated liquidity rebalancing geometry, made observable through shared depositor balances. When autonomously rebalanced positions share a token balance, token-ratio mismatches between old and new tick ranges route residual tokens through that shared balance, transferring capital between positions in independent pools. Six theorems characterise the mechanism (Theorems 1–3 in Paper I, Theorems 4–6 in Paper II), and a graph-theoretic *Connector Rule* relating per-pool flow to portfolio topology is stated as a conjecture. A 16-test Foundry suite verifies all six theorems against unmodified V3 contracts on Base mainnet, with six fork tests against live Aerodrome Slipstream. A 1,380-event controlled dataset and a separate 35,910-event production-scale dataset anchor the empirical results.
+The *Geometric Siphon* is a mechanism arising from concentrated liquidity rebalancing geometry, made observable through shared depositor balances. When autonomously rebalanced positions share a token balance, token-ratio mismatches between old and new tick ranges route residual tokens through that shared balance, transferring capital between positions in independent pools. Six theorems characterise the mechanism (Theorems 1–3 in Paper I, Theorems 4–6 in Paper II), and a graph-theoretic *Connector Rule* relating per-pool flow to portfolio topology is stated as a conjecture. A 16-test Foundry suite verifies all six theorems against unmodified V3 contracts on Base mainnet, with six fork tests against live Aerodrome Slipstream, and the theorem statements are machine-checked in Lean 4 against mathlib. A 1,380-event controlled dataset and a separate 35,910-event production-scale dataset anchor the empirical results.
 
 | | |
 |---|---|
@@ -16,6 +16,7 @@ The *Geometric Siphon* is a mechanism arising from concentrated liquidity rebala
 | **Data DOI** | [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19904832.svg)](https://doi.org/10.5281/zenodo.19904832) - Diffusion event log |
 | **Foundry** | `forge` ≥ 1.5; Solidity 0.8.26 |
 | **Python** | 3.9+, standard library only |
+| **Lean** | 4.32.2 via elan; mathlib pinned in `lean/lake-manifest.json` |
 | **Licence** | code MIT (`LICENSE`); Zenodo data deposit CC-BY-4.0; paper PDFs and LaTeX sources © K. R. Ryan, all rights reserved |
 
 **Status.** The consolidated manuscript in `papers/manuscript/` revises and unifies Papers I and II and is being prepared for journal submission. The SSRN preprints below remain the citable record.
@@ -98,6 +99,10 @@ The reproduction harness reads from JSONL event logs that ship in the Zenodo dat
 │   ├── test/                     5 test contracts + helpers/ + interfaces/
 │   ├── PROOF_OUTPUT.md           captured forge test output
 │   └── README.md
+├── lean/                       Lean 4 formalisation of the theorem layer
+│   ├── GeometricSiphon/          shared definitions + five theorem files
+│   ├── AxiomCheck.lean           axiom audit
+│   └── README.md
 ├── reproduction/               13 Python scripts that regenerate paper tables
 │   ├── README.md
 │   ├── _common.py
@@ -124,6 +129,19 @@ RPC_BASE_ALCHEMY=https://mainnet.base.org forge test -vv
 ```
 
 Any Base RPC URL with archive support works in `RPC_BASE_ALCHEMY`. The fork tests are pinned to Base block `43_175_000` (2026-03-10 10:42 UTC, mid-Phase 2 of the paper's data window), so captured numerical residuals are bit-reproducible. Forge caches RPC responses under `~/.foundry/cache`, so repeat runs are fast.
+
+## Lean formalisation
+
+[`lean/`](./lean/) machine-checks the theorem layer in Lean 4 against mathlib: Theorem 1 (the vanishing iff, plus the unconditional inequality that the isolated-case rebalance never creates value), Theorem 3 parts (i), (iii) and (iv), Theorem 4 with bridge lemmas connecting the closed form to Theorem 1's mint minimum, Theorems 5 and 6 in full, and Theorem 2 at two levels: the deterministic linearised core of the paper's spectral argument, and an exact expected-contraction theorem for a declared discrete model of the rebalance process, in which the convergence claim holds with no linearisation. Theorem 3 part (ii) and the identification of the discrete model with the on-chain process are not formalised; the full coverage table and scope caveats are in [`lean/README.md`](./lean/README.md). The formalisation covers the idealised real-arithmetic model of the paper; the Foundry suite above remains the check against fixed-point pool arithmetic.
+
+```bash
+cd lean
+lake exe cache get   # one-off, fetches prebuilt mathlib (several GB)
+lake build
+
+# audit: every theorem depends only on propext, Classical.choice, Quot.sound
+lake env lean AxiomCheck.lean
+```
 
 ## Reproducing the paper's tables
 
