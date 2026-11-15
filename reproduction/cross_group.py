@@ -1,11 +1,11 @@
 """
-Table 15: Cross-group token decomposition.
+Cross-group token decomposition, partial.
 
-Reproduces §5.2.3 Table 15 from supplementary/closed-form-decomposition-cache.json
-(581 transaction receipts). Partial reproduction: emits per-token dust deltas
-from the receipt cache. The 9-row paper table additionally needs per-receipt
-depositor attribution, which requires the address → depositor-emoji link
-(not in the deposit). See ../README.md for the receipt-cache schema.
+From supplementary/closed-form-decomposition-cache.json (581 transaction
+receipts). The script decodes per-token dust from each receipt and reports
+how many receipts parse and how many pools they touch. The paper's nine-row
+table also needs each receipt's depositor, which is not in the deposit, so
+the table itself is not regenerated.
 
 Per-token dust on a rebalance is:
 
@@ -17,7 +17,7 @@ Positive values = donated to the contract dust pool; negative = absorbed.
 import json
 from collections import defaultdict
 
-from _common import SUPP_DIR
+from _common import SUPP_DIR, heading
 
 # Aerodrome Slipstream NonfungiblePositionManager event topic hashes.
 DECREASE_LIQ = "0x26f6a048ee9138f2c0ce266f322cb99228e8d619ae2bff30c67f8dcf9d2377b4"
@@ -102,7 +102,7 @@ def main():
         if result["dust0"] != 0 or result["dust1"] != 0:
             nonzero_dust += 1
 
-    print("# Table 15: Cross-group token decomposition\n")
+    print(heading("cross_group", "Cross-group token decomposition, inputs only") + "\n")
     print(f"Source: supplementary/closed-form-decomposition-cache.json "
           f"({len(cache)} receipts).\n")
     print(f"Parsed cleanly: {parsed_count} / {len(cache)}")
@@ -110,11 +110,8 @@ def main():
     print(f"Distinct pools touched: {len(pool_counter)}")
     print()
 
-    print("Top 12 pools by receipt count:\n")
-    print("| Pool address | Receipts |")
-    print("|---|---|")
-    for pool, n in sorted(pool_counter.items(), key=lambda x: -x[1])[:12]:
-        print(f"| {pool} | {n:,} |")
+    counts = sorted(pool_counter.values(), reverse=True)
+    print("Receipts per pool, largest first: " + ", ".join(str(n) for n in counts))
 
 
 if __name__ == "__main__":

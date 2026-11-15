@@ -1,10 +1,8 @@
 """
-Table 17: Phase 1 regime partitioning by market state.
-
-Reproduces §5.5 Table 17 from events-phase1.jsonl.
+Phase 1 regime partitioning by market state, from events-phase1.jsonl.
 """
 
-from _common import fmt_money, load_jsonl, md_table
+from _common import heading, fmt_money, load_jsonl, md_table
 
 REGIMES = [
     ("P1: Stress",     "2026-03-03T17:49", "2026-03-04T06:00", "ETH $2,215 → $1,984"),
@@ -31,7 +29,7 @@ def main():
             character,
         ])
 
-    print("# Table 17: Phase 1 regime partitioning\n")
+    print(heading("regime", "Phase 1 regime partitioning") + "\n")
     print(f"Source: events-phase1.jsonl ({len(phase1)} events).\n")
     print(md_table(
         ["Phase", "Period (UTC)", "Events", "Net $", "Character"],

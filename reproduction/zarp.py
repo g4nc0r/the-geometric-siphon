@@ -1,16 +1,22 @@
 """
-Table 19: USDC/ZARP CL10 14-event extinction trajectory.
+USDC/ZARP CL10 14-event extinction trajectory.
 
-Reproduces §5.8 Table 19 from phase2-controlled-superset.jsonl
-(equivalent supplementary/fiat-experiment-events.jsonl gives the same
-result for ZARP). The "14 events" are the chronological pre-extinction
-events; events 15–21 in the bundled log are post-extinction tail with
-V ≈ $2 and are excluded by the paper's 14-row table.
+From phase2-controlled-superset.jsonl (supplementary/fiat-experiment-events.jsonl
+gives the same result for ZARP). The 14 events are the chronological
+pre-extinction events; events 15 to 21 in the bundled log are a
+post-extinction tail with V ≈ $2 and are not in the paper's table.
+
+The paper's last column, the USDC amount of each internal swap, is read
+from pool Swap events and is not in the deposit. Twelve of the fourteen
+rebalances carried a swap, so the α printed here includes the effect of
+the swap where one occurred. The paper's bound of 6 rebalances uses the
+zero-swap residual fractions, which need the pool state before each
+transaction; this script prints the bound at the realised mean α, 11.
 """
 
 import math
 
-from _common import fmt_money, load_jsonl, md_table
+from _common import heading, fmt_money, load_jsonl, md_table
 
 
 def main():
@@ -53,11 +59,11 @@ def main():
             pl_s,
         ])
 
-    print("# Table 19: USDC/ZARP CL10 14-event extinction trajectory\n")
+    print(heading("zarp", "USDC/ZARP CL10 14-event extinction trajectory") + "\n")
     print("Source: phase2-controlled-superset.jsonl, ZARP subset, first 14 events.\n")
     print(md_table(
         ["Event", "Time (UTC)", "Pre ($)", "Post ($)", "Dust D",
-         "V/L_pool", "α", "L_pool"],
+         "L/L_p", "α", "L_p"],
         rows,
     ))
     print()
@@ -81,7 +87,7 @@ def main():
         terminal = zarp[-1].get("postValue", 0)
         k_star = math.ceil(math.log(initial / terminal) / math.log(1 / (1 - alpha_bar)))
         k_loose = math.ceil(math.log(initial / terminal) / math.log(1 / (1 - alpha_min)))
-        print(f"\nExtinction bounds (Theorem 3 part iv):")
+        print(f"\nExtinction bounds at the realised α, which includes the swaps (Theorem 3 part iv):")
         print(f"  ᾱ across {len(alphas)} donation events: {alpha_bar:.3f}")
         print(f"  α_min: {alpha_min:.3f}")
         print(f"  K* (tight) = ⌈ln({initial:.0f}/{terminal:.2f}) / ln(1/{1-alpha_bar:.2f})⌉ = {k_star}")

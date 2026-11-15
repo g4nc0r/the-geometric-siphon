@@ -1,86 +1,77 @@
-# Foundry verification suite
+# Captured test output
 
-Frozen `forge test -vv` output, kept under version control as a regression target. Sixteen tests across five contracts verify Theorems 1, 3, 4, 5, and 6 in *The Geometric Siphon: Existence, Equilibrium, and Directional Properties of the Residual in Concentrated Liquidity Portfolios* (K. R. Ryan, 2026), and the architectural precondition of §7.1 against live Aerodrome Slipstream contracts on Base.
+Part of the [Foundry verification suite](./README.md) of [The Geometric Siphon](../README.md).
 
-| Theorem / claim | Paper section | Test contract | Tests | Pool |
-|---|---|---|---|---|
-| Thm 1, geometric residual existence and scaling | §3.2 | `GeometricResidualProofClean` | 3 | `MockCLPool` |
-| Thm 1, same claims on real Slipstream | §6, App D.8 | `GeometricResidualProof` | 3 | Aerodrome Slipstream (fork) |
-| Thm 3, zero-swap extinction | §3.6 | `ZeroSwapExtinctionProof` | 4 | `MockCLPool` |
-| Thm 4, residual monotonicity | §3.7 | `NewTheoremsProof` | 1 | `MockCLPoolV2` |
-| Thm 5, directional asymmetry (mock) | §3.8 | `NewTheoremsProof` | 1 | `MockCLPoolV2` |
-| Thm 5, directional asymmetry (fork) | App D.12 | `DirectionalExitForkProof` | 1 | Aerodrome Slipstream (fork) |
-| Thm 6, exit asymmetry (mock) | §3.9 | `NewTheoremsProof` | 1 | `MockCLPoolV2` |
-| Thm 6, exit asymmetry (fork) | App D.13 | `DirectionalExitForkProof` | 1 | Aerodrome Slipstream (fork) |
-| Architectural precondition | §7.1, App D.8 | `GeometricResidualProof` | 1 | Aerodrome Slipstream (fork) |
+The values the sixteen tests print under `forge test -vv`, transcribed test by test and kept under version control as the regression target. Coverage, commands and pool descriptions are in the [README](./README.md). Section and appendix numbers refer to the paper, and the test numbers are those of its Appendix D.
 
-## Reproduction
+| | |
+|---|---|
+| Result | 16 tests passed, 0 failed |
+| Compiler | Solidity 0.8.26, `via_ir`, optimiser 200 runs |
+| Fork pin | Base block `43_175_000`, 10 March 2026, 10:42 UTC |
+| Last reproduced | forge 1.8.6, 15 November 2026 |
 
-```bash
-git submodule update --init --recursive   # first time only
-forge build
+| Contract | Pool | Tests | Passed |
+|---|---|---|---|
+| `GeometricResidualProofClean` | `MockCLPool` | 3 | 3 |
+| `ZeroSwapExtinctionProof` | `MockCLPool` | 4 | 4 |
+| `NewTheoremsProof` | `MockCLPoolV2` | 3 | 3 |
+| `GeometricResidualProof` | Slipstream fork | 4 | 4 |
+| `DirectionalExitForkProof` | Slipstream fork | 2 | 2 |
+| | | 16 | 16 |
 
-# Mock-pool tests only (no network)
-forge test -vv --no-match-contract '(GeometricResidualProof|DirectionalExitForkProof)$'
+The fork pin sits inside the paper's Phase 2 data window (7 to 12 March 2026) and makes the captured fork values reproducible. The qualitative results hold at every block: the residual exists, the control case leaves rounding dust only, the residual scales with size, a stock position manager absorbs nothing, `V_up > V_down`, and `V_above > V_below`.
 
-# Full suite, including live fork tests
-RPC_BASE_ALCHEMY=https://mainnet.base.org forge test -vv
-```
+## Contents
 
-Any working Base RPC URL is acceptable in `RPC_BASE_ALCHEMY`. The public endpoint `https://mainnet.base.org` works for all six fork tests; Alchemy, QuickNode, and `https://base.publicnode.com` also work. Forge caches RPC responses under `~/.foundry/cache`, so repeat runs are fast.
+- [Theorem 1, mock pool: Tests 1 to 3](#theorem-1-mock-pool)
+- [Theorem 3, mock pool: Tests 4 to 7](#theorem-3-mock-pool)
+- [Theorems 4 to 6, mock pool: Tests 8 to 10](#theorems-4-to-6-mock-pool)
+- [Theorem 1 and §7.1, Base fork](#theorem-1-and-71-base-fork)
+- [Theorems 5 and 6, Base fork: Tests 11 and 12](#theorems-5-and-6-base-fork)
+- [Notes](#notes)
 
-All six fork tests are pinned to Base block `43_175_000` (2026-03-10 10:42 UTC), inside the paper's Phase 2 data window (2026-03-08 to 2026-03-12). The pin makes the captured numerical values bit-reproducible and aligns the fork tests temporally with the empirical data in §5. Re-running requires a Base archive RPC. Qualitative claims (residual exists, control case is dust-only, residual scales with size, no cross-position absorption on a stock NFPM, $V_{\text{up}} > V_{\text{down}}$, $V_{\text{above}} > V_{\text{below}}$) hold at every block.
+## Theorem 1, mock pool
 
-## Run summary
+Contract `GeometricResidualProofClean`, pool `MockCLPool`.
 
-```
-Suite                               Tests   Pass  Fail
-GeometricResidualProofClean             3      3     0
-ZeroSwapExtinctionProof                 4      4     0
-NewTheoremsProof                        3      3     0
-GeometricResidualProof (fork)           4      4     0
-DirectionalExitForkProof (fork)         2      2     0
-                                       --     --    --
-                                       16     16     0
-```
-
----
-
-## Theorem 1: `GeometricResidualProofClean`
-
-### `test_theorem1_rangeChangeCreatesResidual` (§6, App D.1)
+### Test 1: `test_theorem1_rangeChangeCreatesResidual` (§6, App D.1)
 
 | Step | Value |
 |---|---|
 | Initial position | 1 WETH + 2,500 USDC, ±500 ticks around tick 73,135 |
 | Price movement | +200 ticks |
 | New range | ±1,000 ticks (wider) |
-| Withdrawn | 0.0759 WETH + 3,434.58 USDC |
+| Withdrawn | 75,920,850 raw units of token0 + 3,434.58 USDC |
 | Re-deposited liquidity | 6,681,244,254 (from 23,525,142,796) |
 | **Residual** | 1 wei token0 + 2,061,006,718 token1 ≈ **2,061 USDC** |
 
-Assertion `assertTrue(residual0 > 0 || residual1 > 0)` PASSED.
+Assertion `assertTrue(residual0 > 0 || residual1 > 0)` passed.
 
-### `test_theorem1_noRangeChange_noResidual` (App D.2)
+### Test 2: `test_theorem1_noRangeChange_noResidual` (App D.2)
 
-Same setup, same +200 tick price move, re-mint into the **identical** range. Residual: 1 wei token0 + 29 wei token1. Pure integer rounding from `mulDiv` floor division.
+The same setup and the same +200 tick price move, re-minted into the identical range.
 
-Assertion `assertLt(residual1, 1e3)` PASSED. Confirms the converse `R_old = R_new ⇒ ΔR = 0`.
+| | Value |
+|---|---|
+| **Residual** | 1 wei token0 + 29 base units of token1 (USDC) |
 
-### `test_theorem1_largerPositionLargerResidual` (App D.3)
+The residual is integer rounding from `mulDiv` floor division. Assertion `assertLt(residual1, 1e3)` passed. This is the direction `R_old = R_new ⇒ ΔR = 0` of Theorem 1.
 
-| Position size | Residual (raw sum) | Ratio |
+### Test 3: `test_theorem1_largerPositionLargerResidual` (App D.3)
+
+| Position size | Residual (raw sum, as logged) | Ratio |
 |---|---|---|
 | 0.5 WETH | 1,030,503,360 | 1.0× |
 | 2.0 WETH | 4,122,013,419 | 4.00× |
 
-Assertion `assertGt(largeResidual, smallResidual)` PASSED.
+Assertion `assertGt(largeResidual, smallResidual)` passed.
 
----
+## Theorem 3, mock pool
 
-## Theorem 3: `ZeroSwapExtinctionProof`
+Contract `ZeroSwapExtinctionProof`, pool `MockCLPool`. Here α is the fraction of the value withdrawn that is not redeployed, with both valued in token1 at the price of the rebalance.
 
-### `test_theorem3_singleSidedExitNoSwapLosesValue` (App D.4)
+### Test 4: `test_theorem3_singleSidedExitNoSwapLosesValue` (App D.4)
 
 | Step | Value |
 |---|---|
@@ -88,157 +79,153 @@ Assertion `assertGt(largeResidual, smallResidual)` PASSED.
 | Price movement | +200 ticks (above upper bound) |
 | Withdrawal | 0 WETH + 2,499,999,999 USDC (100% token1) |
 | New range | [73000, 73400] (requires both tokens) |
-| New liquidity | **0** (`min()` constraint binds at zero) |
+| New liquidity | **0** (the mint minimum binds at zero) |
 | **α** | **100%** |
 
-Assertions `assertLt(valueFinal, valueInitial)` and `assertGt(alpha, 0.5e18)` PASSED.
+Assertions `assertLt(valueFinal, valueInitial)` and `assertGt(alpha, 0.5e18)` passed.
 
-### `test_theorem3_residualScalesWithDisplacement` (App D.5)
+### Test 5: `test_theorem3_residualScalesWithDisplacement` (App D.5)
 
-Position deployed in a 1,000-tick range; price displaced upward before a same-width rebalance with no swap.
+A position in a 1,000-tick range. The price is displaced upwards and the position is rebalanced with no swap into a 500-tick range around the new price. At 100 and 300 ticks the price is still inside the old range; 600 ticks is an exit.
 
 | Displacement | α |
 |---|---|
-| 100 ticks | 0% |
-| 300 ticks | 37% |
+| 100 ticks | 4.85% |
+| 300 ticks | 50.06% |
 | 600 ticks | 100% |
 
-Assertions `assertGe(α₃₀₀, α₁₀₀)` and `assertGt(α₆₀₀, α₃₀₀)` PASSED. The α=0% at 100 ticks reflects `MockCLPool`'s linearised sqrt-price approximation; on real V3 tick math this is small but strictly positive.
+Assertions `assertGt(α₁₀₀, 0)`, `assertGt(α₃₀₀, α₁₀₀)` and `assertGt(α₆₀₀, α₃₀₀)` passed.
 
-### `test_theorem3_repeatedRebalancesGeometricDecay` (App D.6)
+### Test 6: `test_theorem3_repeatedRebalancesGeometricDecay` (App D.6)
 
-Five sequential rebalance cycles with 150-tick price drift and no swap, starting from a 2 WETH + 5,000 USDC position in a ±400-tick range:
+Five rebalance cycles in sequence, each with a 150-tick upward price drift and no swap, starting from a position offered 2 WETH + 5,000 USDC in a ±400-tick range. The value column is the position after each rebalance, at that cycle's price. The decay factor is the value redeployed over the value withdrawn at the same price, which is `1 − α` of that cycle.
 
 | Cycle | Value (USD) | Decay factor |
 |---|---|---|
-| 0 | 4,999 | --- |
-| 1 | 3,823 | 0.76 |
-| 2 | 1,565 | 0.40 |
-| 3 | 1,197 | 0.76 |
-| 4 | 490 | 0.40 |
-| 5 | 374 | 0.76 |
+| 0 | 9,120 | |
+| 1 | 6,268 | 0.684 |
+| 2 | 2,855 | 0.454 |
+| 3 | 1,962 | 0.684 |
+| 4 | 894 | 0.454 |
+| 5 | 614 | 0.684 |
 
-Total decay over five cycles: 92%. Assertions `V[k+1] < V[k]` for all `k` and `totalDecay > 90%` PASSED.
+Total decay over five cycles: 93%. The two factors alternate because the new bounds are rounded to the tick grid, which puts the price at two alternating distances from them. Assertions `V[k+1] < V[k]` for all `k` and `totalDecay > 90%` passed.
 
-### `test_theorem3_fullyOutOfRangeNearTotalLoss` (App D.7)
+### Test 7: `test_theorem3_fullyOutOfRangeNearTotalLoss` (App D.7)
 
 | Step | Value |
 |---|---|
-| Initial position | ±200 ticks around tick 73,135 |
+| Initial position | ±200 ticks around tick 73,135, value $4,240 |
 | Price movement | +2,000 ticks past upper bound |
-| Withdrawal | 0 WETH + 4,255,319,148 USDC |
+| Withdrawal | 0 WETH + 4,255.319148 USDC |
 | New liquidity | **0** |
 | **α** | **100%** |
 
-Assertion `assertGt(α, 0.95e18)` PASSED. Mirrors the ZARP terminal event (Event 14) referenced in §5.8.
+Assertion `assertGt(α, 0.95e18)` passed.
 
----
+## Theorems 4 to 6, mock pool
 
-## Theorems 4-6: `NewTheoremsProof`
+Contract `NewTheoremsProof`, pool `MockCLPoolV2`, which uses the exact Uniswap V3 `TickMath` constants.
 
-`MockCLPoolV2` implements the exact Uniswap V3 `TickMath` constants for sqrt-price computation, so captured values are quantitatively accurate.
+### Test 8: `test_theorem4_residualMonotonicity` (§3.7, App D.9)
 
-### `test_theorem4_residualMonotonicity` (§3.7, App D.9)
+Eight upward displacement levels on a 1,000-tick-wide position at base tick 78,244 (price about $2,500). The theorem's domain ends at the range boundary, +500 ticks. Beyond it the position is entirely token1 and the residual stays at the boundary value.
 
-Eight upward displacement levels on a 1,000-tick-wide position at base tick 78,244 (price ~$2,500):
-
-| Displacement (ticks) | Dust (USD) | Monotonic |
+| Displacement (ticks) | Dust (USD) | Position |
 |---|---|---|
-| +100 | $1,822 | --- |
-| +200 | $3,663 | ✓ |
-| +300 | $5,522 | ✓ |
-| +400 | $7,400 | ✓ |
-| +500 | $9,297 (range exit) | ✓ |
-| +600 | $9,297 (capped) | ✓ |
-| +700 | $9,297 (capped) | ✓ |
-| +800 | $9,297 (capped) | ✓ |
+| +100 | $1,822 | in range |
+| +200 | $3,663 | in range |
+| +300 | $5,522 | in range |
+| +400 | $7,400 | in range |
+| +500 | $9,297 | at the range boundary |
+| +600 | $9,297 | beyond the range |
+| +700 | $9,297 | beyond the range |
+| +800 | $9,297 | beyond the range |
 
-Zero violations. Assertion `assertEq(monotoneViolations, 0)` PASSED.
+The test counts a violation where a level is below the one before it. Zero violations. Assertion `assertEq(monotoneViolations, 0)` passed.
 
-### `test_theorem5_directionalAsymmetry` (§3.8, App D.10)
+### Test 9: `test_theorem5_directionalAsymmetry` (§3.8, App D.10)
 
-Five symmetric displacement levels on a 2 WETH + 5,000 USDC position (~$5,000):
+A position offered 2 WETH + 5,000 USDC in the range [77700, 78700], worth $9,200 at the starting price. The sqrt price is displaced by the same amount δ upwards and downwards, with both prices inside the range, and the position is valued in token1 at each. The last column is the closed form of the gap, `4 L δ (1 − s / s_b)`.
 
-| Displacement | Up value (USD) | Down value (USD) | Gap |
-|---|---|---|---|
-| ±100 ticks | $5,522 | $3,663 | +$1,859 |
-| ±200 ticks | $6,459 | $2,740 | +$3,718 |
-| ±300 ticks | $7,400 | $1,822 | +$5,577 |
-| ±400 ticks | $8,346 | $908 | +$7,437 |
-| ±450 ticks | $8,346 | $0 | +$8,346 |
-
-Zero violations. Assertion `assertEq(asymmetryViolations, 0)` PASSED.
-
-### `test_theorem6_exitAsymmetry` (§3.9, App D.11)
-
-Five symmetric exit distances past the range boundary:
-
-| Exit distance | Above value | Below value | Above swap frac | Below swap frac |
+| δ, share of s | V_up (USD) | V_down (USD) | Gap | Closed form |
 |---|---|---|---|---|
-| ±50 ticks | $9,297 | $0 | 0 bps | 9,999 bps |
-| ±100 ticks | $9,297 | $0 | 0 bps | 9,999 bps |
-| ±200 ticks | $9,297 | $0 | 0 bps | 9,999 bps |
-| ±300 ticks | $9,297 | $0 | 0 bps | 9,999 bps |
-| ±500 ticks | $9,297 | $0 | 0 bps | 9,999 bps |
+| 0.50% | $9,237 | $9,153 | +$84 | $84 |
+| 1.00% | $9,266 | $9,098 | +$168 | $168 |
+| 1.50% | $9,285 | $9,033 | +$252 | $252 |
+| 2.00% | $9,295 | $8,959 | +$336 | $336 |
+| 2.25% | $9,297 | $8,919 | +$378 | $378 |
 
-Ten of ten value-and-swap-fraction confirmations. Assertion `assertEq(totalConfirmations, 10)` PASSED.
+Assertions `assertGt(V_up, V_down)` and `assertApproxEqRel(V_up − V_down, closedForm, 0.1%)` passed at every level.
 
----
+### Test 10: `test_theorem6_exitAsymmetry` (§3.9, App D.11)
 
-## Fork verification: `GeometricResidualProof` (§6, App D.8)
+The same position, taken a sqrt-price distance d above the upper bound and the same distance below the lower bound. Above the range it holds token1 only and below it token0 only. The last column is Corollary 6.1, `V_below = V_above (s_a − d)² / (s_a s_b)`.
 
-Four tests reproduce the Theorem 1 scenarios against the WETH/USDC tickSpacing-100 pool on Base mainnet via `vm.createSelectFork("base", FORK_BLOCK)`. They mint, swap, withdraw, and re-mint through the unmodified Aerodrome Slipstream `NonfungiblePositionManager` (`0x827922686190790b37229fd06084350E74485b72`). No mock pool, no helper contracts. The contract uses `vm.deal` to fund itself with WETH and USDC. The pin (`FORK_BLOCK = 43_175_000`, 2026-03-10 10:42 UTC) sits inside the paper's Phase 2 window.
+| d, share of s | V_above (USD) | V_below (USD) | Closed form |
+|---|---|---|---|
+| 0.25% | $9,297 | $8,798 | $8,798 |
+| 0.50% | $9,297 | $8,753 | $8,753 |
+| 1.00% | $9,297 | $8,663 | $8,663 |
+| 1.50% | $9,297 | $8,573 | $8,573 |
+| 2.50% | $9,297 | $8,395 | $8,395 |
 
-| Test | Captured residual | Verifies |
+Assertions `assertGt(V_above, V_below)`, `assertApproxEqRel(V_below, closedForm, 0.1%)` and `V_below` strictly decreasing in d passed at every distance.
+
+## Theorem 1 and §7.1, Base fork
+
+Contract `GeometricResidualProof` (§6, App D.8). Four tests run the Theorem 1 scenarios against the WETH/USDC pool with tick spacing 100 on Base, through `vm.createSelectFork("base", FORK_BLOCK)`. They mint, swap, withdraw and re-mint through the unmodified Aerodrome Slipstream `NonfungiblePositionManager` (`0x827922686190790b37229fd06084350E74485b72`), with no mock pool and no helper contracts. The contract funds itself with WETH and USDC through `vm.deal`.
+
+| Test | Captured | Checks |
 |---|---|---|
-| `test_theorem1_rangeChangeCreatesResidual` | 46 wei WETH + \$329.36 USDC | Range change at non-zero displacement creates a non-zero residual on real Slipstream contracts (Thm 1) |
-| `test_theorem1_noRangeChangeZeroResidual` | 468 wei WETH + 25 wei USDC | Same-range rebalance produces only rounding dust (Thm 1 converse) |
-| `test_theorem1_largerPositionDonatesMore` | small \$164.64 / large \$658.56 | A 4× larger position produces a 4.00× larger residual |
-| `test_section7_1_stockNfpmDoesNotAbsorbDust` | liquidity 981,276,404,164,067 → 164,066 (1 wei) | A stock NFPM does **not** absorb cross-position dust (§7.1) |
+| `test_theorem1_rangeChangeCreatesResidual` | 46 wei WETH + $329.36 USDC | A range change at a displaced price leaves a residual on the live contracts |
+| `test_theorem1_noRangeChangeZeroResidual` | 468 wei WETH + 25 base units of USDC | A same-range rebalance leaves rounding dust only |
+| `test_theorem1_largerPositionDonatesMore` | small $164.64, large $658.57 | A position four times larger leaves a residual 4.00 times larger |
+| `test_section7_1_stockNfpmDoesNotAbsorbDust` | liquidity 981,276,404,164,067 → 981,276,404,164,066 | A stock position manager does not absorb another position's dust (§7.1) |
 
-Fork residuals (\$329) are smaller than mock-pool residuals (\$2,061) because the fork test moves the pool price by swapping a fixed \$1,000 USDC, which on a deep WETH/USDC pool shifts the tick by 1--3 ticks. The mock test displaces by a hardcoded +200 ticks.
+Fork residuals ($329) are smaller than mock-pool residuals ($2,061) because the fork tests move the pool price by a swap of 500 or 1,000 USDC, which on a deep WETH/USDC pool shifts the price by less than a tick. The mock test displaces by 200 ticks.
 
-`test_section7_1_stockNfpmDoesNotAbsorbDust` verifies §7.1's architectural precondition. The Geometric Siphon requires a `dustBalance[depositor][token]` storage layout shared across a depositor's positions. A stock NFPM has no such layout: every position is an independent NFT and `mint()` consumes only the tokens it is given. The test creates two same-range positions, leaves a residual via a range change on the first (\$329.36 stranded), then performs a same-range rebalance on the second and asserts that its liquidity does not grow. The 1-wei rounding decrease is well within `assertLe`.
+`test_section7_1_stockNfpmDoesNotAbsorbDust` checks the architectural precondition of §7.1. The mechanism requires a `dustBalance[depositor][token]` storage layout shared across a depositor's positions. A stock position manager has no such layout: every position is an independent NFT, and `mint()` consumes only the tokens it is given. The test creates two positions in the same range, leaves a residual through a range change on the first ($329.36 stranded), then rebalances the second into its own range and asserts that its liquidity does not grow. The decrease of 1 wei is rounding and is within `assertLe`.
 
----
+## Theorems 5 and 6, Base fork
 
-## Fork verification: `DirectionalExitForkProof` (App D.12-13)
+Contract `DirectionalExitForkProof` (App D.12 and D.13), on the same pool and at the same block as `GeometricResidualProof`.
 
-Two fork tests exercise Theorems 5 and 6 on the same live Aerodrome Slipstream pool. The mock-pool counterparts (Tests 9 and 10) display the down-direction value as `$0` under integer-arithmetic floor when token0 is heavily depressed; the live pool eliminates the floor and resolves the inequalities to strictly positive values. Both tests are pinned to the same block as `GeometricResidualProof`.
+Pool ordering: WETH (`0x4200…0006`) < USDC (`0x8335…2913`), so token0 is WETH and token1 is USDC. This is the ordering Theorems 5 and 6 are stated for.
 
-Pool ordering: WETH (`0x4200…0006`) < USDC (`0x8335…2913`), so token0 = WETH (volatile) and token1 = USDC (stablecoin). This is the forward ordering Theorems 5 and 6 are stated for; no inversion handling needed.
+### Test 11: `test_theorem5_directionalAsymmetryOnSlipstream`
 
-```
-[PASS] test_theorem5_directionalAsymmetryOnSlipstream()
-  Position range:           ±1,000 ticks
-  Up displacement:          2 ticks
-  V_up   (USDC, 6dp):       4,414,837,879  ($4,414.84)
-  Down displacement:        1 tick
-  V_down (USDC, 6dp):       4,414,292,550  ($4,414.29)
-  V_up - V_down:            545,329  ($0.55)
+| | Value |
+|---|---|
+| Position range | ±1,000 ticks |
+| Up displacement | 2 ticks |
+| `V_up` (USDC, 6 dp) | 4,414,837,879 ($4,414.84) |
+| Down displacement | 1 tick |
+| `V_down` (USDC, 6 dp) | 4,414,292,550 ($4,414.29) |
+| **`V_up − V_down`** | 545,329 (**$0.55**) |
 
-[PASS] test_theorem6_exitAsymmetryOnSlipstream()
-  Position range:           ±100 ticks (one tickSpacing each side)
-  Ticks past upper bound:   101,429
-  Ticks past lower bound:   1,161
-  V_above (USDC, 6dp):      2,946,802,981  ($2,946.80)   100% USDC
-  V_below (USDC, 6dp):      2,597,775,879  ($2,597.78)   100% WETH at depressed price
-  V_above - V_below:        349,027,102  ($349.03)
-```
+`V_up > V_down` on a volatile/stablecoin pair in V3 ordering, on the unmodified Slipstream contracts.
 
-| Test | Captured | Verifies |
-|---|---|---|
-| `test_theorem5_directionalAsymmetryOnSlipstream` | $V_{\text{up}} = \$4{,}414.84$, $V_{\text{down}} = \$4{,}414.29$ | Thm 5: $V_{\text{up}} > V_{\text{down}}$ on volatile/stablecoin in V3 forward ordering, on unmodified Slipstream contracts (no mock floor) |
-| `test_theorem6_exitAsymmetryOnSlipstream` | $V_{\text{above}} = \$2{,}946.80$, $V_{\text{below}} = \$2{,}597.78$ | Thm 6: $V_{\text{above}} > V_{\text{below}}$ at exit; below-exit position holds depreciated WETH at strictly positive USD value |
+### Test 12: `test_theorem6_exitAsymmetryOnSlipstream`
 
-Both tests use `vm.snapshot` / `vm.revertTo` to run up- and down-direction (or above- and below-exit) swaps from an identical post-mint pool state, eliminating path-dependence between the two measurements. Position values are computed from on-chain `positions(tokenId)` plus current `slot0().sqrtPriceX96` via the standard V3 amount-for-liquidity formulas, with token0 (WETH) valued at the pool's current price and token1 (USDC) at face value (no off-chain oracle).
+| | Value |
+|---|---|
+| Position range | ±100 ticks (one tick spacing each side) |
+| Ticks past upper bound | 101,429 |
+| Ticks past lower bound | 1,161 |
+| `V_above` (USDC, 6 dp) | 2,946,802,981 ($2,946.80), all USDC |
+| `V_below` (USDC, 6 dp) | 2,597,775,879 ($2,597.78), all WETH at a depressed price |
+| **`V_above − V_below`** | 349,027,102 (**$349.03**) |
 
----
+`V_above > V_below` at exit, with the below-range position holding WETH at a strictly positive USD value.
+
+Both tests use `vm.snapshot` and `vm.revertTo` to run the two directions from an identical pool state after the mint, so neither measurement depends on the other. Position values are computed from on-chain `positions(tokenId)` and the current `slot0().sqrtPriceX96` by the standard V3 amount-for-liquidity formulas, with token0 (WETH) valued at the pool's current price and token1 (USDC) at face value, with no off-chain oracle.
 
 ## Notes
 
-- `GeometricResidualProofClean` and `ZeroSwapExtinctionProof` use `MockCLPool`, which approximates `sqrtPriceX96` linearly around tick 73,135. Sufficient to demonstrate the residual at order of magnitude; not Uniswap-accurate in the last significant figure. The §6 small-position rounding (1,030 vs 1,031) and the decay-factor truncation (0.40 vs 0.41) trace to this approximation.
-- `NewTheoremsProof` uses `MockCLPoolV2`, which implements the exact V3 `TickMath` exponential constants verbatim from Uniswap V3 core. Captured values match §3.7--§3.9 to the cent at every displacement level.
-- `GeometricResidualProof` runs against an unmodified Aerodrome Slipstream pool via `vm.createSelectFork`. This is the on-chain evidence for §6's "running against unmodified Uniswap V3 contracts" claim.
-- Stage 2 dust absorption is not verified on `GeometricResidualProofClean`'s linear mock pool — that would require shared liquidity and fee accounting, which is out of scope for the mock. The fork-mode equivalent `test_section7_1_stockNfpmDoesNotAbsorbDust` verifies the converse: a stock NFPM cannot absorb cross-position dust.
-- Update `FORK_BLOCK` (in `GeometricResidualProof.t.sol`) and `BASE_BLOCK_PIN` (in `DirectionalExitForkProof.t.sol`) to re-run against a different Base block. Qualitative claims hold at every block; only the captured numeric values shift.
+- `GeometricResidualProofClean` and `ZeroSwapExtinctionProof` use `MockCLPool`, which approximates `sqrtPriceX96` linearly around tick 73,135. It shows the residual at the right order of magnitude and is not accurate to the last significant figure.
+- `NewTheoremsProof` uses `MockCLPoolV2`, with the exact V3 `TickMath` constants taken verbatim from Uniswap V3 core.
+- The mock pools carry no decimal offset between the tokens. Token0 is valued at the pool's raw price, `sqrtPriceX96² / 2¹⁹²`, through `_valueAtSqrtPrice` in `test/helpers/MockPositionTestBase.sol`.
+- `GeometricResidualProof` runs against an unmodified Aerodrome Slipstream pool through `vm.createSelectFork`. It is the evidence for the statement in §6 that six tests run against unmodified Slipstream contracts.
+- Absorption from a shared dust pool is not tested on the mock pool, which would need shared liquidity and fee accounting. The fork test `test_section7_1_stockNfpmDoesNotAbsorbDust` checks the converse, that a stock position manager absorbs nothing.
+- To run against a different Base block, change `FORK_BLOCK` in `GeometricResidualProof.t.sol` and `BASE_BLOCK_PIN` in `DirectionalExitForkProof.t.sol`. The qualitative results hold at every block and only the captured values change.

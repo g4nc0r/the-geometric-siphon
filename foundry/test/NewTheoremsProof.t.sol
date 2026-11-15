@@ -80,9 +80,8 @@ contract NewTheoremsProof is MockPositionTestBase {
             (uint256 w0, uint256 w1) = pool.getAmountsForLiquidity(
                 pos.liquidity, pos.tickLower, pos.tickUpper
             );
-            uint256 valueBefore = (w0 * _getPrice(newTick)) / 1e18 + w1;
+            uint256 valueBefore = _valueAtPoolPrice(w0, w1);
             
-            // Withdraw
             (w0, w1) = _withdrawPosition(pos);
             
             // Create new position centered on new tick
@@ -95,14 +94,12 @@ contract NewTheoremsProof is MockPositionTestBase {
             (uint256 a0, uint256 a1) = pool.getAmountsForLiquidity(
                 newPos.liquidity, newPos.tickLower, newPos.tickUpper
             );
-            uint256 valueAfter = (a0 * _getPrice(newTick)) / 1e18 + a1;
+            uint256 valueAfter = _valueAtPoolPrice(a0, a1);
             
-            // Residual = value NOT deployed (left as dust)
-            uint256 residualUsd = valueBefore > valueAfter ? valueBefore - valueAfter : 0;
-            // Also count token residuals directly
+            // Residual = tokens not deployed (left as dust)
             uint256 dustToken0 = w0 > a0 ? w0 - a0 : 0;
             uint256 dustToken1 = w1 > a1 ? w1 - a1 : 0;
-            uint256 dustUsd = (dustToken0 * _getPrice(newTick)) / 1e18 + dustToken1;
+            uint256 dustUsd = _valueAtPoolPrice(dustToken0, dustToken1);
             
             console.log("Displacement +%d ticks:", uint256(int256(displacements[d])));
             console.log("  Value before: $%d, after: $%d", valueBefore / 1e6, valueAfter / 1e6);
@@ -122,8 +119,9 @@ contract NewTheoremsProof is MockPositionTestBase {
     
     // =========================================================================
     // Theorem 5: Directional Asymmetry
-    // For symmetric ±δ price moves, the up-move position retains strictly more
-    // USD value than the down-move position (token1-denominated).
+    // For symmetric sqrt-price moves s ± δ inside the range, the up-move position
+    // is worth strictly more in token1 than the down-move position, and the gap
+    // is 4 L δ (1 - s / s_b).
     // =========================================================================
 
     function test_theorem5_directionalAsymmetry() public {
@@ -131,206 +129,92 @@ contract NewTheoremsProof is MockPositionTestBase {
 
         int24 tickLower = _nearest(BASE_TICK - RANGE_WIDTH / 2);
         int24 tickUpper = _nearest(BASE_TICK + RANGE_WIDTH / 2);
+        uint256 sA = pool.getSqrtRatioAtTick(tickLower);
+        uint256 sB = pool.getSqrtRatioAtTick(tickUpper);
+        uint256 s0 = pool.sqrtPriceX96();
 
-        uint256 deposit0 = 2 ether;
-        uint256 deposit1 = 5000e6;
+        Position memory pos = _createPosition(tickLower, tickUpper, 2 ether, 5000e6);
+        console.log("Initial value: $%d", _positionValue(pos) / 1e6);
 
-        uint256 asymmetryViolations = 0;
+        // Displacements of s, in units of 0.01% of s. All keep s ± δ inside the range.
+        uint256[5] memory dispBps = [uint256(50), 100, 150, 200, 225];
 
-        int24[5] memory displacements = [int24(100), 200, 300, 400, 450];
+        for (uint256 d = 0; d < dispBps.length; d++) {
+            uint256 delta = s0 * dispBps[d] / 10000;
+            require(s0 + delta < sB && s0 - delta > sA, "displacement leaves the range");
 
-        uint256 baseSnap = vm.snapshotState();
+            pool.movePriceToSqrtPrice(uint160(s0 + delta));
+            uint256 vUp = _positionValue(pos);
 
-        for (uint256 d = 0; d < displacements.length; d++) {
-            int24 disp = displacements[d];
+            pool.movePriceToSqrtPrice(uint160(s0 - delta));
+            uint256 vDown = _positionValue(pos);
 
-            // === UP MOVE ===
-            vm.revertToState(baseSnap);
-            baseSnap = vm.snapshotState();
+            // Closed form of the gap: V(s+δ) - V(s-δ) = 4 L δ (1 - s / s_b)
+            uint256 expectedGap = (uint256(pos.liquidity) * 4 * delta / sB) * (sB - s0) >> 96;
 
-            Position memory posUp = _createPosition(tickLower, tickUpper, deposit0, deposit1);
+            console.log("Displacement +/-%d bps of s:", dispBps[d]);
+            console.log("  V_up: $%d, V_down: $%d", vUp / 1e6, vDown / 1e6);
+            console.log("  Gap: $%d, closed form: $%d", (vUp - vDown) / 1e6, expectedGap / 1e6);
 
-            (uint256 init0, uint256 init1) = pool.getAmountsForLiquidity(
-                posUp.liquidity, tickLower, tickUpper
-            );
-            uint256 initialValue = (init0 * _getPrice(BASE_TICK)) / 1e18 + init1;
-
-            int24 upTick = _nearest(BASE_TICK + disp);
-            pool.movePriceToTick(upTick);
-
-            (uint256 upW0, uint256 upW1) = _withdrawPosition(posUp);
-            uint256 upWithdrawnValue = (upW0 * _getPrice(upTick)) / 1e18 + upW1;
-
-            int24 upNewLower = _nearest(upTick - RANGE_WIDTH / 2);
-            int24 upNewUpper = _nearest(upTick + RANGE_WIDTH / 2);
-            Position memory upNewPos = _createPosition(upNewLower, upNewUpper, upW0, upW1);
-            (uint256 upA0, uint256 upA1) = pool.getAmountsForLiquidity(
-                upNewPos.liquidity, upNewLower, upNewUpper
-            );
-            uint256 upDeployedValue = (upA0 * _getPrice(upTick)) / 1e18 + upA1;
-
-            // === DOWN MOVE (symmetric) ===
-            vm.revertToState(baseSnap);
-            baseSnap = vm.snapshotState();
-
-            Position memory posDown = _createPosition(tickLower, tickUpper, deposit0, deposit1);
-
-            int24 downTick = _nearest(BASE_TICK - disp);
-            pool.movePriceToTick(downTick);
-
-            (uint256 downW0, uint256 downW1) = _withdrawPosition(posDown);
-            uint256 downWithdrawnValue = (downW0 * _getPrice(downTick)) / 1e18 + downW1;
-
-            int24 downNewLower = _nearest(downTick - RANGE_WIDTH / 2);
-            int24 downNewUpper = _nearest(downTick + RANGE_WIDTH / 2);
-            Position memory downNewPos = _createPosition(downNewLower, downNewUpper, downW0, downW1);
-            (uint256 downA0, uint256 downA1) = pool.getAmountsForLiquidity(
-                downNewPos.liquidity, downNewLower, downNewUpper
-            );
-            uint256 downDeployedValue = (downA0 * _getPrice(downTick)) / 1e18 + downA1;
-
-            uint256 upDustUsd = upWithdrawnValue > upDeployedValue ? (upWithdrawnValue - upDeployedValue) / 1e6 : 0;
-            uint256 downDustUsd = downWithdrawnValue > downDeployedValue ? (downWithdrawnValue - downDeployedValue) / 1e6 : 0;
-            
-            console.log("Displacement +/-%d ticks:", uint256(int256(disp)));
-            console.log("  Initial value: $%d", initialValue / 1e6);
-            console.log("  UP: withdrawn $%d, deployed $%d, dust $%d", 
-                upWithdrawnValue / 1e6, upDeployedValue / 1e6, upDustUsd);
-            console.log("  DN: withdrawn $%d, deployed $%d, dust $%d", 
-                downWithdrawnValue / 1e6, downDeployedValue / 1e6, downDustUsd);
-            
-            // The up-move position should retain strictly more USD value than the
-            // down-move position (Theorem 5, token1-denominated).
-            if (upWithdrawnValue < downWithdrawnValue) {
-                asymmetryViolations++;
-                console.log("  VIOLATION: down-move retained more value!");
-            } else {
-                console.log("  UP - DN value gap: $%d", (upWithdrawnValue - downWithdrawnValue) / 1e6);
-            }
+            assertGt(vUp, vDown, "Theorem 5: V(s + delta) > V(s - delta)");
+            assertApproxEqRel(vUp - vDown, expectedGap, 1e15, "Theorem 5: gap matches 4 L delta (1 - s/s_b)");
         }
-        
-        assertEq(asymmetryViolations, 0, "Theorem 5: up-moves always retain more value");
-        console.log("\nTheorem 5 verified: up-moves retain more value at all %d displacement levels", displacements.length);
+
+        pool.movePriceToSqrtPrice(uint160(s0));
+        console.log("\nTheorem 5 verified at %d displacement levels", dispBps.length);
     }
-    
+
     // =========================================================================
     // Theorem 6: Exit Asymmetry
-    // For a (volatile, stablecoin) pool, a below-range exit retains less USD value
-    // than an above-range exit at symmetric sqrt-price displacement past the boundary.
+    // At a sqrt-price distance d past the boundary, the below-range position
+    // (all token0) is worth strictly less in token1 than the above-range
+    // position (all token1), and V_below / V_above = (s_a - d)^2 / (s_a s_b).
     // =========================================================================
 
-    /// @notice Verifies Theorem 6 (Exit Asymmetry) from §3.9.
-    /// @dev The V3 amount equations treat token0 and token1 asymmetrically:
-    ///        amount0 = L · (1/sqrtP_current − 1/sqrtP_upper)   (nonlinear in sqrtPrice)
-    ///        amount1 = L · (sqrtP_current − sqrtP_lower)       (linear in sqrtPrice)
-    ///
-    ///      For (volatile token0, stablecoin token1):
-    ///        - Below exit: position is 100% token0. The token0 quantity is governed
-    ///          by the 1/sqrtPrice term, and its USD value falls as price falls.
-    ///        - Above exit: position is 100% token1. The token1 quantity is governed
-    ///          by the linear sqrtPrice term and its USD value is constant.
-    ///
-    ///      The test confirms two consequences at symmetric exit distances:
-    ///        (a) the above-exit position retains strictly more USD value, and
-    ///        (b) the below-exit position requires a larger swap fraction to redeploy.
-    ///      Across 5 exit distances this produces 10 confirmations (5 value + 5 swap-frac).
     function test_theorem6_exitAsymmetry() public {
         console.log("Theorem 6: exit asymmetry sweep");
 
         int24 tickLower = _nearest(BASE_TICK - RANGE_WIDTH / 2);
         int24 tickUpper = _nearest(BASE_TICK + RANGE_WIDTH / 2);
+        uint256 sA = pool.getSqrtRatioAtTick(tickLower);
+        uint256 sB = pool.getSqrtRatioAtTick(tickUpper);
+        uint256 s0 = pool.sqrtPriceX96();
 
-        uint256 deposit0 = 2 ether;
-        uint256 deposit1 = 5000e6;
+        Position memory pos = _createPosition(tickLower, tickUpper, 2 ether, 5000e6);
+        console.log("Initial value: $%d", _positionValue(pos) / 1e6);
 
-        int24[5] memory exitDistances = [int24(50), 100, 200, 300, 500];
+        // Distances past the boundary, in units of 0.01% of the starting sqrt price.
+        uint256[5] memory distBps = [uint256(25), 50, 100, 150, 250];
+        uint256 prevBelow = type(uint256).max;
 
-        uint256 belowRetainsLess = 0;
-        uint256 belowSwapsMore = 0;
+        for (uint256 d = 0; d < distBps.length; d++) {
+            uint256 dist = s0 * distBps[d] / 10000;
 
-        uint256 baseSnap = vm.snapshotState();
+            pool.movePriceToSqrtPrice(uint160(sB + dist));
+            (uint256 above0, uint256 above1) = pool.getAmountsForLiquidity(pos.liquidity, tickLower, tickUpper);
+            uint256 vAbove = _valueAtPoolPrice(above0, above1);
 
-        for (uint256 d = 0; d < exitDistances.length; d++) {
-            int24 exitDist = exitDistances[d];
+            pool.movePriceToSqrtPrice(uint160(sA - dist));
+            (uint256 below0, uint256 below1) = pool.getAmountsForLiquidity(pos.liquidity, tickLower, tickUpper);
+            uint256 vBelow = _valueAtPoolPrice(below0, below1);
 
-            vm.revertToState(baseSnap);
-            baseSnap = vm.snapshotState();
-            Position memory posAbove = _createPosition(tickLower, tickUpper, deposit0, deposit1);
-            uint128 startLiq = posAbove.liquidity;
-            
-            // Record initial value at initial price
-            (uint256 init0, uint256 init1) = pool.getAmountsForLiquidity(startLiq, tickLower, tickUpper);
-            uint256 initialValueUsd = (init0 * _getPrice(BASE_TICK)) / 1e18 + init1;
-            
-            // === ABOVE EXIT ===
-            int24 aboveTick = tickUpper + exitDist;
-            pool.movePriceToTick(aboveTick);
-            (uint256 aboveW0, uint256 aboveW1) = pool.getAmountsForLiquidity(startLiq, tickLower, tickUpper);
-            uint256 aboveValueUsd = (aboveW0 * _getPrice(aboveTick)) / 1e18 + aboveW1;
-            
-            // For a new in-range position centered on aboveTick, what fraction must be swapped?
-            // Above exit: all USDC, need ~50% as WETH → swap fraction ≈ need0_value / total_value
-            int24 aboveNewL = _nearest(aboveTick - RANGE_WIDTH / 2);
-            int24 aboveNewU = _nearest(aboveTick + RANGE_WIDTH / 2);
-            // At center of new range, the token ratio tells us the swap fraction
-            // Use unit liquidity to get the ratio
-            (uint256 ref0, uint256 ref1) = pool.getAmountsForLiquidity(1e12, aboveNewL, aboveNewU);
-            uint256 refValue0 = (ref0 * _getPrice(aboveTick)) / 1e18;
-            uint256 refValueTotal = refValue0 + ref1;
-            // Above exit has all token1 → must swap refValue0/refValueTotal to get token0
-            uint256 aboveSwapFracBps = refValueTotal > 0 ? (refValue0 * 10000) / refValueTotal : 0;
-            
-            // === BELOW EXIT ===
-            vm.revertToState(baseSnap);
-            baseSnap = vm.snapshotState();
-            _createPosition(tickLower, tickUpper, deposit0, deposit1);
-            int24 belowTick = tickLower - exitDist;
-            pool.movePriceToTick(belowTick);
-            (uint256 belowW0, uint256 belowW1) = pool.getAmountsForLiquidity(startLiq, tickLower, tickUpper);
-            uint256 belowValueUsd = (belowW0 * _getPrice(belowTick)) / 1e18 + belowW1;
-            
-            // Below exit: all WETH, need ~50% as USDC → swap fraction ≈ need1_value / total_value
-            int24 belowNewL = _nearest(belowTick - RANGE_WIDTH / 2);
-            int24 belowNewU = _nearest(belowTick + RANGE_WIDTH / 2);
-            (uint256 bRef0, uint256 bRef1) = pool.getAmountsForLiquidity(1e12, belowNewL, belowNewU);
-            uint256 bRefValue0 = (bRef0 * _getPrice(belowTick)) / 1e18;
-            uint256 bRefValueTotal = bRefValue0 + bRef1;
-            // Below exit has all token0 → must swap bRef1/bRefValueTotal to get token1
-            uint256 belowSwapFracBps = bRefValueTotal > 0 ? (bRef1 * 10000) / bRefValueTotal : 0;
-            
-            console.log("Exit +/-%d ticks:", uint256(int256(exitDist)));
-            console.log("  Initial: $%d", initialValueUsd / 1e6);
-            console.log("  ABOVE value: $%d, swap frac: %d bps", aboveValueUsd / 1e6, aboveSwapFracBps);
-            console.log("  BELOW value: $%d, swap frac: %d bps", belowValueUsd / 1e6, belowSwapFracBps);
-            
-            // Check 1: below-exit retains less USD value
-            if (aboveValueUsd > belowValueUsd) {
-                belowRetainsLess++;
-                uint256 gap = (aboveValueUsd - belowValueUsd);
-                console.log("  Value gap: ABOVE > BELOW by $%d", gap / 1e6);
-            }
-            
-            // Check 2: below-exit requires larger swap fraction
-            if (belowSwapFracBps > aboveSwapFracBps) {
-                belowSwapsMore++;
-                console.log("  Swap gap: BELOW needs %d more bps", belowSwapFracBps - aboveSwapFracBps);
-            }
+            // Corollary 6.1: V_below / V_above = (s_a - d)^2 / (s_a s_b)
+            uint256 expectedBelow = (vAbove * (sA - dist) / sA) * (sA - dist) / sB;
+
+            console.log("Exit distance %d bps of s:", distBps[d]);
+            console.log("  V_above: $%d, V_below: $%d", vAbove / 1e6, vBelow / 1e6);
+            console.log("  Closed-form V_below: $%d", expectedBelow / 1e6);
+
+            assertEq(above0, 0, "above the range the position holds token1 only");
+            assertEq(below1, 0, "below the range the position holds token0 only");
+            assertGt(vAbove, vBelow, "Theorem 6: V_above > V_below");
+            assertApproxEqRel(vBelow, expectedBelow, 1e15, "Corollary 6.1: closed-form exit ratio");
+            assertLt(vBelow, prevBelow, "V_below falls as the exit distance grows");
+            prevBelow = vBelow;
         }
-        
-        console.log("\nBelow retains less value: %d / %d", belowRetainsLess, exitDistances.length);
-        console.log("Below requires larger swap: %d / %d", belowSwapsMore, exitDistances.length);
 
-        // Theorem 6 (Exit Asymmetry): §3.9 reports 10/10 confirmations.
-        // With 5 exit distances and 2 asymmetry checks per distance (value
-        // retention + swap fraction), the suite produces exactly 10 confirmations
-        // when the theorem holds at every level.
-        uint256 totalConfirmations = belowRetainsLess + belowSwapsMore;
-        assertEq(
-            totalConfirmations,
-            2 * exitDistances.length,
-            "Theorem 6: below-exit must show both lower value retention and larger swap fraction at every distance"
-        );
-        console.log("Theorem 6 verified: %d / %d confirmations of below-exit asymmetry", totalConfirmations, 2 * exitDistances.length);
+        pool.movePriceToSqrtPrice(uint160(s0));
+        console.log("\nTheorem 6 verified at %d exit distances", distBps.length);
     }
 
     // =========================================================================
@@ -341,12 +225,9 @@ contract NewTheoremsProof is MockPositionTestBase {
         return TickHelpers.nearest(tick, TICK_SPACING);
     }
 
-    /// @notice Linear approximation of token0 price in token1 (6 decimals).
-    /// @dev    price ≈ 2500 · (1 + (tick − BASE_TICK) · 0.0001).
-    function _getPrice(int24 _tick) internal pure returns (uint256) {
-        int256 tickDelta = int256(_tick) - int256(BASE_TICK);
-        int256 priceChange = int256(2500e6) * tickDelta / 10000;
-        uint256 price = uint256(int256(2500e6) + priceChange);
-        return price > 0 ? price : 1;
+    /// @notice Value of a position in token1 units at the pool's current price.
+    function _positionValue(Position memory pos) internal view returns (uint256) {
+        (uint256 a0, uint256 a1) = pool.getAmountsForLiquidity(pos.liquidity, pos.tickLower, pos.tickUpper);
+        return _valueAtPoolPrice(a0, a1);
     }
 }

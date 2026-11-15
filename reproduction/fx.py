@@ -1,12 +1,19 @@
 """
-Table 18: Stablecoin FX isolation (Sunday weekend experiment).
+Stablecoin FX isolation (weekend experiment, 7 and 8 March 2026).
 
-Reproduces §5.6 Table 18. The paper's snapshot is fiat-experiment events
-through 2026-03-09 00:00 UTC (end of Sunday 8 March, before Monday FX
-markets reopened).
+Snapshot: fiat-experiment events through 2026-03-09 00:00 UTC (end of
+Sunday 8 March, before Monday FX markets reopened).
+
+Two columns of the printed table are not regenerated. The σ_24h values
+were computed at rebalance time and are not recoverable from the deposit
+(README Known Issues 2); the values printed here come from the bundled
+`sigma` field and differ. The paper's last column, the number of
+rebalances that carried an internal swap, is counted from pool Swap
+events, which are not in the deposit. The logged swap amount is zero on
+every row and is not evidence that no swap was made (paper §4.6).
 """
 
-from _common import fmt_money, load_supp_jsonl, md_table
+from _common import fmt_money, heading, load_supp_jsonl, md_table
 
 CUTOFF_ISO = "2026-03-09T00"
 
@@ -44,14 +51,13 @@ def main():
         avg_s = avg_sigma_24h(evts)
         sigma_str = f"{avg_s:.1f}" if avg_s else "-"
         cum_str = fmt_money(cum)
-        # No DEX route existed for these fiat pools (paper §5.6).
-        rows.append([label, f"{first_vl:.3f}", sigma_str, cum_str, "0"])
+        rows.append([label, f"{first_vl:.3f}", sigma_str, cum_str, str(len(evts))])
 
-    print("# Table 18: Stablecoin FX isolation\n")
+    print(heading("fx", "Stablecoin FX isolation") + "\n")
     print(f"Source: supplementary/fiat-experiment-events.jsonl, snapshot through "
-          f"{CUTOFF_ISO} UTC ({len(snap)} events; markets closed Sun 8 March).\n")
+          f"{CUTOFF_ISO} UTC ({len(snap)} events; markets closed over the weekend of 7 and 8 March).\n")
     print(md_table(
-        ["Position", "V/L_pool", "σ_24h", "Cumulative dust", "Swaps"],
+        ["Position", "L/L_p", "σ_24h (bundled)", "Cumulative dust", "Events"],
         rows,
     ))
     print()

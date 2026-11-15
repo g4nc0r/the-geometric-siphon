@@ -2,7 +2,7 @@
 Theorem 2 (Single-pool convergence), discrete-model layer.
 
 The paper proves Theorem 2 by linearising the expected growth equation at
-the equilibrium and running a spectral argument (App A); Convergence.lean
+the equilibrium and running a spectral argument (App B); Convergence.lean
 formalises that deterministic core. This file closes the expectation gap in
 a different way: it declares an explicit discrete stochastic model of the
 shared-balance rebalancing process and proves the convergence claim
@@ -17,9 +17,9 @@ the fraction a of its value to the pool and absorbs A(D) from it:
   V' k = (1 - a) V k + A(D)
   D'   = D + a V k - A(D).
 
-This encodes the paper's two empirically grounded per-event laws: donation
-proportional to position value (the constant proportional donation rate c
-of §5, with a playing c per event), and absorption depending on the pool
+This encodes the two per-event laws of the paper's model: donation
+proportional to position value (the constant donation rate c of §3.4,
+with a playing c per event), and absorption depending on the pool
 state but not on the identity or size of the chosen position (the Stage 2
 mint draws from the accumulated pool). Every event conserves the total
 value sum V + D (`stepState_total`), matching the conservation assumption

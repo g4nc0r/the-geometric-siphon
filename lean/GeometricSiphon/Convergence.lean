@@ -4,7 +4,7 @@ rate) of "The Geometric Siphon" - the deterministic linearised layer.
 
 Scope note. Theorem 2 is an in-expectation statement over a stochastic
 rebalancing process; the paper's own proof proceeds by linearising the
-expected growth equation at the fixed point (App A, spectral argument):
+expected growth equation at the fixed point (App B, spectral argument):
 
   η̇ = -M η,   M = c I + π 1 1ᵀ,
 

@@ -42,6 +42,23 @@ abstract contract MockPositionTestBase is Test {
         pos = Position(tickLower, tickUpper, liquidity);
     }
 
+    /// @notice Value of a token pair in token1 units at a given sqrt price.
+    /// @dev The mock pools carry no decimal offset, so token0 is valued at the
+    ///      pool's raw price, sqrtPriceX96^2 / 2^192.
+    function _valueAtSqrtPrice(uint256 amount0, uint256 amount1, uint160 sqrtPriceX96_)
+        internal
+        pure
+        returns (uint256)
+    {
+        uint256 s = uint256(sqrtPriceX96_);
+        return (((amount0 * s) >> 96) * s >> 96) + amount1;
+    }
+
+    /// @notice Value of a token pair in token1 units at the pool's current price.
+    function _valueAtPoolPrice(uint256 amount0, uint256 amount1) internal view returns (uint256) {
+        return _valueAtSqrtPrice(amount0, amount1, pool.sqrtPriceX96());
+    }
+
     function _withdrawPosition(Position memory pos)
         internal
         returns (uint256 amount0, uint256 amount1)

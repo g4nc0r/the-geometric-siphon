@@ -16,18 +16,16 @@ import {TickHelpers} from "./helpers/Tick.sol";
 ///         precondition against the unmodified Aerodrome Slipstream
 ///         NonfungiblePositionManager on Base.
 ///
-/// Theorem 1 (Geometric Residual Existence, §3.4):
-///   A CL position rebalanced to a new range whose V3 amount equations
-///   demand a different token ratio produces a strictly positive
-///   geometric residual ΔR > 0; a same-range rebalance produces none.
+/// Theorem 1 (geometric residual, §3.2):
+///   A rebalance into a range that requires a different token ratio at the
+///   current price leaves a non-zero geometric residual. A rebalance into the
+///   same range leaves none.
 ///
-/// §7.1 Architectural precondition:
-///   Cross-position absorption requires a depositor-level shared dust
-///   balance. A stock NFPM (Slipstream included) treats every position as
-///   an independent NFT; mint() consumes only the tokens it is given,
-///   so Position B's same-range rebalance cannot grow from Position A's
-///   residual. This file's `test_section7_1_*` test asserts that absence
-///   on live-chain Slipstream contracts.
+/// §7.1, architectural precondition:
+///   Absorption across positions needs a dust balance shared at depositor
+///   level. A stock NFPM treats every position as an independent NFT and
+///   `mint()` consumes only the tokens it is given, so one position cannot
+///   grow from another's residual.
 contract GeometricResidualProof is Test {
     // Base mainnet addresses
     address constant NFPM = 0x827922686190790b37229fd06084350E74485b72;
@@ -47,7 +45,7 @@ contract GeometricResidualProof is Test {
     // Price oracle (simplified - using fixed price for USD conversion)
     uint256 constant ETH_PRICE_USD = 2500e6; // $2500 USDC per WETH
 
-    // Pinned to 2026-03-10 10:42 UTC, mid-Phase 2 of the paper's data window.
+    // Pinned to 2026-03-10 10:42 UTC, inside Phase 2 of the paper's data window.
     // Re-running requires a Base archive RPC.
     uint256 constant FORK_BLOCK = 43_175_000;
 
@@ -77,7 +75,7 @@ contract GeometricResidualProof is Test {
         usdc.approve(NFPM, type(uint256).max);
     }
 
-    /// @notice Stage 1: Prove range change creates geometric residual
+    /// @notice A range change at a displaced price leaves a residual.
     function test_theorem1_rangeChangeCreatesResidual() public {
         (, int24 currentTick) = pool.slot0();
 
@@ -104,7 +102,6 @@ contract GeometricResidualProof is Test {
         (uint256 amount0, uint256 amount1) = _withdrawPosition(position1);
         position1 = _mintPosition(tickLower2, tickUpper2, amount0, amount1);
 
-        // Measure residual
         uint256 wethAfter = weth.balanceOf(address(this));
         uint256 usdcAfter = usdc.balanceOf(address(this));
 
@@ -120,26 +117,14 @@ contract GeometricResidualProof is Test {
         console.log("Residual USD value (6 decimals):");
         console.log(residualUSD);
 
-        // Assert: residual must exist
-        assertTrue(wethResidual > 0 || usdcResidual > 0, "Geometric residual must exist");
+                assertTrue(wethResidual > 0 || usdcResidual > 0, "Geometric residual must exist");
         assertGt(residualUSD, 0, "Residual USD > 0");
     }
 
-    /// @notice Verifies the architectural precondition described in §7.1.
-    /// @dev The Geometric Siphon requires a `dustBalance[depositor][token]` storage
-    ///      layout that is shared across all of a depositor's positions, regardless
-    ///      of pool. A standard NFPM (Aerodrome Slipstream included) does not
-    ///      have this; every position is an independent NFT and `mint()` only
-    ///      consumes the exact tokens it is given. There is no shared dust pool
-    ///      to absorb from when a same-range rebalance happens.
-    ///
-    ///      Therefore, on a stock NFPM, after Position A leaves a residual via a
-    ///      range-change rebalance, Position B's same-range rebalance MUST NOT grow.
-    ///      The residual is stranded in the depositor's wallet, not absorbed.
-    ///
-    ///      This test asserts the absence of cross-position absorption on a stock
-    ///      NFPM, which directly verifies the precondition §7.1 cites as the
-    ///      reason vault-per-pool architectures do not exhibit the siphon.
+    /// @notice The architectural precondition of §7.1.
+    /// @dev Position A leaves a residual by a range-change rebalance. Position B
+    ///      then rebalances into its own range. On a stock NFPM there is no
+    ///      shared balance to draw from, so B's liquidity must not grow.
     function test_section7_1_stockNfpmDoesNotAbsorbDust() public {
         (, int24 currentTick) = pool.slot0();
 
@@ -154,8 +139,8 @@ contract GeometricResidualProof is Test {
         _swapUSDCForWETH(1000e6);
         (, currentTick) = pool.slot0();
 
-        // Position 1: range-change rebalance, leaves a residual in the
-        // depositor's wallet (Stage 1, geometric creation, verified separately).
+        // Position 1: a range-change rebalance, which leaves a residual in the
+        // depositor's wallet.
         int24 tickLower2 = TickHelpers.nearest(currentTick - 1000, tickSpacing);
         int24 tickUpper2 = TickHelpers.nearest(currentTick + 1000, tickSpacing);
 
@@ -175,10 +160,8 @@ contract GeometricResidualProof is Test {
         // Measure Position 2's liquidity before the same-range rebalance.
         (,,,,, int24 tL, int24 tU, uint128 liq2Before,,,,) = nfpm.positions(position2);
 
-        // Position 2: same-range rebalance. On a stock NFPM, mint() consumes
-        // exactly what it is given (no shared dust pool to draw from), so the
-        // re-minted liquidity must equal the withdrawn liquidity. Position 2
-        // cannot grow as a side-effect of Position 1's residual.
+        // Position 2: a same-range rebalance. mint() consumes exactly what it
+        // is given, so the re-minted liquidity equals the withdrawn liquidity.
         (amt0, amt1) = _withdrawPosition(position2);
         position2 = _mintPosition(tL, tU, amt0, amt1);
 
@@ -189,9 +172,7 @@ contract GeometricResidualProof is Test {
         console.log("Liquidity after:");
         console.log(uint256(liq2After));
 
-        // The architectural precondition: Position 2 must NOT have absorbed any of
-        // Position 1's residual. On Slipstream, liq2After should equal liq2Before
-        // (within rounding) and never exceed it.
+        // liq2After equals liq2Before within rounding and never exceeds it.
         assertLe(
             uint256(liq2After),
             uint256(liq2Before),
@@ -214,7 +195,7 @@ contract GeometricResidualProof is Test {
         uint256 wethBefore = weth.balanceOf(address(this));
         uint256 usdcBefore = usdc.balanceOf(address(this));
 
-        // Rebalance to SAME range
+        // Rebalance into the same range
         (uint256 amt0, uint256 amt1) = _withdrawPosition(position1);
         position1 = _mintPosition(tickLower, tickUpper, amt0, amt1);
 
@@ -284,9 +265,7 @@ contract GeometricResidualProof is Test {
         residualUSD = (residualWETH * ETH_PRICE_USD) / 1e18 + residualUSDC;
     }
 
-    // =============================================================================
-    // Helper Functions
-    // =============================================================================
+    // Helpers
 
     function _mintPosition(int24 tickLower, int24 tickUpper, uint256 amount0, uint256 amount1)
         internal

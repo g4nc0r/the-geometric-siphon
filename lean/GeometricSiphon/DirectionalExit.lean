@@ -3,7 +3,7 @@ Theorems 5 and 6 of "The Geometric Siphon": directional asymmetry and exit
 asymmetry, with the closed-form exit value-retention ratio and the
 price-space scaling of the directional gap.
 
-Setting (paper §3.8, §3.9, App A): pool (T0, T1) with T0 the volatile asset
+Setting (paper §3.8, §3.9, App B): pool (T0, T1) with T0 the volatile asset
 and T1 a stablecoin, so position value V = L φ(s, sa, sb) is in USD. The
 V3 ordering places the volatile asset as token0 throughout.
 

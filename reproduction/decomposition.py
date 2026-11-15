@@ -1,12 +1,15 @@
 """
-Table 6: Core decomposition of observed dust flow.
+Core decomposition of observed dust flow.
 
-Reproduces §5.1 Table 6 from supplementary/slippage-decomposition.json
-and supplementary/swap-verification.json.
+From supplementary/slippage-decomposition.json and
+supplementary/swap-verification.json. D is the observed dust flow of a
+rebalance and S the slippage of its swap, so D + S is the dust flow before
+slippage. The table reports the rank correlation of D + S with D, which
+says that slippage is a small part of the flow.
 """
 
 import statistics
-from _common import load_supp_json, spearman, md_table
+from _common import heading, load_supp_json, spearman, md_table
 
 
 def main():
@@ -16,12 +19,12 @@ def main():
     # 72 swap-decoded events
     D = [e["D"] for e in sd]
     S = [e["S"] for e in sd]
-    dR = [d + s for d, s in zip(D, S)]  # ΔR = D + S
+    pre = [d + s for d, s in zip(D, S)]  # dust flow before slippage, D + S
     abs_D = [abs(x) for x in D]
-    abs_dR = [abs(x) for x in dR]
+    abs_pre = [abs(x) for x in pre]
 
-    rho1 = spearman(dR, D)
-    rho2 = spearman(abs_dR, abs_D)
+    rho1 = spearman(pre, D)
+    rho2 = spearman(abs_pre, abs_D)
 
     n_swap = sum(1 for e in sv if e.get("hadSwap"))
     n_total = len(sv)
@@ -31,14 +34,14 @@ def main():
     median_pct = statistics.median(e["pctOfSwap"] for e in sd)
     median_size = statistics.median(e["swapSize"] for e in sd)
 
-    print("# Table 6: Core decomposition of observed dust flow\n")
+    print(heading("decomposition", "Core decomposition of observed dust flow") + "\n")
     print(f"Source: supplementary/slippage-decomposition.json (72 swap-decoded "
           f"Phase 1 events).\n")
     print(md_table(
         ["Metric", "Value", "N"],
         [
-            ["Spearman ρ(ΔR, D)",     f"**{rho1:.3f}**",  "72"],
-            ["Spearman ρ(|ΔR|, |D|)", f"**{rho2:.3f}**",  "72"],
+            ["Spearman ρ(D + S, D)",     f"**{rho1:.3f}**",  "72"],
+            ["Spearman ρ(|D + S|, |D|)", f"**{rho2:.3f}**",  "72"],
             ["Events with swap (Phase 1 manual subset)", "72", "-"],
             ["Events without swap (Phase 1 manual subset)", "20", "-"],
             ["Mean slippage S",      f"${mean_S:.2f}", "72"],

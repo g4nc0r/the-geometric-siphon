@@ -1,7 +1,13 @@
 import GeometricSiphon.Defs
 import GeometricSiphon.GeometricResidual
+import GeometricSiphon.ResidualShare
 import GeometricSiphon.Monotonicity
+import GeometricSiphon.MonotonicityDown
 import GeometricSiphon.DirectionalExit
 import GeometricSiphon.Extinction
+import GeometricSiphon.PartialSwap
+import GeometricSiphon.Excursion
+import GeometricSiphon.SharedBalance
 import GeometricSiphon.Convergence
 import GeometricSiphon.ConvergenceDiscrete
+import GeometricSiphon.ConvergenceVariance

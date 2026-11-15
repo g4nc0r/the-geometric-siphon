@@ -1,7 +1,7 @@
 /-
 Theorem 4 (Residual monotonicity) of "The Geometric Siphon".
 
-Setting (paper §3.7, App A): equal-width rebalance recentred on the current
+Setting (paper §3.7, App B): equal-width rebalance recentred on the current
 sqrt price. Old range [sa, sb] with width w = sb - sa and midpoint
 sbar = (sa + sb)/2; current price s = sbar + δ; new range [s - w/2, s + w/2].
 For δ ≥ 0 token0 binds and the residual appears as surplus token1
@@ -10,7 +10,7 @@ For δ ≥ 0 token0 binds and the residual appears as surplus token1
   ΔR(δ) = L (s - sa) - L ((1/s - 1/sb) / (1/s - 1/(s + w/2))) (w/2).
 
 Sign convention: in this theorem ΔR(δ) is the value surrendered by the
-rebalance, i.e. V_old - V_new, which is ≥ 0 on the upward branch. Theorem 1's
+rebalance, i.e. V_old - V_new, which is ≥ 0 for an upward displacement. Theorem 1's
 signed residual is the negative of this quantity.
 
 The appendix simplification (eq. g-simplified) reduces the closed form to a
@@ -18,9 +18,15 @@ rational function; here we normalise one step further, to
 
   ΔR(δ) = L δ (2 sbar + w/2 + δ) / (sbar + w/2),
 
-from which ΔR(0) = 0, ΔR(w/2) = L w, strict monotonicity across the branch,
-the downward-branch boundary magnitude L w sbar / sb, and the branch
-asymmetry |ΔR(-δ)| < ΔR(δ) all follow.
+from which ΔR(0) = 0, ΔR(w/2) = L w and strict monotonicity for upward
+displacement follow.
+
+The normal form is the residual for an upward displacement only. For δ < 0 token1
+binds in the mint minimum and the residual is a different expression, given
+in MonotonicityDown.lean (Corollary 4.1). The lemmas `deltaR_down_boundary`
+and `deltaR_continuation_asymmetry` below, and `deltaR_strictMono` for δ < 0, are
+statements about the continuation of the upward closed form to δ < 0, not
+about the downward residual.
 
 We also prove the bridging results the paper leaves implicit: for
 0 ≤ δ < w/2 token0 is the binding constraint in the mint minimum of
@@ -47,7 +53,7 @@ noncomputable def deltaR (L sbar w δ : ℝ) : ℝ :=
 
 /-- The appendix simplification (eq. g-simplified, normalised): substituting
     s = sbar + δ, sa = sbar - w/2, sb = sbar + w/2 into the closed form
-    yields the rational normal form. Holds on the closed branch δ ≥ -w/2. -/
+    yields the rational normal form. Holds for δ ≥ -w/2. -/
 theorem deltaRclosed_eq_deltaR (L sbar w δ : ℝ)
     (hw : 0 < w) (hmid : w / 2 < sbar) (hδl : -(w / 2) ≤ δ) :
     deltaRclosed L (sbar + δ) (sbar - w / 2) (sbar + w / 2) w
@@ -85,8 +91,10 @@ theorem deltaR_up_boundary (L sbar w : ℝ) (hsb : sbar + w / 2 ≠ 0) :
   field_simp
   ring
 
-/-- Downward boundary value: ΔR(-w/2) = -(L w sbar / sb) with sb = sbar + w/2,
-    i.e. boundary magnitude smaller than the upward branch by sbar / sb. -/
+/-- The upward closed form continued to δ = -w/2 takes the value
+    -(L w sbar / sb) with sb = sbar + w/2. This is not the residual at the
+    downward boundary, which is `deltaRdown_boundary` in
+    MonotonicityDown.lean. -/
 theorem deltaR_down_boundary (L sbar w : ℝ) (hsb : sbar + w / 2 ≠ 0) :
     deltaR L sbar w (-(w / 2)) = -(L * w * sbar / (sbar + w / 2)) := by
   rw [show L * w * sbar = L * (2 * (w / 2)) * sbar from by ring]
@@ -95,10 +103,11 @@ theorem deltaR_down_boundary (L sbar w : ℝ) (hsb : sbar + w / 2 ≠ 0) :
   field_simp
   ring
 
-/-- **Theorem 4 (Residual monotonicity), monotone core.** ΔR is strictly
-    increasing in δ across the whole in-range branch [-w/2, w/2]; with
-    `deltaR_zero`, |ΔR| is therefore strictly increasing in |δ| on each
-    branch, with the endpoint values given by the boundary lemmas. -/
+/-- **Theorem 4 (Residual monotonicity), monotone core.** The normal form
+    is strictly increasing in δ on [-w/2, w/2]. For an upward displacement in
+    [0, w/2], where it is the residual, this is the theorem, with endpoint
+    values `deltaR_zero` and `deltaR_up_boundary`. The downward case is
+    `deltaRdown_strictMono` in MonotonicityDown.lean. -/
 theorem deltaR_strictMono (L sbar w δ₁ δ₂ : ℝ)
     (hL : 0 < L) (hw : 0 < w) (hmid : w / 2 < sbar)
     (h₁ : -(w / 2) ≤ δ₁) (_h₂ : δ₂ ≤ w / 2) (h₁₂ : δ₁ < δ₂) :
@@ -114,9 +123,10 @@ theorem deltaR_strictMono (L sbar w δ₁ δ₂ : ℝ)
       = L * ((δ₂ - δ₁) * (2 * sbar + w / 2 + (δ₁ + δ₂))) := by ring
   linarith [key, expand]
 
-/-- Branch asymmetry at equal displacement: the downward-branch magnitude is
-    strictly smaller, |ΔR(-δ)| < ΔR(δ) for δ ∈ (0, w/2]. -/
-theorem deltaR_branch_asymmetry (L sbar w δ : ℝ)
+/-- Asymmetry of the continued closed form: |ΔR(-δ)| < ΔR(δ) for
+    δ ∈ (0, w/2]. The comparison of the two residuals at equal displacement
+    is `deltaRdown_lt_up` in MonotonicityDown.lean. -/
+theorem deltaR_continuation_asymmetry (L sbar w δ : ℝ)
     (hL : 0 < L) (_hw : 0 < w) (hmid : w / 2 < sbar)
     (hδ : 0 < δ) (hδ' : δ ≤ w / 2) :
     |deltaR L sbar w (-δ)| < deltaR L sbar w δ := by
@@ -140,7 +150,7 @@ theorem deltaR_branch_asymmetry (L sbar w δ : ℝ)
 
 The closed form is not free-standing: it is V_old - V_new for the recentred
 rebalance, with V_new determined by the mint minimum of Theorem 1. The two
-lemmas below make that precise on the upward branch 0 ≤ δ < w/2 (at δ = w/2
+lemmas below make that precise for an upward displacement 0 ≤ δ < w/2 (at δ = w/2
 the price sits on the old boundary and the position is single-sided; that
 endpoint is covered by Theorem 3's exit analysis and by continuity). -/
 

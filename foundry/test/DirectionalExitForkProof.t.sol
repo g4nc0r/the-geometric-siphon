@@ -14,16 +14,14 @@ import {TickHelpers} from "./helpers/Tick.sol";
 /// @title DirectionalExitForkProof
 /// @notice Live-fork verification of Theorems 5 and 6 against unmodified
 ///         Aerodrome Slipstream contracts on Base mainnet, complementing the
-///         mock-pool tests in NewTheoremsProof.t.sol whose below-direction
-///         values floor to zero under integer arithmetic at depressed token0
-///         prices.
+///         mock-pool tests in NewTheoremsProof.t.sol.
 contract DirectionalExitForkProof is Test {
     address constant NFPM = 0x827922686190790b37229fd06084350E74485b72;
     address constant FACTORY = 0x5e7BB104d84c7CB9B682AaC2F3d509f5F406809A;
     address constant WETH = 0x4200000000000000000000000000000000000006;
     address constant USDC = 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913;
 
-    /// @dev Pinned to 2026-03-10 10:42 UTC, mid-Phase 2 of the paper's data
+    /// @dev Pinned to 2026-03-10 10:42 UTC, inside Phase 2 of the paper's data
     ///      window. The qualitative inequalities hold at every block;
     ///      pinning makes the captured numerical values bit-reproducible.
     uint256 constant BASE_BLOCK_PIN = 43_175_000;
@@ -61,7 +59,7 @@ contract DirectionalExitForkProof is Test {
         usdc.approve(NFPM, type(uint256).max);
     }
 
-    /// @notice Theorem 5: V_up > V_down for symmetric in-range displacement.
+    /// @notice Theorem 5: V_up > V_down for an upward against a downward displacement inside the range.
     function test_theorem5_directionalAsymmetryOnSlipstream() public {
         (, int24 t0) = pool.slot0();
         int24 tickLower = TickHelpers.nearest(t0 - 1000, TICK_SPACING);

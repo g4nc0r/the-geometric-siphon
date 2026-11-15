@@ -12,9 +12,9 @@ contract MockCLPool {
     uint256 constant Q96 = 2**96;
 
     /// @notice Tick anchor for the linear sqrt-price approximation;
-    ///         corresponds to a price of ≈2500 (sqrt(2500) ≈ 50).
+    ///         the anchor sqrt price is 3.97 × 2^96, a raw price of about 15.8.
     int24 internal constant ANCHOR_TICK = 73135;
-    uint256 internal constant ANCHOR_SQRT_PRICE = 314748404868481885948183330816; // sqrt(2500) * 2^96
+    uint256 internal constant ANCHOR_SQRT_PRICE = 314748404868481885948183330816;
 
     constructor(uint160 _sqrtPriceX96) {
         sqrtPriceX96 = _sqrtPriceX96;
@@ -77,10 +77,14 @@ contract MockCLPool {
         tick = newTick;
         sqrtPriceX96 = getSqrtRatioAtTick(newTick);
     }
+
+    /// @notice Set the sqrt price directly, for displacements that are symmetric
+    ///         in sqrt price. The stored tick is left as it was.
+    function movePriceToSqrtPrice(uint160 newSqrtPriceX96) external {
+        sqrtPriceX96 = newSqrtPriceX96;
+    }
     
-    // =============================================================================
-    // Internal Math Functions
-    // =============================================================================
+    // Internal math
     
     function getAmount0ForLiquidity(
         uint160 sqrtRatioAX96,

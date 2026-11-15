@@ -8,11 +8,8 @@ import {MockCLPool} from "./MockCLPool.sol";
 ///         exact Uniswap V3 TickMath function (verbatim constants from
 ///         v3-core). Used where quantitative accuracy matters (Theorems 4-6).
 contract MockCLPoolV2 is MockCLPool {
-    /// @dev `MockCLPool(0)` initialises the parent state with `tick = ANCHOR_TICK`
-    ///      and `sqrtPriceX96 = 0`; we then overwrite both with the caller's
-    ///      tick and the exact sqrt-price computed by the V2 override of
-    ///      `getSqrtRatioAtTick`. The parent's initial assignment is intentional
-    ///      and harmless.
+    /// @dev The parent is constructed with a zero sqrt price. The tick and the
+    ///      exact sqrt price are then set here.
     constructor(int24 _tick) MockCLPool(0) {
         tick = _tick;
         sqrtPriceX96 = getSqrtRatioAtTick(_tick);

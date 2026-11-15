@@ -1,0 +1,37 @@
+name: Foundry tests
+
+on:
+  push:
+    branches: [main]
+    paths: ["foundry/**", ".gitmodules", ".github/workflows/foundry.yml"]
+  pull_request:
+    paths: ["foundry/**", ".gitmodules", ".github/workflows/foundry.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mock:
+    name: Mock-pool tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: foundry
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: stable
+
+      - name: Build
+        run: forge build
+
+      # The six fork tests need a Base archive RPC and are run locally;
+      # their captured output is in foundry/PROOF_OUTPUT.md.
+      - name: Run the 10 network-free tests
+        run: forge test -vv --no-match-contract '(GeometricResidualProof|DirectionalExitForkProof)$'

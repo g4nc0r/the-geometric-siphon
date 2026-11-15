@@ -1,7 +1,7 @@
 """
 Shared utilities for the reproduction scripts.
 
-Each script reproduces one paper table from the bundled JSONLs and prints
+Each script computes one paper table from the bundled JSONLs and prints
 markdown-formatted output.
 """
 
@@ -15,6 +15,28 @@ SUPP_DIR = DATA_DIR / "supplementary"
 # |dustPnl| threshold that flags the single outlier described in
 # README.md Known Issues 1.
 OUTLIER_THRESHOLD = 1e8
+
+# Table numbers and sections of the November 2026 revision of the paper.
+# This is the only place they are written; change them here if the paper
+# is renumbered.
+TABLES = {
+    "decomposition": ("8", "§5.1"),
+    "stratified": ("9", "§5.2"),
+    "size_sweep": ("10", "§5.3"),
+    "liquidity_share_buckets": ("17", "Appendix E"),
+    "cross_group": ("18", "Appendix E"),
+    "hub_spoke": ("19", "Appendix E"),
+    "regime": ("20", "Appendix E"),
+    "fx": ("21", "Appendix E"),
+    "zarp": ("22", "Appendix E"),
+    "changes": ("23", "Appendix F"),
+}
+
+
+def heading(key, title, prefix="Table"):
+    """Markdown heading carrying the paper's table number for `key`."""
+    number, section = TABLES[key]
+    return f"# {prefix} {number} ({section}): {title}"
 
 
 def load_jsonl(name):
@@ -73,7 +95,12 @@ def fmt_money(x, places=0):
 
 
 def is_same_range(e):
-    """Strict tick-equality definition of same-range rebalance."""
+    """Tick equality of the logged old and new ranges.
+
+    Until 24 May 2026 the logger read the old range after it had been
+    updated, so this returns True for most range-changing rebalances in the
+    bundled files (paper §4.6). It is kept for reference and is not used by
+    any script."""
     return (e.get("oldTickLower") == e.get("tickLower")
             and e.get("oldTickUpper") == e.get("tickUpper"))
 

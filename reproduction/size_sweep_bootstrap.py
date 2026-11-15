@@ -1,17 +1,16 @@
 """
-Table 8 supplement: bootstrap and permutation analyses on the V/L_pool sweep.
+Bootstrap and permutation analyses on the position-size sweep.
 
-Same 33-event slice as `table8_vl_sweep.py`. Reports per-position bootstrap
+Same 33-event slice as `size_sweep.py`. Reports per-position bootstrap
 CIs on the dust-mediated growth multiplier (1 + cumulative_dust /
 deployment) and a permutation test on the per-event Spearman rank
-correlation between preValue and dustPnl. Theorem 2 predicts a strictly
-negative correlation; the permutation null reshuffles dustPnl across the
-33 events while holding preValue fixed.
+correlation between preValue and dustPnl. The permutation null reshuffles
+dustPnl across the 33 events while holding preValue fixed.
 """
 
 import random
 
-from _common import load_jsonl, md_table, spearman
+from _common import heading, load_jsonl, md_table, spearman
 
 
 B = 10_000
@@ -75,7 +74,7 @@ def main():
             extreme += 1
     p_value = (extreme + 1) / (B + 1)  # add-one smoothing
 
-    print("# Table 8 supplement: bootstrap and permutation analyses\n")
+    print(heading("size_sweep", "bootstrap and permutation analyses", prefix="Supplement to Table") + "\n")
     print(f"Source: phase2-controlled-superset.jsonl, first 33 chronological events "
           f"across the three KellyClaude/USDC CL200 positions in `🧪` "
           f"(13 Small + 11 Medium + 9 Large). B = {B}, seed = {SEED}.\n")

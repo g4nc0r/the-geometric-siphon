@@ -1,29 +1,29 @@
 """
-Table 8: V/L_pool sweep (single-pool equilibrium).
-
-Reproduces §5.3 Table 8 of the consolidated paper.
+Single-pool position-size sweep.
 
 The table reports the Small / Medium / Large KellyClaude/USDC CL200
 positions after their first 33 chronological rebalance events
 (13 Small + 11 Medium + 9 Large = 33 total events across the three
-positions, not per position).
+positions, not per position). The "after 33 events" values are within
+five dollars of the rounded figures printed in the paper.
 """
 
-from _common import fmt_money, load_jsonl, md_table
+from _common import fmt_money, heading, load_jsonl, md_table
 
-PAPER_VL = {"Small": 0.021, "Medium": 0.063, "Large": 0.189}
+# Deployment as a share of pool TVL, as stated in the paper.
+POOL_SHARE = {"Small": "2.1%", "Medium": "6.3%", "Large": "18.9%"}
 
 # Cumulative dust band: above this magnitude a position is labelled an
 # absorber/donor; smaller magnitudes are reported as neutral. The threshold
 # sits above the paper's Medium-row figure (+$84), which is why the script
-# reports Medium as Neutral (flipped) in line with Table 8.
+# reports Medium as Neutral (flipped) in line with the paper's table.
 ROLE_BAND_USD = 100
 
 
 def main():
     phase2 = load_jsonl("phase2-controlled-superset.jsonl")
 
-    # Kelly V/L sweep depositor
+    # depositor of the size sweep
     kelly = sorted(
         [e for e in phase2 if "KellyClaude" in (e.get("name") or "") and e.get("depositor") == "🧪"],
         key=lambda e: e.get("ts", 0),
@@ -56,13 +56,13 @@ def main():
             role = "Neutral (flipped)"
         rows.append([
             size,
-            f"${deploy:.0f} (V/L={PAPER_VL[size]})",
+            f"${deploy:.0f} ({POOL_SHARE[size]} of pool TVL)",
             f"~${after:.0f}",
             fmt_money(cum_dust),
             role,
         ])
 
-    print("# Table 8: V/L_pool sweep\n")
+    print(heading("size_sweep", "Single-pool position-size sweep") + "\n")
     print(f"Snapshot: first 33 chronological events across the three KellyClaude")
     print(f"positions in 🧪 depositor ({sum(len(v) for v in by_size.values())} events).\n")
     print(md_table(

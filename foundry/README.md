@@ -1,100 +1,138 @@
 # Foundry verification suite
 
-Foundry verification suite for the *Geometric Siphon* research line by K. R. Ryan. Section references in this README and in `PROOF_OUTPUT.md` correspond to the consolidated working manuscript at `papers/manuscript/`.
+[![Foundry tests](https://github.com/g4nc0r/the-geometric-siphon/actions/workflows/foundry.yml/badge.svg)](https://github.com/g4nc0r/the-geometric-siphon/actions/workflows/foundry.yml)
+![Solidity](https://img.shields.io/badge/Solidity-0.8.26-363636?logo=solidity&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-16-b7410e)
+![Fork pin](https://img.shields.io/badge/Base_fork-block_43175000-0052ff)
 
-The suite is **16 tests across 5 contracts**, covering the six theorems and the architectural precondition. See `PROOF_OUTPUT.md` for the captured output and the test-to-section mapping.
+Part of [The Geometric Siphon](../README.md). The proofs in real arithmetic are in [`../lean/`](../lean/).
 
-## What the suite verifies
+Sixteen tests across five contracts check Theorems 1, 3, 4, 5 and 6 of the paper, and the architectural precondition of §7.1, in the integer arithmetic of a V3 pool. Ten run on mock pools with no network access. Six run against the unmodified Aerodrome Slipstream contracts on a fork of Base. The captured output is in [`PROOF_OUTPUT.md`](./PROOF_OUTPUT.md) and is the regression target.
 
-| Theorem / claim | Paper section | Test contract | Tests | Pool |
+Section and appendix numbers refer to the November 2026 revision of the paper.
+
+## Coverage
+
+| Result | Paper | Mock pool | Base fork |
+|---|---|---|---|
+| Theorem 1, geometric residual | §3.2 | 3 tests | 3 tests |
+| Theorem 3, zero-swap extinction | §3.6 | 4 tests | |
+| Theorem 4, residual monotonicity, upward displacement | §3.7 | 1 test | |
+| Theorem 5, directional asymmetry | §3.8 | 1 test | 1 test |
+| Theorem 6, exit asymmetry | §3.9 | 1 test | 1 test |
+| Architectural precondition | §7.1 | | 1 test |
+
+Not covered here:
+
+- Theorem 2 is a statement in expectation over many rebalances. It is proved in Lean in a declared discrete model.
+- Corollary 4.1, Theorem 4 for a downward displacement, is proved in Lean. The Theorem 4 test displaces the price upwards only.
+- Propositions 7 to 12 concern the internal swap and the shared balance. Their proofs are in Lean, except Proposition 8, which is first order.
+- Absorption from a shared dust pool is not tested. A mock would need shared liquidity and fee accounting. The fork test for §7.1 checks the converse, that a stock position manager with no shared balance absorbs nothing.
+
+## Tests
+
+The first column is the test number used in Appendix D of the paper.
+
+| Paper | Test | Contract | Pool | Checks |
 |---|---|---|---|---|
-| Thm 1, geometric residual existence and scaling | §3.2 | `GeometricResidualProofClean` | 3 | `MockCLPool` |
-| Thm 1, same claims on real Slipstream | §6, App D.8 | `GeometricResidualProof` | 3 | Aerodrome Slipstream (fork) |
-| Thm 3, zero-swap extinction | §3.6 | `ZeroSwapExtinctionProof` | 4 | `MockCLPool` |
-| Thm 4, residual monotonicity | §3.7 | `NewTheoremsProof` | 1 | `MockCLPoolV2` |
-| Thm 5, directional asymmetry (mock + fork) | §3.8, App D.12 | `NewTheoremsProof` + `DirectionalExitForkProof` | 2 | `MockCLPoolV2` + Slipstream |
-| Thm 6, exit asymmetry (mock + fork) | §3.9, App D.13 | `NewTheoremsProof` + `DirectionalExitForkProof` | 2 | `MockCLPoolV2` + Slipstream |
-| Architectural precondition | §7.1, App D.8 | `GeometricResidualProof` | 1 | Aerodrome Slipstream (fork) |
+| Test 1 | `test_theorem1_rangeChangeCreatesResidual` | `GeometricResidualProofClean` | `MockCLPool` | A range change at a displaced price leaves a residual |
+| Test 2 | `test_theorem1_noRangeChange_noResidual` | `GeometricResidualProofClean` | `MockCLPool` | The same range leaves rounding dust only |
+| Test 3 | `test_theorem1_largerPositionLargerResidual` | `GeometricResidualProofClean` | `MockCLPool` | The residual scales linearly with position size |
+| Test 4 | `test_theorem3_singleSidedExitNoSwapLosesValue` | `ZeroSwapExtinctionProof` | `MockCLPool` | Part (i): a single-sided exit with no swap loses value |
+| Test 5 | `test_theorem3_residualScalesWithDisplacement` | `ZeroSwapExtinctionProof` | `MockCLPool` | Part (ii): the residual fraction grows with displacement |
+| Test 6 | `test_theorem3_repeatedRebalancesGeometricDecay` | `ZeroSwapExtinctionProof` | `MockCLPool` | Part (iii): repeated zero-swap rebalances decay geometrically |
+| Test 7 | `test_theorem3_fullyOutOfRangeNearTotalLoss` | `ZeroSwapExtinctionProof` | `MockCLPool` | A deep out-of-range rebalance loses nearly everything |
+| Test 8 | `test_theorem4_residualMonotonicity` | `NewTheoremsProof` | `MockCLPoolV2` | The residual rises strictly with upward displacement |
+| Test 9 | `test_theorem5_directionalAsymmetry` | `NewTheoremsProof` | `MockCLPoolV2` | `V(s+δ) > V(s−δ)`, and the gap equals `4Lδ(1 − s/s_b)` |
+| Test 10 | `test_theorem6_exitAsymmetry` | `NewTheoremsProof` | `MockCLPoolV2` | `V_above > V_below`, and the ratio equals Corollary 6.1 |
+| D.8 | `test_theorem1_rangeChangeCreatesResidual` | `GeometricResidualProof` | Slipstream fork | Test 1 on the live pool |
+| D.8 | `test_theorem1_noRangeChangeZeroResidual` | `GeometricResidualProof` | Slipstream fork | Test 2 on the live pool |
+| D.8 | `test_theorem1_largerPositionDonatesMore` | `GeometricResidualProof` | Slipstream fork | Test 3 on the live pool |
+| D.8 | `test_section7_1_stockNfpmDoesNotAbsorbDust` | `GeometricResidualProof` | Slipstream fork | A stock position manager does not absorb another position's dust |
+| Test 11 | `test_theorem5_directionalAsymmetryOnSlipstream` | `DirectionalExitForkProof` | Slipstream fork | Test 9 on the live pool |
+| Test 12 | `test_theorem6_exitAsymmetryOnSlipstream` | `DirectionalExitForkProof` | Slipstream fork | Test 10 on the live pool |
 
 ## Running
 
 ```bash
 git submodule update --init --recursive   # first time only
-
 forge build
 
-# Mock-pool tests only, no network access required (10 tests)
+# Mock-pool tests, no network access (10 tests)
 forge test -vv --no-match-contract '(GeometricResidualProof|DirectionalExitForkProof)$'
 
-# Full suite, including the 6 live fork tests against Aerodrome Slipstream (16 tests)
+# Full suite, with the 6 fork tests (16 tests)
 RPC_BASE_ALCHEMY=https://mainnet.base.org forge test -vv
 
-# Single test
-forge test --match-test test_theorem1_rangeChangeCreatesResidual -vvv
-
-# Gas report
-forge test --gas-report
+# A single test
+forge test --match-test test_theorem4_residualMonotonicity -vvv
 ```
 
-Any working Base RPC URL is acceptable in `RPC_BASE_ALCHEMY`. The public endpoint above supports Base archive queries. All six fork tests are pinned to Base block `43_175_000` (2026-03-10 10:42 UTC), inside the paper's Phase 2 data window. Both the qualitative claims and the captured numerical residuals are bit-reproducible at this pin.
+Any Base RPC with archive support works in `RPC_BASE_ALCHEMY`. The six fork tests are pinned to Base block `43_175_000` (10 March 2026, 10:42 UTC), inside the paper's Phase 2 data window, so the captured residuals are reproducible. The continuous-integration workflow runs the ten mock-pool tests.
 
-## Architecture
+## Pools
 
-- **`MockCLPool.sol`** implements the V3 amount equations as a minimal CL pool (`getAmountsForLiquidity`, `getLiquidityForAmounts`, `movePriceToTick`) with a linearised `getSqrtRatioAtTick`. Captured residuals are within ~1% of the figures reported in the paper. Used by `GeometricResidualProofClean` and `ZeroSwapExtinctionProof`.
-- **`MockCLPoolV2.sol`** has the same surface but uses the exact Uniswap V3 `TickMath` exponential constants verbatim from `v3-core`. Captured values match §3.7--§3.9 to the cent. Used by `NewTheoremsProof`.
-- **`test/GeometricResidualProof.t.sol`** runs against live Aerodrome Slipstream on Base via `vm.createSelectFork("base", FORK_BLOCK)`, calls the unmodified `NonfungiblePositionManager` (`0x827922686190790b37229fd06084350E74485b72`), funds itself via `vm.deal`, and exercises the same mint/swap/withdraw/re-mint sequence on real on-chain V3 geometry. Verifies Theorem 1 and §7.1's architectural precondition.
-- **`test/DirectionalExitForkProof.t.sol`** verifies Theorems 5 and 6 on the same Slipstream pool, eliminating the integer-arithmetic floor that masks the strict inequalities in the mock-pool versions.
+| Pool | Tick arithmetic | Used by | Agreement with the paper |
+|---|---|---|---|
+| `src/MockCLPool.sol` | Linearised around tick 73,135 | Tests 1 to 7 | Within 1% of the reported figures |
+| `src/MockCLPoolV2.sol` | Exact V3 `TickMath` constants, verbatim from `v3-core` | Tests 8 to 10 | To the cent |
+| Aerodrome Slipstream WETH/USDC, Base | The deployed contracts | Fork tests | Captured at the pinned block |
 
-## Mathematical foundation
+Both mock pools implement the V3 amount equations as a minimal pool (`getAmountsForLiquidity`, `getLiquidityForAmounts`, `movePriceToTick`). They charge no fees and model no slippage, so they isolate the geometric residual.
 
-The geometric residual arises from the token-ratio mismatch between the old and new ranges (`R_old ≠ R_new`). For a position with liquidity `L` in range `[s_a, s_b]` at current sqrt price `s`, the value factor is
+The fork tests call the unmodified `NonfungiblePositionManager` at `0x827922686190790b37229fd06084350E74485b72` through `vm.createSelectFork("base", FORK_BLOCK)`, fund themselves with `vm.deal`, and mint, swap to move the price, withdraw and re-mint on the live pool. Fork residuals are smaller than mock residuals because the fork tests move the price by a swap of 500 or 1,000 USDC, which shifts it by less than a tick, where the mock tests displace by 200 ticks.
+
+The mock pools carry no decimal offset between the tokens. The mock tests value token0 at the pool's raw price, `sqrtPriceX96² / 2¹⁹²`, so every value they report is the whole position in token1 units. Tests 9 and 10 displace the sqrt price by equal amounts in each direction and check the inequality and its closed form.
+
+## The claim under test
+
+A position with liquidity `L` in range `[s_a, s_b]` at sqrt price `s` has value `L φ` in token1 units, with
 
 ```
 φ(s, s_a, s_b) = 2s − s²/s_b − s_a
 ```
 
-and the closed-form (signed) residual fraction `ΔR/V` is
+A rebalance into `[s_a', s_b']` with no swap and no shared balance mints
 
 ```
-Case A, token1-binding:   ΔR/V = (s − s_a) · φ_new / [(s − s_a') · φ_old] − 1
-Case B, token0-binding:   ΔR/V = (1/s − 1/s_b) · φ_new / [(1/s − 1/s_b') · φ_old] − 1
+L_new = min( x / (1/s − 1/s_b'),  y / (s − s_a') )
 ```
 
-where primed variables refer to the new range. See §3 for the derivation and Theorem 1 for the equivalence `ΔR/V = 0 ⇔ R_old = R_new`. The empirical dust flow `D = ΔR − S` (after on-chain swap absorption) is what the reproduction scripts compute against.
+from the withdrawn amounts `x`, `y`. Theorem 1 gives the residual as a fraction of value,
+
+```
+ΔR / V = −(ω' − ω) / ω'  ≤  0
+```
+
+where `ω` is the fraction of the withdrawn value held in the binding token and `ω'` the fraction the new range requires in it. The residual is zero exactly when the two ranges require the same token ratio at the current price. The tests compute `L_new` in pool arithmetic and compare the value redeployed with the value withdrawn.
 
 ## Layout
 
 ```
 foundry/
 ├── src/
-│   ├── MockCLPool.sol                       linear-tick CL pool (Theorems 1, 3)
-│   └── MockCLPoolV2.sol                     exact V3 TickMath CL pool (Theorems 4-6)
+│   ├── MockCLPool.sol                       linearised tick arithmetic (Theorems 1, 3)
+│   └── MockCLPoolV2.sol                     exact V3 TickMath (Theorems 4 to 6)
 ├── test/
-│   ├── GeometricResidualProofClean.t.sol    Theorem 1 (mock)
-│   ├── GeometricResidualProof.t.sol         Theorem 1 + §7.1 precondition (fork)
-│   ├── ZeroSwapExtinctionProof.t.sol        Theorem 3 (mock)
-│   ├── NewTheoremsProof.t.sol               Theorems 4-6 (mock with exact tick math)
-│   └── DirectionalExitForkProof.t.sol       Theorems 5-6 (fork, no integer floor)
-├── lib/
-│   └── forge-std/
+│   ├── GeometricResidualProofClean.t.sol    Theorem 1, mock
+│   ├── ZeroSwapExtinctionProof.t.sol        Theorem 3, mock
+│   ├── NewTheoremsProof.t.sol               Theorems 4 to 6, mock
+│   ├── GeometricResidualProof.t.sol         Theorem 1 and §7.1, fork
+│   ├── DirectionalExitForkProof.t.sol       Theorems 5 and 6, fork
+│   ├── helpers/
+│   └── interfaces/
+├── lib/forge-std/                           submodule
 ├── foundry.toml
-├── PROOF_OUTPUT.md
+├── PROOF_OUTPUT.md                          captured forge output, by test
 └── README.md
 ```
 
-## Limitations
+## Requirements
 
-- **Stage 2 dust absorption is verified on the fork side, not the mock side.** Verifying it on a mock pool requires implementing shared liquidity and fee accounting. The mock-pool tests isolate Stage 1 (geometric creation). The fork-mode `test_stockNfpmDoesNotAbsorbDust` verifies the converse: a stock NFPM cannot absorb cross-position dust, which is the architectural precondition §7.1 cites.
-- **`MockCLPool` uses linear tick math.** Order-of-magnitude correct, ≤1% off in the last digit. The fork tests and `MockCLPoolV2` are the references for quantitatively accurate values.
-- **No fees, no slippage in the mock tests.** The mock suites isolate the geometric component; swap-fee and slippage frictions are orthogonal and analysed separately in the paper.
-- **Fork tests are pinned to Base block `43_175_000`** (2026-03-10 10:42 UTC, mid-Phase 2). Captured numerical residuals are bit-reproducible at this pin. Re-running requires a Base archive RPC. The qualitative claims (existence, scaling, control case, `V_up > V_down`, `V_above > V_below`) hold at every block regardless.
-
-## Dependencies
-
-- Foundry (`forge ≥ 1.5`)
-- Solidity 0.8.26
-- `forge-std` (cloned into `lib/forge-std`)
+- Foundry, `forge` 1.5 or later
+- Solidity 0.8.26, set in `foundry.toml`
+- `forge-std`, as a git submodule under `lib/`
 
 ## Licence
 
-MIT.
+MIT. See [`../LICENSE`](../LICENSE).

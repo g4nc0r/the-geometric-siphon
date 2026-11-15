@@ -1,24 +1,24 @@
 """
-Tables 10 and 11: Exit asymmetry per portfolio + reversed-ordering negative
-control (Theorem 6).
+May 2026 version: per-portfolio dust on above-range and below-range exits,
+and the reversed-ordering comparison.
 
-Same per-portfolio framing as `table9_directional.py`. Theorem 6 predicts
-V_below < V_above on volatile/stablecoin pairs in V3 ordering, so within
-each portfolio the mean dust on above-exits should exceed the mean on
-below-exits (above − below > 0). Per-portfolio bootstrap CIs are reported
-along with a sign test across portfolios.
+Reproduces the exit comparison of the May 2026 version of the paper, which
+the November 2026 revision withdraws (Appendix F). The comparison reads
+`exitSide` from the logged range fields, which are wrong on most
+range-changing rebalances in the bundled Phase 3 file (paper §4.6): the
+file records 2,428 exits where chain events give 5,774.
 
-The script also prints the reversed-ordering negative control for the
-largest portfolio (the only one with enough reversed-ordering exits to
-test): Theorem 6 predicts the inequality should sign-flip when V3 token
-roles are reversed, so V_below should become positive.
+The revision's own tables use exit sides derived from chain events, which
+are not in the deposit. There every interval spans zero and the
+reversed-ordering pairs do not change sign. The revision also explains why
+neither comparison tests Theorem 6.
 """
 
 import random
 from collections import defaultdict
 from math import comb
 
-from _common import load_jsonl, filter_outliers, md_table, pair_kind, fmt_money
+from _common import heading, load_jsonl, filter_outliers, md_table, pair_kind, fmt_money
 
 # Fixed seed for bit-reproducible bootstrap.
 random.seed(20260430)
@@ -48,13 +48,12 @@ def main():
         by_portfolio[e.get("depositor", "?")].append(e)
     portfolios = sorted(by_portfolio.keys(), key=lambda w: -len(by_portfolio[w]))
 
-    print("# Table 10: Per-portfolio exit asymmetry\n")
+    print(heading("changes", "the May 2026 exit comparison, from logged fields", prefix="May 2026 column of Table") + "\n")
     n_above = sum(1 for e in phase3 if e.get("exitSide") == "above")
     n_below = sum(1 for e in phase3 if e.get("exitSide") == "below")
-    print(f"Source: phase3-events.jsonl, exit events ({n_above + n_below:,} total).\n")
-    print(f"Theorem 6 predicts V_below < V_above on volatile/stablecoin pairs in V3 "
-          f"ordering. Within each portfolio's theorem domain, the mean dust on "
-          f"above-exits should exceed the mean on below-exits.\n")
+    print(f"Source: phase3-events.jsonl, logged exit events ({n_above + n_below:,} total).\n")
+    print(f"Mean dust on above-range and below-range exits, pairs with T_0 volatile and "
+          f"T_1 USD-stable, exit side from the logged range fields.\n")
 
     rows = []
     n_portfolios = 0
@@ -95,15 +94,14 @@ def main():
     if n_portfolios:
         p_sign = sum(comb(n_portfolios, k)
                      for k in range(n_predicted, n_portfolios + 1)) / 2 ** n_portfolios
-        print(f"Per-portfolio sign test: {n_predicted}/{n_portfolios} portfolios in predicted "
-              f"direction (above > below), one-sided p = {p_sign:.4f}.")
+        print(f"Above-range exits above below-range exits in {n_predicted} of {n_portfolios} portfolios "
+              f"on the logged fields (one-sided sign-test p = {p_sign:.4f}).")
 
-    # Table 11: reversed-ordering negative control on P1.
+    # Reversed-ordering pairs (T_0 USD-stable).
     print()
-    print("# Table 11: P1 reversed-ordering negative control\n")
-    print("Theorem 6 predicts the V_below < V_above inequality reverses when V3 token "
-          "roles are flipped. P1 is the only portfolio with enough reversed-ordering "
-          "exits to test this directly.\n")
+    print("## Reversed-ordering pairs, from logged fields\n")
+    print("Mean dust on exits of pairs with T_0 USD-stable. The largest portfolio is the "
+          "only one with more than a handful of such exits.\n")
     rows = []
     for w in portfolios:
         sub = [e for e in by_portfolio[w] if pair_kind(e) == "sv-stable-t0"]

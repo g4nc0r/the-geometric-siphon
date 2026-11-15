@@ -10,18 +10,18 @@ import sys
 from pathlib import Path
 
 SCRIPTS = [
-    "table6_decomposition.py",
-    "table7_stratified.py",
-    "table8_vl_sweep.py",
-    "table8_vl_sweep_bootstrap.py",
-    "table9_directional.py",
-    "table10_exit.py",
-    "table14_vl_buckets.py",
-    "table15_cross_group.py",
-    "table16_hub_spoke.py",
-    "table17_regime.py",
-    "table18_fx.py",
-    "table19_zarp.py",
+    "decomposition.py",
+    "stratified.py",
+    "size_sweep.py",
+    "size_sweep_bootstrap.py",
+    "liquidity_share_buckets.py",
+    "cross_group.py",
+    "hub_spoke.py",
+    "regime.py",
+    "fx.py",
+    "zarp.py",
+    "may_directional.py",
+    "may_exit.py",
 ]
 
 

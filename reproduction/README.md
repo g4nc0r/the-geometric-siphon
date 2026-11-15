@@ -1,53 +1,66 @@
 # Reproduction scripts
 
-Each script regenerates one or more paper tables from the bundled JSONLs. Python 3.9+, standard library only.
+![Python](https://img.shields.io/badge/Python-3.9+_stdlib-3776ab?logo=python&logoColor=white)
+[![Data DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19904831.svg)](https://doi.org/10.5281/zenodo.19904831)
+
+Part of [The Geometric Siphon](../README.md).
+
+Twelve scripts that compute the paper's tables from the event logs of the data deposit. Python 3.9 or later, standard library only. Table and section numbers are those of the November 2026 revision; they are set in one place, `TABLES` in `_common.py`.
+
+The deposit holds the operator's rebalance log. The revision reads ranges, exit sides, displacements and swap amounts from chain events instead (paper §4.6), and those events are not in the deposit. The scripts therefore regenerate the tables that rest on the log's dust and value fields, and say in their output where a column of the printed table comes from chain events.
 
 ## Usage
 
+Download the deposit and place this folder inside it, beside the JSONL files.
+
 ```bash
-python3 table9_directional.py    # one table
-python3 run_all.py               # all 12 scripts
+python3 run_all.py          # all twelve, about 15 seconds
+python3 decomposition.py    # one table
 ```
 
 ## Coverage
 
-| Script | Reproduces | Source data |
-|---|---|---|
-| `table6_decomposition.py` | Table 6 (§5.1): Spearman ρ(ΔR, D), mean S, swap impact | `supplementary/slippage-decomposition.json`, `swap-verification.json` |
-| `table7_stratified.py` | Table 7 (§5.2): stratified V/L and σ correlations by group | `events-phase1.jsonl` |
-| `table8_vl_sweep.py` | Table 8 (§5.3): KellyClaude V/L sweep | `phase2-controlled-superset.jsonl` |
-| `table8_vl_sweep_bootstrap.py` | Table 8 supplement (§5.3): per-position bootstrap CIs and permutation test on ρ(preValue, dustPnl) | `phase2-controlled-superset.jsonl` |
-| `table9_directional.py` | Table 9 (§5.9): per-portfolio directional asymmetry | `phase3-events.jsonl` |
-| `table10_exit.py` | Tables 10 and 11 (§5.10): per-portfolio exit asymmetry + P1 reversed-ordering negative control | `phase3-events.jsonl` |
-| `table14_vl_buckets.py` | Table 14 (§5.2): V/Lₚ transfer function | `phase2-controlled-superset.jsonl` |
-| `table15_cross_group.py` | Table 15 (§5.2): cross-group token decomposition | `supplementary/closed-form-decomposition-cache.json` |
-| `table16_hub_spoke.py` | Table 16 (§5.4): hub-spoke topology (Group B) | `phase2-controlled-superset.jsonl` |
-| `table17_regime.py` | Table 17 (§5.5): Phase 1 regime partitioning | `events-phase1.jsonl` |
-| `table18_fx.py` | Table 18 (§5.6): stablecoin FX isolation | `supplementary/fiat-experiment-events.jsonl` |
-| `table19_zarp.py` | Table 19 (§5.8): USDC/ZARP 14-event extinction | `phase2-controlled-superset.jsonl` |
+| Script | Paper table | Source data | Agreement with the printed table |
+|---|---|---|---|
+| `decomposition.py` | Table 8 (§5.1), dust flow and slippage | `supplementary/slippage-decomposition.json`, `swap-verification.json` | exact |
+| `stratified.py` | Table 9 (§5.2), stratified correlations | `events-phase1.jsonl` | exact |
+| `size_sweep.py` | Table 10 (§5.3), position-size sweep | `phase2-controlled-superset.jsonl` | dust exact; end values within $5 |
+| `size_sweep_bootstrap.py` | §5.3, permutation test | `phase2-controlled-superset.jsonl` | exact; the bootstrap intervals it also prints are not in the paper |
+| `liquidity_share_buckets.py` | Table 17, mean D/V by liquidity share | `phase2-controlled-superset.jsonl` | differs, see below |
+| `cross_group.py` | Table 18, cross-group decomposition | `supplementary/closed-form-decomposition-cache.json` | inputs only |
+| `hub_spoke.py` | Table 19, hub-spoke topology | `phase2-controlled-superset.jsonl` | exact |
+| `regime.py` | Table 20, Phase 1 regimes | `events-phase1.jsonl` | exact |
+| `fx.py` | Table 21, stablecoin FX isolation | `supplementary/fiat-experiment-events.jsonl` | dust and liquidity share exact; two columns not regenerated |
+| `zarp.py` | Table 22, USDC/ZARP trajectory | `phase2-controlled-superset.jsonl` | exact; swap column not regenerated |
+| `may_directional.py` | Table 23, May 2026 column: rising against falling dust | `phase3-events.jsonl` | reproduces the May figures |
+| `may_exit.py` | Table 23, May 2026 column: above against below exits | `phase3-events.jsonl` | reproduces the May figures |
+
+## Where the output differs from the paper
+
+- **Table 17.** Three of the six buckets match in count and mean, and the 0.05 to 0.10 bucket has the same mean with 30 events against 29. The 0.01 to 0.05 bucket holds 66 events against 98 printed and the 0.20 to 0.50 bucket 10 against 9, so the total is 576 against 606. The events behind the difference are not in the deposit.
+- **Table 18.** The script decodes per-token dust from 581 receipts and reports how many parse. The paper's nine-row table also needs each receipt's depositor, which is not in the deposit.
+- **Table 21, σ column.** The paper's values were computed at rebalance time and are not recoverable from the deposit. The script prints the bundled `sigma` values, which differ (73.6, 1.6, 4.6, 1.5, 0.2 against 98.8, 1.4, 5.0, 1.5, 0.1).
+- **Tables 21 and 22, swap columns.** The paper counts internal swaps from pool Swap events. The logged swap amount is zero on every row of the deposit and is not evidence that no swap was made.
+- **Table 22, extinction bound.** The paper's bound of 6 rebalances uses the zero-swap residual fractions, which need the pool state before each transaction. The script prints the bound at the realised mean α, 11.
+
+## The two May 2026 scripts
+
+`may_directional.py` and `may_exit.py` reproduce comparisons that the May 2026 version of the paper reported and the revision withdraws. They read displacement and exit side from the logged range fields. Until 24 May 2026 the logger read a position's old range after it had been updated, so those fields are wrong on most range-changing rebalances in the deposit. The revision's Tables 24 and 25 make the same comparisons on sides derived from chain events and reach different counts. The scripts are kept so that the May figures listed in Table 23 can be checked.
 
 ## Snapshot conventions
 
-Several paper tables report values at a *snapshot* of the diffusion log rather than the full bundled superset. Each script applies the correct snapshot:
+Several tables report values at a snapshot of the log. Each script applies its own.
 
-| Table | Snapshot |
+| Script | Snapshot |
 |---|---|
-| 8 (V/L sweep) | First 33 chronological events across the three Kelly positions |
-| 14 (V/L buckets) | Phase 2 events through 2026-03-09 03:00 UTC, all depositors |
-| 16 (Hub-spoke) | First 301 chronological events across depositor 👑's four Group B positions |
-| 18 (FX isolation) | Fiat events through 2026-03-09 00:00 UTC (end of Sunday weekend window) |
-| 19 (ZARP) | First 14 chronological ZARP events (the pre-extinction trajectory) |
+| `size_sweep.py` | First 33 chronological events across the three KellyClaude positions |
+| `liquidity_share_buckets.py` | Phase 2 events through 2026-03-09 03:00 UTC, all depositors |
+| `hub_spoke.py` | First 301 chronological events across depositor 👑's four Group B positions |
+| `fx.py` | Fiat events through 2026-03-09 00:00 UTC, the end of the weekend window |
+| `zarp.py` | First 14 chronological ZARP events |
 
-Tables 6, 7, 9, 10, and 17 reproduce directly from the full bundled file; no snapshot is applied.
-
-## Caveats
-
-- **Table 15:** partial reproduction. The script emits per-token dust deltas (554/581 receipts, 12 pools); the 9-row paper table additionally needs per-receipt depositor attribution, which requires the address → depositor-emoji link (not in the deposit).
-- **Table 18 σ₂₄ₕ column:** unrecoverable from the deposit; see `../README.md` Known Issues 2.
-- **Foundry suite:** the 16-test Foundry verification suite (§6, Appendix D) is not regenerated by these scripts. To re-run it, clone the companion code repository at <https://github.com/g4nc0r/the-geometric-siphon> and run `forge test -vv` in its `foundry/` directory.
+The other scripts use the full files.
 
 ## `depositor_mapping.json`
 
-Depositor-emoji → paper-group (A/B/C/D/E) lookups, one per phase. Use the one matching the table being reproduced.
-
-The address → depositor-emoji link needed for per-receipt attribution in Table 15 is not in the deposit.
+Lookups from depositor label to paper group (A to E), one per phase. Use the one that matches the table.
