@@ -318,6 +318,7 @@ By~\eqref{eq:ratio} and~\eqref{eq:value}, a position whose amounts are in the ra
 \end{equation}
 of its value in token0 and token1. Let $\omega$ be the fraction of the withdrawn value held in the missing token and $\omega'$ the fraction of a position's value that the new range requires in the same token. These are~\eqref{eq:fractions} at $R = R_{\symup{old}}$ and at $R = R_{\symup{new}}$.
 
+\needspace{4\baselineskip}
 \begin{theorem}[Geometric residual]\label{thm:residual}
 For a concentrated liquidity rebalance from range $[s_a, s_b]$ to $[s_a', s_b']$ at current sqrt price $s$, with $s$ in the interior of both ranges, the residual in the isolated case is
 \begin{equation}\label{eq:share}
@@ -337,6 +338,7 @@ which is the equality in~\eqref{eq:share}. Of the fractions~\eqref{eq:fractions}
 \end{proof}
 \vspace{9pt}
 
+\needspace{4\baselineskip}
 \begin{corollary}[Ratio-preserving ranges]\label{cor:locus}
 At fixed $s$, the new ranges with zero residual are those satisfying
 \[
@@ -347,6 +349,7 @@ This is one equation in two unknowns and therefore defines a one-dimensional cur
 
 \noindent A ratio-preserving range leaves the composition of the position as it was, so no such range recentres a displaced position.
 
+\needspace{4\baselineskip}
 \begin{corollary}[Round trip]\label{cor:roundtrip}
 Let two ranges containing $s$ require the fractions $\omega_A \leq \omega_B$ of value in token0. In the isolated case, a rebalance from one to the other and back at the price $s$ leaves the fraction
 \[
@@ -426,6 +429,7 @@ A shared balance & Each leftover stays with its own position, with no transfer &
 
 Within a single pool, residuals donated by one rebalance become dust available for later rebalances to absorb. Larger positions donate proportionally, while smaller positions receive a larger proportional benefit from any given dust absorption. Same-pool values therefore converge in expectation.
 
+\needspace{4\baselineskip}
 \begin{theorem}[Single-pool convergence]\label{thm:convergence}
 $N$ positions in the same pool and range, sharing a contract balance, converge in expectation to equal value under repeated rebalancing with uniform per-position rebalance probability.
 \end{theorem}
@@ -444,6 +448,7 @@ With per-position rebalance probability $\pi = 1/N$,
 The first term is strictly decreasing in $V_i$, while the second is constant, so smaller positions grow faster in proportional terms. Equilibrium, defined by $\dot{V}_i/V_i = \dot{V}_j/V_j$, therefore requires $V_i = V_j$. In the regime where the linearisation holds, the resulting gradient contracts towards that fixed point.
 \end{proof}
 
+\needspace{4\baselineskip}
 \begin{corollary}[Exponential convergence rate]\label{cor:convergence-rate}
 Under the assumptions of Theorem~\ref{thm:convergence} and the additional assumption that swap routing preserves total value (so $\sum_i V_i + D_{\symup{pool}}$ is constant in expectation), the differential deviations between positions decay exponentially at rate $c$:
 \[
@@ -455,6 +460,7 @@ Under the assumptions of Theorem~\ref{thm:convergence} and the additional assump
 The decay timescale is $\tau = 1/c$, independent of $N$, with $t$ counted in the position's own rebalances. Counted in rebalances of the group the rate is $c/N$. Proof in Appendix~\ref{app:dr-derivation}.
 \end{corollary}
 
+\needspace{4\baselineskip}
 \begin{corollary}[Dispersion]\label{cor:dispersion}
 In the model of Theorem~\ref{thm:convergence}, let a rebalance take the rebalancing position from value $V$ to $(1 - c)V + A$, where the absorption $A$ does not depend on which position rebalances. For two positions write $d = V_i - V_j$ and $g = A - c\,(V_i + V_j)/2$. Conditional on the state before a rebalance in the group, the gap $d'$ after it satisfies
 \[
@@ -494,6 +500,7 @@ What a shared token does contribute is proved in Proposition~\ref{prop:netting}.
 
 In pools with swap routing, the position manager's internal swap absorbs most of $\Delta R$ at each rebalance, leaving only a small remainder as net dust. This damping keeps positions inside the convergence basin of Theorem~\ref{thm:convergence}. When no swap is made, that damping is absent and the full residual leaks on each rebalance. Theorem~\ref{thm:extinction} treats this case, and Proposition~\ref{prop:partial} extends it to an internal swap that recovers part of the residual. The \acr{USDC}/\acr{ZARP} trajectory (\S\ref{sec:zarp}) is an example of the second, and its two zero-swap events show the factor that the first compounds.
 
+\needspace{4\baselineskip}
 \begin{theorem}[Zero-swap extinction]\label{thm:extinction}
 Let $P$ be a \acr{CL} position with value $V_0 > 0$. If the current price exits the position's range and a rebalance is performed with no swap, minting into a new range containing the current price, then:
 \begin{enumerate}
@@ -539,6 +546,7 @@ Applying \acr{AM}--\acr{GM} to the positive terms $\{1 - \alpha_k\}$ yields the 
 
 \noindent Under sustained zero-swap rebalancing in the isolated case, the sequence $V_0, V_1, \ldots$ is monotonically decreasing and the trajectory cannot recover endogenously.
 
+\needspace{4\baselineskip}
 \begin{corollary}[Irreversibility of zero-swap extinction]\label{cor:irreversibility}
 Under the assumptions of Theorem~\ref{thm:extinction}, the position returns to net absorption at a rebalance only if the shared dust pool holds at least the amount of the missing token that the position lacks. An isolated position, which has no dust pool to draw on, cannot recover.
 \end{corollary}
@@ -549,6 +557,7 @@ Under the assumptions of Theorem~\ref{thm:extinction}, the position returns to n
 
 The equal-width rebalance recentred on the current price is the canonical policy of automated \acr{CL} engines, including the one in \S\ref{sec:infrastructure}. Theorem~\ref{thm:monotonicity} shows that the residual grows as the price moves away from the midpoint of the original range.
 
+\needspace{4\baselineskip}
 \begin{theorem}[Residual monotonicity]\label{thm:monotonicity}
 For a \acr{CL} position in range $[s_a, s_b]$ rebalanced to a new range of equal width centred on the current sqrt price $s$, where $s$ has been displaced upwards by $\delta$ from the midpoint $\bar{s} = (s_a + s_b)/2$, the absolute geometric residual $|\Delta R|$ is strictly increasing in $\delta$ on $(0, w/2]$, with $|\Delta R(0)| = 0$ and $|\Delta R(w/2)| = L \cdot w$.
 \end{theorem}
@@ -561,6 +570,7 @@ Let $w = s_b - s_a$, $\bar{s} = (s_a + s_b)/2$, and $s = \bar{s} + \delta$. At $
 Appendix~\ref{app:dr-derivation} simplifies~\eqref{eq:dr-closed-form} and shows that its derivative is strictly positive on $(0, w/2]$, with $|\Delta R(0)| = 0$ and $|\Delta R(w/2)| = L \cdot w$.
 \end{proof}
 
+\needspace{4\baselineskip}
 \begin{corollary}[Downward displacement]\label{cor:downward}
 If $s_b < 3 s_a$, then for a downward displacement $\delta < 0$ the residual is surplus token0, with
 \begin{equation}\label{eq:dr-down}
@@ -581,6 +591,7 @@ the same in both directions, strictly increasing in $|\ell|$, approximately $|\e
 
 Beyond the range-geometric asymmetry of Theorem~\ref{thm:monotonicity}, the retained \acr{USD} value at $+\delta$ strictly exceeds that at $-\delta$ once a stablecoin num\'eraire is fixed. Throughout this subsection, $V(s \pm \delta)$ denotes $L\phi(s \pm \delta, s_a, s_b)$, the position value evaluated at the displaced sqrt price with the range $[s_a, s_b]$ held fixed.
 
+\needspace{4\baselineskip}
 \begin{theorem}[Directional asymmetry]\label{thm:directional}
 For a \acr{CL} position in pool $(T_0, T_1)$ with $T_0$ the volatile asset and $T_1$ a stablecoin, the up-move position $V(s+\delta)$ retains strictly more \acr{USD} value than the down-move position $V(s-\delta)$ at every $\delta > 0$ for which both $s \pm \delta$ remain in range.
 \end{theorem}
@@ -599,6 +610,7 @@ Substituting $\delta = \Delta P/(2s)$ into~\eqref{eq:directional-identity} yield
 
 Past the range boundary, the position is single-sided. In V3 ordering for volatile/stablecoin pairs, above-exits hold only the stablecoin and retain full \acr{USD} value, while below-exits hold only the depreciated volatile token.
 
+\needspace{4\baselineskip}
 \begin{theorem}[Exit asymmetry]\label{thm:exit}
 For a \acr{CL} position in pool $(T_0, T_1)$ with $T_0$ the volatile asset and $T_1$ a stablecoin, a below-range exit retains strictly less \acr{USD} value than an above-range exit at any sqrt-price displacement $d > 0$ past the corresponding boundary.
 \end{theorem}
@@ -619,6 +631,7 @@ V_{\symup{below}}(d) = L\biggl(\frac{1}{s_a} - \frac{1}{s_b}\biggr)\,(s_a - d)^2
 This is strictly decreasing in $d$ on $(0, s_a)$. Hence $V_{\symup{below}}/V_{\symup{above}}$ is strictly decreasing in $d$, and the below-exit retains strictly less \acr{USD} value at every $d > 0$.
 \end{proof}
 
+\needspace{4\baselineskip}
 \begin{corollary}[Closed-form exit value-retention ratio]\label{cor:exit-ratio}
 Under the conditions of Theorem~\ref{thm:exit},
 \[
@@ -635,6 +648,7 @@ with $P' = (s_a - d)^2$, $P_a = s_a^2$, and $P_b = s_b^2$. The ratio is strictly
 
 By Theorem~\ref{thm:residual} the fraction of value redeployed without a swap is $V_{\symup{new}}/V = \omega/\omega'$. Write $\Delta\omega = \omega' - \omega \geq 0$ for the \emph{ratio mismatch}, so that the zero-swap residual fraction is $\alpha = \Delta\omega/\omega'$.
 
+\needspace{4\baselineskip}
 \begin{proposition}[Partial-swap extinction]\label{prop:partial}
 Let $K$ consecutive isolated rebalances have zero-swap residual fractions $\alpha_k \in [0,1]$, and let the internal swap at rebalance $k$ leave a fraction $\beta_k$ of the position's value undeployed, with $0 \leq \beta_k \leq \alpha_k$. Then
 \[
@@ -643,12 +657,14 @@ V_K = V_0 \prod_{k=1}^{K} (1 - \beta_k),
 and the bounds of Theorem~\ref{thm:extinction} hold with $\beta_k$ in place of $\alpha_k$.
 \end{proposition}
 
+\needspace{4\baselineskip}
 \begin{corollary}[Uniform recovery]\label{cor:uniform-recovery}
 If each internal swap recovers the same fraction $S_{\symup{eff}} \in [0,1)$ of the residual, so that $\beta_k = (1 - S_{\symup{eff}})\alpha_k$, the extinction bound of Theorem~\ref{thm:extinction}(iv) is, before rounding, at least $1/(1 - S_{\symup{eff}})$ times its zero-swap value. Both are bounds on the number of rebalances needed to reach $\varepsilon$, and neither is a realised extinction time.
 \end{corollary}
 
 \noindent The product follows by induction, and the corollary from concavity of the logarithm (Appendix~\ref{app:dr-derivation}). Swap costs prevent complete recovery even at a fixed price, since a swap with any positive cost recovers strictly less than the whole residual. The swap's own price impact adds a further mismatch, by changing the ratio required at the mint.
 
+\needspace{4\baselineskip}
 \begin{proposition}[Swap leftover]\label{prop:leftover}
 Let a position with ratio mismatch $\Delta\omega$ be rebalanced into a range centred on the current sqrt price, and let $\lambda$ be the new position's liquidity as a fraction of the pool's in-range liquidity $L_p$ with the position withdrawn. Let the position manager swap the amount that would match the withdrawn amounts to the new range at the pre-swap price, against constant pool liquidity, and mint at the post-swap price. To first order in $\lambda$ and $\Delta\omega$, the leftover is the fraction
 \[
@@ -657,6 +673,7 @@ Let a position with ratio mismatch $\Delta\omega$ be rebalanced into a range cen
 of the position's value, in the token the swap bought.
 \end{proposition}
 
+\needspace{4\baselineskip}
 \begin{corollary}[Swap size]\label{cor:swap-size}
 If the swap of Proposition~\ref{prop:leftover} is scaled by a factor $\theta$, the leftover is
 \[
@@ -679,6 +696,7 @@ The liquidity share $L/L_p$ of the datasets below is read after the mint, with t
 
 A displaced position can be rebalanced in three ways. It can swap and redeploy in full, it can deploy what its withdrawn amounts allow and leave the rest undeployed, or it can choose a range that requires the token ratio it already holds and stay off centre. At a fixed price and with a costless swap, the three are tied by one identity.
 
+\needspace{4\baselineskip}
 \begin{proposition}[Displacement identity]\label{prop:identity}
 Let a position with ratio mismatch $\Delta\omega$ be rebalanced at a fixed sqrt price into a range requiring value fraction $\omega'$ of its missing token, after swapping value $Q \leq V\,\Delta\omega$ of its surplus token for its missing token at no cost. If $\beta$ is the fraction of value the mint leaves undeployed, then
 \[
@@ -686,6 +704,7 @@ Let a position with ratio mismatch $\Delta\omega$ be rebalanced at a fixed sqrt 
 \]
 \end{proposition}
 
+\needspace{4\baselineskip}
 \begin{corollary}[Narrow-range form]\label{cor:narrow}
 For a range narrow enough that value fractions are linear in the normalised displacement, let $\hat\delta \in [0,1]$ be the displacement from the old centre, measured in the direction of the move, and $\hat\delta' \in [0, \hat\delta]$ the displacement left from the new centre. Then
 \[
@@ -695,6 +714,7 @@ For a range narrow enough that value fractions are linear in the normalised disp
 
 \noindent After the swap the missing token's value fraction is $\omega + Q/V$, and~\eqref{eq:share} gives $1 - \beta = (\omega + Q/V)/\omega'$, which is the identity. The corollary substitutes $\omega = (1 - \hat\delta)/2$ and $\omega' = (1 - \hat\delta')/2$. Table~\ref{tab:corners} lists the three corners of Corollary~\ref{cor:narrow}. Proposition~\ref{prop:leftover} adds the price impact of the swap, which the identity holds fixed.
 
+\needspace{4\baselineskip}
 \begin{corollary}[After an exit]\label{cor:exit-trade}
 A position that has left its range holds one token only, so that $\omega = 0$ and $\Delta\omega = \omega'$. At no cost, full deployment requires $Q = \omega' V$, one half of the position for a range centred in tick space. If the swap costs a fraction $\kappa$ of the value swapped, the value deployed is greatest at
 \[
@@ -723,6 +743,7 @@ Recentred, fully deployed    & $\beta = 0$, $\hat\delta' = 0$ & $Q/V = \hat\delt
 
 Theorems~\ref{thm:residual} and~\ref{thm:extinction} treat the residual as leaving the position. When the position keeps its own leftover and absorbs it at later mints, the cost of a displacement changes order.
 
+\needspace{4\baselineskip}
 \begin{proposition}[Retained excursion]\label{prop:excursion}
 For a fully deployed position whose range is centred on $s$ in tick space, with upper bound $s_b$, let $h = \ln(s_b/s)$. Suppose the sqrt price moves to $s e^{\ell}$ with $|\ell| < h$ and returns to $s$, the range being recentred at equal width in ticks after each move, with no swap and with the position's own leftover retained and offered to the next mint. Then
 \[
@@ -741,6 +762,7 @@ the approximation holding for $h \ll 1$. Each rebalance preserves the combined v
 
 All values, entitlements, and swap slippage in this subsection are measured in one num\'eraire at the prices of the transaction concerned. Let $z_{i,k}$ be the value mismatch of position $i$ in token $k$, positive in its surplus token and negative in its missing token, with $\sum_k z_{i,k} = 0$, and write $a^{+} = \max(a, 0)$ and $a^{-} = \max(-a, 0)$.
 
+\needspace{4\baselineskip}
 \begin{proposition}[Netting]\label{prop:netting}
 Let positions $i = 1, \ldots, n$ rebalance at common prices against one shared balance, each to be minted at its own value. The least total value that must be swapped outside the shared balance is $\sum_k (\sum_i z_{i,k})^{+}$, and the saving over each position swapping alone is
 \[
@@ -751,6 +773,7 @@ which is zero exactly when no token is the surplus token of one position and the
 
 \noindent Movements within the shared balance are free, so only aggregate holdings matter, and every unit of a token in aggregate surplus must be sold at least once (Appendix~\ref{app:dr-derivation}). For a single position rebalancing against the dust pool, the saving is the part of its missing amount that the dust pool holds.
 
+\needspace{4\baselineskip}
 \begin{corollary}[Shared tokens]\label{cor:shared}
 Let the positions of Proposition~\ref{prop:netting} have been centred in tick space at common prices, and let each be recentred with the price still inside its range. Write $\nu_k$ for the change in the log \acr{USD} price of token $k$ since the centring. Then the missing token of each position is the token of its pool with the larger $\nu$. A token contributes to the saving of Proposition~\ref{prop:netting} if and only if its $\nu_k$ lies strictly between those of two tokens with which it shares a pool.
 \end{corollary}
@@ -763,6 +786,7 @@ Netting does not require a transfer. An \emph{accounting rule} assigns each posi
 
 A rule is \emph{neutral} if at each rebalance every other position's equity is unchanged and the rebalancing position's equity falls only by its own slippage. The mint~\eqref{eq:mint}, under which no entitlement is recorded, is the \emph{ownerless rule}.
 
+\needspace{4\baselineskip}
 \begin{proposition}[Neutral accounting]\label{prop:neutral}
 Let the value minted, $V_j'$, be the lesser of what the mint~\eqref{eq:mint} would deploy and the position's equity $U_j'$, and let the position's entitlement become
 \[
@@ -771,6 +795,7 @@ G_j' = U_j' - V_j' ,
 every other entitlement being unchanged. This rule is neutral and attains the saving of Proposition~\ref{prop:netting}.
 \end{proposition}
 
+\needspace{4\baselineskip}
 \begin{corollary}[Uniqueness]\label{cor:unique}
 Under any neutral rule the entitlements after each rebalance are those of Proposition~\ref{prop:neutral}, and no mint exceeds the position's equity $U_j'$. Between rebalances a neutral rule must divide the dust pool's revaluation among the entitlements, and if entitlements are revalued in proportion to their value the rule is unique.
 \end{corollary}
@@ -1787,6 +1812,7 @@ Since $s < s_b$ in the interior of the range, the factor in parentheses is stric
 
 \subsubsection*{Price-space scaling}
 
+\needspace{4\baselineskip}
 \begin{corollary}[Leading-order price-space scaling]\label{cor:directional-scaling}
 For a position with $s$ in the interior of $[s_a, s_b]$, a symmetric price-space displacement of magnitude $\Delta P$ around the current price $P_0 = s^2$ produces, to leading order in $\Delta P/P_0$, a \acr{USD}-value gap
 \[
