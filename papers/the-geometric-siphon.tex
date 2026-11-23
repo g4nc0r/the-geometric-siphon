@@ -148,6 +148,8 @@
 \PassOptionsToPackage{hyphens}{url}
 \Urlmuskip=0mu plus 1mu
 \urlstyle{same}
+\def\UrlBreakPenalty{10000}
+\def\UrlBigBreakPenalty{10000}
 \usepackage[bottom]{footmisc}
 \renewcommand{\footnotelayout}{\fontsize{8.6pt}{11.4pt}\selectfont}
 \setlength{\footnotesep}{9pt}
@@ -1513,7 +1515,7 @@ The author operated the off-chain concentrated liquidity rebalancing system from
 
 \section*{Data and code availability}
 
-The Foundry suite, the Lean~4 formalisation, the reference simulator, and the reproduction harness are on GitHub at \url{https://github.com/g4nc0r/the-geometric-siphon}, with an archival snapshot on Zenodo at \url{https://doi.org/10.5281/zenodo.19526374}. The repository documents what the formalisation covers and what it does not. The event logs of the controlled phases, which support the controlled-phase tables of \S\ref{sec:results} and Appendix~\ref{app:empirical}, are deposited on Zenodo at \url{https://doi.org/10.5281/zenodo.19904831}. The on-chain dataset of \S\ref{sec:record} is derived from public contract and pool events on Base. Its derived files, the simulator's grid and replay scripts, and the test specifications fixed in advance are not part of the current deposits, and the author intends to release them with a peer-reviewed version of the paper.
+The Foundry suite, the Lean~4 formalisation, the reference simulator, and the reproduction harness are on GitHub at {\def\UrlBreakPenalty{100}\def\UrlBigBreakPenalty{100}\url{https://github.com/g4nc0r/the-geometric-siphon}}, with an archival snapshot on Zenodo at \url{https://doi.org/10.5281/zenodo.19526374}. The repository documents what the formalisation covers and what it does not. The event logs of the controlled phases, which support the controlled-phase tables of \S\ref{sec:results} and Appendix~\ref{app:empirical}, are deposited on Zenodo at \url{https://doi.org/10.5281/zenodo.19904831}. The on-chain dataset of \S\ref{sec:record} is derived from public contract and pool events on Base. Its derived files, the simulator's grid and replay scripts, and the test specifications fixed in advance are not part of the current deposits, and the author intends to release them with a peer-reviewed version of the paper.
 
 \addcontentsline{toc}{section}{References}
 \begin{thebibliography}{99}
